@@ -6,6 +6,12 @@
 <body>
 
 <h1>8x8 Gomoku</h1>
+<div id="players">
+    <div id="p1">Joueur 1: -</div>
+    <div id="p2">Joueur 2: -</div>
+</div>
+<div id="turn"></div>
+<div id="message"></div>
 <div id="board"></div>
 <div>
     Joueur 1 : <span id="t1">60</span>s |
@@ -14,6 +20,14 @@
 
 <script src="/static/app.js"></script>
 
-<button onclick="resetGame()">Nouvelle partie</button>
+<div>
+    Temps (s):
+    <input id="time_control" type="number" value="60" min="1" style="width:60px">
+
+    Incrément (s):
+    <input id="increment" type="number" value="0" min="0" style="width:60px">
+
+    <button onclick="resetGame()">Nouvelle partie</button>
+</div>
 </body>
 </html>

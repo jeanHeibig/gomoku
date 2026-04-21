@@ -5,15 +5,20 @@ from bitboard import has_five, set_bit
 class Game:
     def __init__(self):
         self.board = [[0]*8 for _ in range(8)]
+
+        self.player_names = ["Alice", "Bob"]
         self.bb = [0, 0]  # joueur 1, joueur 2
         self.player = 0
 
         self.time = [60.0, 60.0]
+        self.increment = 0.0
         self.last_move_time = None
 
         self.started = False
         self.finished = False
         self.winner = None
+
+        # self.connections = []
 
     def play(self, i, j):
         if self.finished:
@@ -31,6 +36,7 @@ class Game:
             self.last_move_time = now
 
             if self.time[self.player] < 0:
+                self.time[self.player] = 0
                 self.finished = True
                 self.winner = 1 - self.player
                 return True
@@ -40,6 +46,8 @@ class Game:
 
         self.board[i][j] = self.player + 1
         self.bb[self.player] = set_bit(self.bb[self.player], i, j)
+
+        self.time[self.player] += self.increment
 
         if has_five(self.bb[self.player], i, j):
             self.finished = True
