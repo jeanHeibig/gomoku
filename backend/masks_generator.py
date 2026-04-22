@@ -1,3 +1,24 @@
+"""
+Module for generating precomputed winning masks for a Gomoku game.
+
+This module provides functionality to generate bitmasks representing all possible
+winning segments on an 8x8 game board where 5 pieces in a row constitute a win.
+The masks are used for efficient bitboard-based game state evaluation.
+
+Constants:
+    BOARD_SIZE: The size of the square game board (8x8).
+    ALIGN: The number of consecutive pieces required to win (5).
+
+Functions:
+    idx(i, j): Converts 2D coordinates to a 1D index.
+    bit(i, j): Returns the bit mask for a specific cell.
+    segment_mask(cells): Creates a bitmask from a list of cell coordinates.
+    all_winning_segments(): Generates all possible winning line segments.
+    build_masks_by_cell(): Maps each cell to its associated winning masks.
+    python_literal_for_dict(d): Generates Python code for the masks dictionary.
+    main(): Entry point to generate and save the precomputed masks.
+"""
+
 from pathlib import Path
 
 BOARD_SIZE = 8
@@ -5,14 +26,17 @@ ALIGN = 5
 
 
 def idx(i: int, j: int) -> int:
-    return i * 8 + j
+    """Convert 2D coordinates (i, j) to a 1D index."""
+    return i * BOARD_SIZE + j
 
 
 def bit(i: int, j: int) -> int:
+    """Get the bit mask for the cell at position (i, j)."""
     return 1 << idx(i, j)
 
 
 def segment_mask(cells: list[tuple[int, int]]) -> int:
+    """Create a bitmask from a list of cell coordinates."""
     m = 0
     for i, j in cells:
         m |= bit(i, j)
@@ -20,6 +44,7 @@ def segment_mask(cells: list[tuple[int, int]]) -> int:
 
 
 def all_winning_segments() -> list[list[tuple[int, int]]]:
+    """Generate all possible winning segments on the board."""
     segments: list[list[tuple[int, int]]] = []
 
     # Horizontaux
@@ -50,7 +75,8 @@ def all_winning_segments() -> list[list[tuple[int, int]]]:
 
 
 def build_masks_by_cell() -> dict[int, list[int]]:
-    masks_by_cell: dict[int, list[int]] = {k: [] for k in range(64)}
+    """Build a dictionary mapping each cell index to its list of winning masks."""
+    masks_by_cell: dict[int, list[int]] = {k: [] for k in range(BOARD_SIZE * BOARD_SIZE)}
 
     for cells in all_winning_segments():
         mask = segment_mask(cells)
@@ -61,12 +87,13 @@ def build_masks_by_cell() -> dict[int, list[int]]:
 
 
 def python_literal_for_dict(d: dict[int, list[int]]) -> str:
+    """Generate Python code representing the masks dictionary."""
     lines: list[str] = []
     lines.append("# Auto-generated file. Do not edit by hand.")
     lines.append("")
     lines.append("WIN_MASKS_BY_CELL = {")
 
-    for k in range(64):
+    for k in range(BOARD_SIZE * BOARD_SIZE):
         masks = d[k]
         lines.append(f"    {k}: [")
         for m in masks:
@@ -80,6 +107,7 @@ def python_literal_for_dict(d: dict[int, list[int]]) -> str:
 
 
 def main() -> None:
+    """Generate and write the precomputed masks to a file."""
     d = build_masks_by_cell()
     content = python_literal_for_dict(d)
 
