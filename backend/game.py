@@ -1,64 +1,81 @@
-import time
+"""
+Game module for managing Gomoku game state and logic.
 
-from bitboard import has_five, set_bit
+This module provides the Game class which handles the core game mechanics
+including move validation, win detection, and game state management for
+an 8x8 Gomoku board.
+"""
+
+from .bitboard import is_last_move_winning, set_bit
+from .player import Player
+from .timer import Timer
+
 
 class Game:
-    def __init__(self):
+    """A class representing a Gomoku game."""
+
+    def __init__(self, players: list[Player], timer: Timer):
+        """Initialize the game with a list of players and a timer.
+
+        Args:
+            players (list[Player]): List of two players.
+            timer (Timer): Timer for managing game time.
+        """
+        self.players = players
+        self.timer = timer
+
         self.board = [[0]*8 for _ in range(8)]
+        self.bitboards = [0, 0]
+        self.ply = 0
 
-        self.player_names = ["Alice", "Bob"]
-        self.bb = [0, 0]  # joueur 1, joueur 2
-        self.player = 0
-
-        self.time = [60.0, 60.0]
-        self.increment = 0.0
-        self.last_move_time = None
-
-        self.started = False
+        self.current_player = 0
         self.finished = False
-        self.winner = None
+        self.draw = False
+        self.winner = None  # 0: P1, 1: P2
 
-        # self.connections = []
+    def _opponent(self):
+        return 1 - self.current_player
 
-    def play(self, i, j):
-        if self.finished:
+    def _win_game(self, winner):
+        self.finished = True
+        self.winner = winner
+
+    def _draw_game(self):
+        self.finished = True
+        self.draw = True
+
+    def play(self, i: int, j: int) -> bool:
+        """Make a move at position (i, j). Return True if the game continues, False if it ends.
+
+        Args:
+            i (int): Row index of the move.
+            j (int): Column index of the move.
+
+        Returns:
+            bool: True if the game continues, False if the game ends.
+        """
+        flagged = self.timer.move_begin()
+
+        if flagged or (self.board[i][j] != 0):  # game lost if illegal move
+            self._win_game(self._opponent())
             return False
 
-        now = time.time()
+        # update board
+        self.board[i][j] = self.current_player + 1
+        self.ply += 1
+        self.bitboards[self.current_player] = set_bit(self.bitboards[self.current_player], i, j)
 
-        if self.last_move_time is None:
-            # first move
-            self.last_move_time = now
-            self.started = True
-        else:
-            elapsed = now - self.last_move_time
-            self.time[self.player] -= elapsed
-            self.last_move_time = now
-
-            if self.time[self.player] < 0:
-                self.time[self.player] = 0
-                self.finished = True
-                self.winner = 1 - self.player
-                return True
-
-        if self.board[i][j] != 0:
-            return False
-
-        self.board[i][j] = self.player + 1
-        self.bb[self.player] = set_bit(self.bb[self.player], i, j)
-
-        self.time[self.player] += self.increment
-
-        if has_five(self.bb[self.player], i, j):
-            self.finished = True
-            self.winner = self.player
+        if is_last_move_winning(self.bitboards[self.current_player], i, j):
+            self._win_game(self.current_player)
             return True
 
-        # Test match nul
-        if all(self.board[i][j] != 0 for i in range(8) for j in range(8)):
-            self.finished = True
-            self.winner = None
+        # Test draws
+        if self.ply == 64:
+            self._draw_game()
             return True
 
-        self.player = 1 - self.player
+        # game continues
+        self.current_player = self._opponent()
+        self.timer.move_end()
+
         return True

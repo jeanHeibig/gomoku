@@ -5,8 +5,8 @@ This module provides functions for manipulating bitboards and checking for
 winning conditions in a Gomoku game using precomputed winning masks.
 """
 
-from masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
-from masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
+from .masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
+from .masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
 
 
 def is_winning(bb: int) -> bool:

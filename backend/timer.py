@@ -70,11 +70,21 @@ class SingleTimer:
 
 
 class Timer:
+    """A timer for managing time controls in a two-player game."""
+
     def __init__(
                 self,
                 initial_time: float | list[float],
                 increment: float | list[float],
                 ):
+        """Initialize the timer with initial times and increments for both players.
+
+        Args:
+            initial_time: Initial time in seconds for each player. Can be a single float
+                for both players or a list of two floats.
+            increment: Time increment per move in seconds. Can be a single float
+                for both players or a list of two floats.
+        """
         if isinstance(initial_time, float):
             initial_time = [initial_time] * 2
         if isinstance(increment, float):
@@ -85,7 +95,7 @@ class Timer:
             SingleTimer(initial_time[1], increment[1])
         ]
 
-        self.ply_nb = 0
+        self.ply = 0
 
         self.current_player = 0
         self.flagged_player = None
@@ -114,7 +124,7 @@ class Timer:
         for t in self.timers:
             t.restart()
 
-        self.ply_nb = 0
+        self.ply = 0
 
         self.current_player = 0
         self.flagged_player = None
@@ -140,29 +150,29 @@ class Timer:
             "times": [t.get_time() for t in self.timers],
         }
 
-    def first_move(self):
-        """Handle the first move: add increment and switch players."""
-        self.timers[self.current_player].add_increment()
-        self._switch()
-        self.ply_nb += 1
-        if self.ply_nb > 1:
-            self._start()
-
     def move_begin(self):
         """Stop the current player's timer and check for flag.
 
         Returns:
-            False if the player has flagged (time out), True otherwise.
+            True if the player has flagged (time out), False otherwise.
         """
-        self._stop()
-        if self.timers[self.current_player].flagged:
-            self.flagged_player = self.current_player
-            self.finished = True
-            return False
-        self.ply_nb += 1
-        return True
+
+        if self.ply > 1:  # logic for the first couple of moves
+            self._stop()
+            if self.timers[self.current_player].flagged:
+                self.flagged_player = self.current_player
+                self.finished = True
+                return True
+
+        self.ply += 1
+        return False
 
     def move_end(self):
         """Switch to the opponent and start their timer."""
+
+        if self.ply < 3:  # logic for the first couple of moves
+            self.timers[self.current_player].add_increment()
+
         self._switch()
-        self._start()
+        if self.ply > 1:
+            self._start()
