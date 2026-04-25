@@ -1,3 +1,10 @@
+"""
+Generator for all winning masks on the 8x8 Gomoku board.
+
+This module generates bitboard masks for all possible five-in-a-row
+winning patterns in horizontal, vertical, and diagonal directions.
+"""
+
 BOARD_SIZE = 8
 ALIGN = 5
 
@@ -15,6 +22,12 @@ def bit(i: int, j: int) -> int:
 
 
 def generate_masks():
+    """Generate all possible five-in-a-row winning masks.
+
+    Returns:
+        List of integers, each representing a bitboard mask for a
+        winning five-stone alignment.
+    """
     masks = []
 
     # horizontaux
@@ -53,6 +66,11 @@ def generate_masks():
 
 
 def save_masks(masks):
+    """Save the generated masks to a Python file.
+
+    Args:
+        masks: List of bitboard masks to save.
+    """
     with open("precomputed_masks_all_board.py", "w", encoding="utf-8") as f:
         f.write("# Auto-generated file. Do not edit by hand.\n\n")
         f.write("WIN_MASKS_ALL_BOARD = [\n")
