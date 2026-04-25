@@ -111,7 +111,7 @@ def main() -> None:
     d = build_masks_by_cell()
     content = python_literal_for_dict(d)
 
-    out = Path("precomputed_masks.py")
+    out = Path("precomputed_masks_by_cell.py")
     out.write_text(content, encoding="utf-8")
 
     print(f"Fichier écrit : {out.resolve()}")
