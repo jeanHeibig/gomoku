@@ -1,0 +1,9 @@
+<input id="name" placeholder="Nom joueur">
+<button onclick="login()">Entrer</button>
+
+<script>
+function login() {
+    const name = document.getElementById("name").value || "guest";
+    window.location.href = `/game?name=${name}`;
+}
+</script>
