@@ -9,7 +9,7 @@ time is low, it falls back to random moves.
 import random
 
 from ...masks.board_tiles import BOARD_TILES
-from ...bitboard import board_to_bitboard, open_spots, winning_tiles, bitboard_to_moves
+from ...bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves
 
 _MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
 
@@ -27,7 +27,7 @@ def _get_winning_moves(bb_player, bb_open):
     wm = 0
     for bb_check in BOARD_TILES:
         wm |= bb_open & winning_tiles(bb_player | (bb_check & bb_open))
-    return bitboard_to_moves(wm)
+    return bb_to_moves(wm)
 
 
 def take_win_in_one_bot(position, timer):
@@ -48,7 +48,7 @@ def take_win_in_one_bot(position, timer):
 
     if remaining_time > _MIN_TIME:
         # Convert board to bitboards and find winning moves
-        bb = board_to_bitboard(position)
+        bb = board_to_bitboards(position)
         winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
         if winning_moves:
             return random.choice(winning_moves)

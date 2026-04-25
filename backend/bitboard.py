@@ -103,7 +103,22 @@ def set_bit(bb: int, i: int, j: int) -> int:
     return bb | ij_to_bit(i, j)
 
 
-def board_to_bitboard(position: list[list[int]]) -> list[int]:
+def bb_from_int_indexes(indexes: list[int]) -> int:
+    """Create a bitboard from a list of integer bit indexes.
+
+    Args:
+        indexes: A list of integer bit positions (0-63) to set in the bitboard.
+
+    Returns:
+        An integer bitboard with the specified bits set.
+    """
+    bb = 0
+    for i in indexes:
+        bb |= (1 << i)
+    return bb
+
+
+def board_to_bitboards(position: list[list[int]]) -> list[int]:
     """Convert a 2D board matrix into two bitboards.
 
     The returned list contains two integers: the first integer encodes
@@ -118,21 +133,21 @@ def board_to_bitboard(position: list[list[int]]) -> list[int]:
     Returns:
         A list of two bitboards `[player1_bb, player2_bb]`.
     """
-    bb = [0, 0]
+    bitboards = [0, 0]
     for i in range(8):
         for j in range(8):
             if position[i][j] == 1:
-                bb[0] = set_bit(bb[0], i, j)
+                bitboards[0] = set_bit(bitboards[0], i, j)
             if position[i][j] == 2:
-                bb[1] = set_bit(bb[1], i, j)
-    return bb
+                bitboards[1] = set_bit(bitboards[1], i, j)
+    return bitboards
 
 
-def bitboard_to_board(bb: list[int]) -> list[list[int]]:
+def bitboards_to_board(bitboards: list[int]) -> list[list[int]]:
     """Convert two bitboards back into a 2D board matrix.
 
     Args:
-        bb: A list of two bitboards `[player1_bb, player2_bb]`.
+        bitboards: A list of two bitboards `[player1_bb, player2_bb]`.
 
     Returns:
         An 8x8 matrix where 0 means empty, 1 means player 1, and 2 means player 2.
@@ -141,14 +156,14 @@ def bitboard_to_board(bb: list[int]) -> list[list[int]]:
     for i in range(8):
         for j in range(8):
             b = ij_to_bit(i, j)
-            if bb[0] & b:
+            if bitboards[0] & b:
                 board[i][j] = 1
-            if bb[1] & b:
+            if bitboards[1] & b:
                 board[i][j] = 2
     return board
 
 
-def bitboard_to_moves(bb: int) -> list[list[tuple[int, int]]]:
+def bb_to_moves(bb: int) -> list[list[tuple[int, int]]]:
     """Convert a bitboard into a list of (i, j) move positions.
 
     Args:

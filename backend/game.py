@@ -6,10 +6,10 @@ including move validation, win detection, and game state management for
 an 8x8 Gomoku board.
 """
 
-from .bitboard import is_last_move_winning, set_bit, board_to_bitboard
+from .bitboard import is_last_move_winning, set_bit, board_to_bitboards
 from .players.player import Player
 from .clock.timer import Timer
-from .clock.timeout import run_with_timeout
+# from .clock.timeout import run_with_timeout
 
 
 class Game:
@@ -29,7 +29,7 @@ class Game:
         if board is None:
             board = [[0]*8 for _ in range(8)]
         self.board = board
-        self.bitboards = board_to_bitboard(self.board)
+        self.bitboards = board_to_bitboards(self.board)
         self.ply = len([(i, j) for i in range(8) for j in range(8) if self.board[i][j]])
         self.current_player = self.ply % 2
 
@@ -59,10 +59,16 @@ class Game:
         return 1 - self.current_player
 
     def _win_game(self, winner):
+        """Set the game as finished with the given winner.
+
+        Args:
+            winner (int): The index of the winning player (0 or 1).
+        """
         self.finished = True
         self.winner = winner
 
     def _draw_game(self):
+        """Set the game as finished with a draw."""
         self.finished = True
         self.draw = True
 
@@ -102,6 +108,7 @@ class Game:
 
         return True
 
+    # TODO: deal with timeouts
     # def get_move(self):
     #     """Wait for player to send their move."""
     #     try:
@@ -118,9 +125,19 @@ class Game:
     #         raise RuntimeError(f"Exception during function execution: {e}") from e
 
     def get_move(self):
+        """Get the next move from the current player.
+
+        Returns:
+            tuple: A tuple (i, j) representing the row and column of the move.
+        """
         return self.players[self.current_player].move_fn(self.board, self.timer)
 
     def run(self):
+        """Run the complete game until completion.
+
+        Returns:
+            float: The game result (0.5 for draw, 0 or 1 for the winning player index).
+        """
         while not self.finished:
             # print(str(self))
             move = self.get_move()
