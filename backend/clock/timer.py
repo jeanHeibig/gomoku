@@ -58,7 +58,7 @@ class SingleTimer:
         """Add the increment to the remaining time."""
         self.remaining_time += self.increment
 
-    def get_time(self) -> float:
+    def get_remaining_time(self) -> float:
         """Get the current remaining time.
 
         Returns:
@@ -102,6 +102,9 @@ class Timer:
 
         self.finished = False
 
+    def __repr__(self):
+        return str(self.get_times()["times"])
+
     def _switch(self):
         self.current_player = 1 - self.current_player
 
@@ -139,6 +142,9 @@ class Timer:
         """
         return self.timers[self.current_player].running
 
+    def get_timeout(self):
+        return self.timers[self.current_player].get_remaining_time()
+
     def get_times(self):
         """Get the current times for both players.
 
@@ -147,7 +153,7 @@ class Timer:
         """
         return {
             "server_time": time.time(),
-            "times": [t.get_time() for t in self.timers],
+            "times": [t.get_remaining_time() for t in self.timers],
         }
 
     def move_begin(self):

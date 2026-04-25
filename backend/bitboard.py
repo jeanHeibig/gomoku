@@ -189,3 +189,10 @@ def open_spots(bb: list[int]) -> int:
         A bitboard where bits are set for empty positions.
     """
     return ~taken_spots(bb)
+
+
+def pretty(bb: int) -> str:
+    """Return pretty string for bitboard."""
+    s = bin(bb)[2:]
+    s = (64 - len(s)) * '0' + s
+    return '\n'.join([s[i:i+8] for i in range(0, 64, 8)])

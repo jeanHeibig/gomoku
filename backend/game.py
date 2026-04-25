@@ -6,32 +6,54 @@ including move validation, win detection, and game state management for
 an 8x8 Gomoku board.
 """
 
-from .bitboard import is_last_move_winning, set_bit
-from .player import Player
-from .timer import Timer
+from .bitboard import is_last_move_winning, set_bit, board_to_bitboard
+from .players.player import Player
+from .clock.timer import Timer
+from .clock.timeout import run_with_timeout
 
 
 class Game:
     """A class representing a Gomoku game."""
 
-    def __init__(self, players: list[Player], timer: Timer):
+    def __init__(self, gid: str, players: list[Player], timer: Timer, board=None):
         """Initialize the game with a list of players and a timer.
 
         Args:
             players (list[Player]): List of two players.
             timer (Timer): Timer for managing game time.
         """
+        self.gid = gid
         self.players = players
         self.timer = timer
 
-        self.board = [[0]*8 for _ in range(8)]
-        self.bitboards = [0, 0]
-        self.ply = 0
+        if board is None:
+            board = [[0]*8 for _ in range(8)]
+        self.board = board
+        self.bitboards = board_to_bitboard(self.board)
+        self.ply = len([(i, j) for i in range(8) for j in range(8) if self.board[i][j]])
+        self.current_player = self.ply % 2
 
-        self.current_player = 0
         self.finished = False
         self.draw = False
         self.winner = None  # 0: P1, 1: P2
+
+    def __repr__(self):
+        s = str(self.timer)
+        s += '\n-----------------------\n'
+        lines = []
+        for i in range(8):
+            l = ""
+            for j in range(8):
+                if self.board[i][j] == 1:
+                    l += 'x'
+                elif self.board[i][j] == 2:
+                    l += 'o'
+                else:
+                    l += '.'
+            lines.append(l)
+        s += '\n'.join(lines)
+        s += '\n-----------------------'
+        return s
 
     def _opponent(self):
         return 1 - self.current_player
@@ -44,7 +66,7 @@ class Game:
         self.finished = True
         self.draw = True
 
-    def play(self, i: int, j: int) -> bool:
+    def play_move(self, i: int, j: int) -> bool:
         """Make a move at position (i, j). Return True if the game continues, False if it ends.
 
         Args:
@@ -79,3 +101,35 @@ class Game:
         self.timer.move_end()
 
         return True
+
+    # def get_move(self):
+    #     """Wait for player to send their move."""
+    #     try:
+    #         move = run_with_timeout(
+    #             func=self.players[self.current_player].move_fn,
+    #             args=(self.board, self.timer),
+    #             timeout=self.timer.get_timeout() + 0.2
+    #         )
+
+    #         return move
+    #     except RuntimeError:  # In case of timeout, return no move
+    #         return None, None
+    #     except Exception as e:
+    #         raise RuntimeError(f"Exception during function execution: {e}") from e
+
+    def get_move(self):
+        return self.players[self.current_player].move_fn(self.board, self.timer)
+
+    def run(self):
+        while not self.finished:
+            # print(str(self))
+            move = self.get_move()
+            self.play_move(*move)
+        # if self.draw:
+        #     print("Draw.")
+        # else:
+        #     print(f"Player {self.winner} wins !")
+        # print(str(self))
+        if self.draw:
+            return 0.5
+        return self.winner
