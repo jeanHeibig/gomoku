@@ -72,21 +72,22 @@ class Game:
         self.finished = True
         self.draw = True
 
-    def play_move(self, i: int, j: int) -> bool:
-        """Make a move at position (i, j). Return True if the game continues, False if it ends.
+    def flag_check(self):
+        if self.timer.has_flagged():
+            self._win_game(self._opponent())
+
+    def play_move(self, i: int, j: int):
+        """Make a move at position (i, j).
 
         Args:
             i (int): Row index of the move.
             j (int): Column index of the move.
-
-        Returns:
-            bool: True if the game continues, False if the game ends.
         """
         flagged = self.timer.move_begin()
 
         if flagged or (self.board[i][j] != 0):  # game lost if illegal move
             self._win_game(self._opponent())
-            return False
+            return
 
         # update board
         self.board[i][j] = self.current_player + 1
@@ -95,18 +96,16 @@ class Game:
 
         if is_last_move_winning(self.bitboards[self.current_player], i, j):
             self._win_game(self.current_player)
-            return True
+            return
 
         # Test draws
         if self.ply == 64:
             self._draw_game()
-            return True
+            return
 
         # game continues
         self.current_player = self._opponent()
         self.timer.move_end()
-
-        return True
 
     # TODO: deal with timeouts
     # def get_move(self):
@@ -132,21 +131,37 @@ class Game:
         """
         return self.players[self.current_player].move_fn(self.board, self.timer)
 
-    def run(self):
+    def move(self):
+        """Execute one move in the game by getting and playing the current player's move."""
+        move = self.get_move()
+        self.play_move(*move)
+
+    def run(self, verbose=False):
         """Run the complete game until completion.
 
         Returns:
             float: The game result (0.5 for draw, 0 or 1 for the winning player index).
         """
         while not self.finished:
-            # print(str(self))
-            move = self.get_move()
-            self.play_move(*move)
-        # if self.draw:
-        #     print("Draw.")
-        # else:
-        #     print(f"Player {self.winner} wins !")
-        # print(str(self))
+            if verbose:
+                print(str(self))
+            self.move()
+
+        if verbose:
+            if self.draw:
+                print("Draw.")
+            else:
+                print(f"Player {self.winner} wins !")
+            print(str(self))
+
+        return self.score()
+
+    def score(self):
+        """Return the game score.
+
+        Returns:
+            float: 0.5 for a draw, or the winning player index (0 or 1).
+        """
         if self.draw:
             return 0.5
         return self.winner

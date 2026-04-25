@@ -6,10 +6,10 @@ from backend.players.bots.random_bot import random_bot
 from backend.players.bots.take_win_in_one_bot import take_win_in_one_bot
 from backend.players.bots.block_opponent_bot import block_opponent_bot
 
-player1 = Player("Alice-human", "human", human)
-player2 = Player("Bob-bot", "bot", random_bot)
-player3 = Player("Charlie-bot", "bot", take_win_in_one_bot)
-player4 = Player("Damian-bot", "bot", block_opponent_bot)
+player1 = Player("Alice-human", False, human)
+player2 = Player("Bob-bot", True, random_bot)
+player3 = Player("Charlie-bot", True, take_win_in_one_bot)
+player4 = Player("Damian-bot", True, block_opponent_bot)
 
 all_players = [player1, player2, player3, player4]
 

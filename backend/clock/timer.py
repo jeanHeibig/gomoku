@@ -145,6 +145,9 @@ class Timer:
     def get_timeout(self):
         return self.timers[self.current_player].get_remaining_time()
 
+    def has_flagged(self):
+        return (self.get_timeout() <= 0) and self.move_begin()
+
     def get_times(self):
         """Get the current times for both players.
 

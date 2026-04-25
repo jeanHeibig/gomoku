@@ -1,221 +1,198 @@
-let board = document.getElementById("board");
+const board = document.getElementById("board")
+const btn = document.getElementById("new-game-btn");
 
-let game_id = 0;
-let hasStarted = false;
+let gid = null
+
+let displayTimes = [0, 0];
+let clockPly = 0;
+let currentPlayer = 0;
+let lastBoard = null;
+let lastUpdate = Date.now();
+let clockInterval = null;
 let finished = false;
 
-let display_times = [60, 60];
-let current_player = 0;
-let last_update = Date.now();
+for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+        const cell = document.createElement("div");
 
-let clockInterval = null;
+        cell.classList.add("cell");
 
-// Create board
-for (let i = 0; i < 64; i++) {
-    let cell = document.createElement("div");
-    cell.className = "cell";
-    cell.onclick = () => play(i);
-    board.appendChild(cell);
+        if ((row + col) % 2 === 0) {
+            cell.classList.add("light");
+        } else {
+            cell.classList.add("dark");
+        }
+
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        cell.dataset.index = row * 8 + col;
+
+        cell.onclick = () => play(row, col);
+
+        board.appendChild(cell);
+    }
 }
 
-resetGame();
+async function newGame() {
+    if (clockInterval) clearInterval(clockInterval);
+    btn.style.display = "none";
 
-// const params = new URLSearchParams(window.location.search);
-// const name = params.get("name") || "guest";
-// let ws = new WebSocket(`ws://localhost:8000/ws/0?name=${name}`);
+    const res = await fetch("/new_game", { method: "GET" });
+    const data = await res.json();
 
-// ws.onmessage = (event) => {
-//     let data = JSON.parse(event.data);
-//     update(data);
-// };
+    gid = data.gid;
+    players = data.players;
 
-// function renderBoard(board) {
-//     let cells = document.getElementsByClassName("cell");
+    renderNicknames();
+    update()
+}
 
-//     for (let i = 0; i < 8; i++) {
-//         for (let j = 0; j < 8; j++) {
-//             let val = board[i][j];
-//             cells[i * 8 + j].innerText =
-//                 val === 1 ? "X" :
-//                 val === 2 ? "O" : "";
-//         }
-//     }
-// }
+async function play(i, j) {
+    if (lastBoard[i][j] !== 0)  {
+        console.log("Illegal move.");
+        return;
+    }
 
-function renderBoard(board) {
-    let cells = document.getElementsByClassName("cell");
+    await fetch(`/move?gid=${gid}&i=${i}&j=${j}`, { method: "POST" });
 
-    for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-            let cell = cells[i * 8 + j];
+    update();
+}
 
-            if ((i + j) % 2 === 0) {
-                cell.classList.add("light");
-                cell.classList.remove("dark");
-            } else {
-                cell.classList.add("dark");
-                cell.classList.remove("light");
-            }
+async function checkTimeout() {
+    if (finished) return;
 
-            // pièces
+    if (displayTimes[currentPlayer] < 0) {
+        displayTimes[currentPlayer] = 0;
+
+        await fetch(`/flag?gid=${gid}`, { method: "POST" });
+
+        update();
+    }
+}
+
+async function update() {
+    const res = await fetch(`/state?gid=${gid}`, { method: "GET" });
+    const data = await res.json();
+
+    renderBoard(data);
+    renderPlayers();
+}
+
+function renderBoard(data) {
+    lastBoard = data.board;
+
+    const cells = document.getElementsByClassName("cell");
+
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const cell = cells[row * 8 + col];
+
             cell.innerHTML = "";
 
-            if (board[i][j] === 1) {
-                cell.innerHTML = '<div class="piece black"></div>';
-            } else if (board[i][j] === 2) {
-                cell.innerHTML = '<div class="piece white"></div>';
+            if (data.board[row][col] === 1) {
+                cell.innerHTML = '<div class="stone black"></div>';
+            } else if (data.board[row][col] === 2) {
+                cell.innerHTML = '<div class="stone white"></div>';
             }
         }
     }
-}
 
-function renderClocks() {
-    document.getElementById("t1").innerText = Math.max(0, display_times[0]).toFixed(1);
-    document.getElementById("t2").innerText = Math.max(0, display_times[1]).toFixed(1);
-}
+    displayTimes = [...data.times["times"]];
+    clockPly = data.clockPly;
+    currentPlayer = data.currentPlayer;
+    finished = data.finished;
+    lastUpdate = Date.now();
 
-function stopClock() {
-    if (clockInterval !== null) {
-        clearInterval(clockInterval);
-        clockInterval = null;
+    renderClocks();
+
+    if (!finished) {
+        startClock()
+    } else {
+        setTimeout(() => {
+            if (data.winner === 0) {
+                alert("Black wins !");
+            } else if (data.winner === 1) {
+                alert("White wins !");
+            } else {
+                alert("Draw.");
+            }
+        }, 50);
+        btn.style.display = "block";
     }
 }
 
+function renderPlayers() {
+    document.getElementById("player-black").classList.toggle(
+        "active", currentPlayer === 0
+    );
+
+    document.getElementById("player-white").classList.toggle(
+        "active", currentPlayer === 1
+    );
+}
+
+function renderNicknames() {
+    bNN = players[0].nickname;
+    wNN = players[1].nickname;
+    botSpan = ' <span class="bot-label">BOT</span>';
+
+    document.title = `Game ${bNN} - ${wNN}`;
+
+    blackNickname = document.getElementById("player-name-black");
+    blackNickname.innerHTML = `${bNN} (Black)` + (players[0].isBot ? botSpan : "");
+
+    whiteNickname = document.getElementById("player-name-white");
+    whiteNickname.innerHTML = `${wNN} (White)` + (players[1].isBot ? botSpan : "");
+
+}
+
+function renderClocks() {
+    cBlack = document.getElementById("clock-black")
+    cWhite = document.getElementById("clock-white")
+    cBlack.innerHTML = formatTime(displayTimes[0]);
+    cWhite.innerHTML = formatTime(displayTimes[1]);
+
+    cBlack.classList.toggle("low-time", (displayTimes[0] < 10));
+    cWhite.classList.toggle("low-time", (displayTimes[1] < 10));
+
+    cBlack.classList.toggle("active-clock", currentPlayer === 0);
+    cWhite.classList.toggle("active-clock", currentPlayer === 1);
+}
+
 function startClock() {
-    stopClock();
+    if (clockPly < 2) return;
+
+    if (clockInterval) clearInterval(clockInterval);
 
     clockInterval = setInterval(() => {
         if (finished) return;
 
         const now = Date.now();
-        const dt = (now - last_update) / 1000;
-        last_update = now;
+        const dt = (now - lastUpdate) / 1000;
 
-        display_times[current_player] -= dt;
+        lastUpdate = now;
+
+        displayTimes[currentPlayer] -= dt
+
+        checkTimeout();
         renderClocks();
-
-        if (display_times[current_player] < 0 && !finished) {
-            finished = true;
-
-            fetch(`/check_timeout/${game_id}`, { method: "POST" })
-                .then(res => res.json())
-                .then(data => {
-                    update(data);
-                });
-        }
-    }, 1000);
+    }, 100);
 }
 
-function update(data) {
-    display_times = [...data.time];
-    current_player = data.player;
-    hasStarted = data.started;
-    finished = data.finished;
-    last_update = Date.now();
+function formatTime(t) {
+    if (t >= 20) {
+        const m = Math.floor(t / 60);
+        const s = Math.floor(t % 60);
 
-    document.getElementById("p1").innerText =
-        "Joueur 1: " + (data.player_names[0] || "-");
-    document.getElementById("p2").innerText =
-        "Joueur 2: " + (data.player_names[1] || "-");
-
-    if (!finished) {
-        document.getElementById("turn").innerText =
-            "Au tour de : Joueur " + (data.player + 1);
+        return `${m.toString().padStart(2, "0")}<span class="colon">:</span>${s.toString().padStart(2, "0")}`;
     } else {
-        document.getElementById("turn").innerText = "";
-    }
+        const s = Math.floor(t);
+        const cs = Math.floor((t - s) * 100);
 
-    renderBoard(data.board);
-    renderClocks();
-
-    if (hasStarted) {
-        startClock();
-    } else {
-        stopClock();
-    }
-
-    if (finished) {
-        stopClock();
-        setTimeout(() => {
-            if (data.winner === null) {
-                showMessage("Match nul !");
-            } else {
-                showMessage("Joueur " + (data.winner + 1) + " gagne !");
-            }
-        }, 10);
+        return `${s.toString().padStart(2, "0")}<span class="centi-seconds">${cs.toString().padStart(2, "0")}</span>`;
     }
 }
 
-async function play(index) {
-    if (finished) return;
+// setInterval(update, 2000);
 
-    const i = Math.floor(index / 8);
-    const j = index % 8;
-
-    const res = await fetch(`/move/${game_id}?i=${i}&j=${j}`, { method: "POST" });
-    const data = await res.json();
-
-    update(data);
-}
-
-function showMessage(msg) {
-    document.getElementById("message").innerText = msg;
-}
-
-function clearMessage(msg) {
-    document.getElementById("message").innerText = "";
-}
-
-// function play(index) {
-//     if (finished) return;
-
-//     const i = Math.floor(index / 8);
-//     const j = index % 8;
-
-//     ws.send(JSON.stringify({
-//         type: "move",
-//         i: i,
-//         j: j,
-//     }));
-// }
-
-// async function init() {
-//     const res = await fetch("/new_game?time_control=120&increment=2");
-//     const data = await res.json();
-//     game_id = data.game_id;
-//     update(data);
-// }
-
-function getTimeSettings() {
-    const tcInput = document.getElementById("time_control");
-    const incInput = document.getElementById("increment");
-
-    let time_control = 60;
-    let increment = 0;
-
-    if (tcInput !== null) {
-        time_control = parseInt(tcInput.value);
-    }
-
-    if (incInput !== null) {
-        increment = parseInt(incInput.value);
-    }
-
-    return { time_control, increment };
-}
-
-async function resetGame() {
-    stopClock();
-    clearMessage();
-
-    const { time_control, increment } = getTimeSettings();
-
-    const res = await fetch(`/new_game?time_control=${time_control}&increment=${increment}`);
-    const data = await res.json();
-
-    game_id = data.game_id;
-    hasStarted = false;
-    finished = false;
-
-    update(data);
-}
+newGame();
