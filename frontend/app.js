@@ -37,7 +37,7 @@ async function newGame() {
     if (clockInterval) clearInterval(clockInterval);
     btn.style.display = "none";
 
-    const res = await fetch("/new_game", { method: "GET" });
+    const res = await fetch("/new_game", { method: "POST" });
     const data = await res.json();
 
     gid = data.gid;
@@ -193,6 +193,14 @@ function formatTime(t) {
     }
 }
 
-// setInterval(update, 2000);
+document.addEventListener("keydown", (e) => {
+    const tag = document.activeElement.tagName;
+
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+    if (e.key === "Enter" && finished) {
+        newGame();
+    }
+});
 
 newGame();

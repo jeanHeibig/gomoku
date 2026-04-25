@@ -73,6 +73,11 @@ class Game:
         self.draw = True
 
     def flag_check(self):
+        """Check if any player has run out of time and end the game if so.
+
+        If the timer indicates that the current player has flagged (run out of time),
+        the game is ended with the opponent declared as the winner.
+        """
         if self.timer.has_flagged():
             self._win_game(self._opponent())
 
@@ -106,22 +111,6 @@ class Game:
         # game continues
         self.current_player = self._opponent()
         self.timer.move_end()
-
-    # TODO: deal with timeouts
-    # def get_move(self):
-    #     """Wait for player to send their move."""
-    #     try:
-    #         move = run_with_timeout(
-    #             func=self.players[self.current_player].move_fn,
-    #             args=(self.board, self.timer),
-    #             timeout=self.timer.get_timeout() + 0.2
-    #         )
-
-    #         return move
-    #     except RuntimeError:  # In case of timeout, return no move
-    #         return None, None
-    #     except Exception as e:
-    #         raise RuntimeError(f"Exception during function execution: {e}") from e
 
     def get_move(self):
         """Get the next move from the current player.

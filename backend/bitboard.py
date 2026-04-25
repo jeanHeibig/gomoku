@@ -163,7 +163,7 @@ def bitboards_to_board(bitboards: list[int]) -> list[list[int]]:
     return board
 
 
-def bb_to_moves(bb: int) -> list[list[tuple[int, int]]]:
+def bb_to_moves(bb: int) -> list[tuple[int, int]]:
     """Convert a bitboard into a list of (i, j) move positions.
 
     Args:

@@ -117,7 +117,7 @@ body {
 }
 
 .active-clock .colon {
-    animation : blink 1s infinite;
+    animation : blink 8s infinite;
 }
 
 .clock:not(.active-clock) .colon {
