@@ -1,3 +1,3 @@
-from .bots.block_opponent_bot import block_opponent_bot
+from .bots.mc_score_bot import mc_score_bot
 
-online_bot = block_opponent_bot
+online_bot = mc_score_bot
