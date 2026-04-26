@@ -59,21 +59,7 @@ def _get_counter_moves(moves, bb, currentPlayer):
     return bb_to_moves(cm)
 
 
-def _get_mc_score(moves, bb, current_player, N):
-    scores = {(i, j): 0 for (i, j) in moves}
-    bb_open = open_spots(bb)
-    I64 = 2 ** 64 - 1
-    for _ in range(N):
-        r_current = random.randint(0, I64)
-        bb_current = bb[current_player] | (r_current & bb_open)
-        movesCurrent = bb_to_moves(bb_open & winning_tiles(bb_current))
-        for (i, j) in movesCurrent:
-            scores[(i, j)] += 1
-
-    return scores
-
-
-def mc_score_bot(position, timer):
+def prevent_double_threats_bot(position, timer):
     # Get all possible moves (empty spots)
     moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
     current_player = len(moves) % 2  # Determine current player (0 or 1)
@@ -111,19 +97,6 @@ def mc_score_bot(position, timer):
             counter_moves = _get_counter_moves(moves, bb, current_player)
             if counter_moves:  # if we did not find any counter, too bad...
                 return random.choice(counter_moves)
-
-    elapsed += time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        # We do a random evaluation function:
-        N = 1000
-        scores = _get_mc_score(moves, bb, current_player, N)
-
-        imax, jmax, smax = None, None, -float("inf")
-        for (i, j) in moves:
-            if scores[(i, j)] > smax:
-                imax, jmax, smax = i, j, scores[(i, j)]
-        return (imax, jmax)
 
     # Fallback to random move if no winning move or low time
     return random.choice(moves)

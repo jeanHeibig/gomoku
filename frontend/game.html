@@ -2,7 +2,7 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Gomoku Game Alice vs. Bob</title>
+        <title>Game</title>
         <link rel="stylesheet" href="/static/style.css">
     </head>
 
@@ -15,7 +15,12 @@
                 <!-- black -->
                 <div id="player-black" class="player active">
                     <div id="player-name-black" class="player-name"></div>
-                    <div id="clock-black" class="clock"></div>
+                    <div id="clock-black" class="clock">
+                        <span class="minutes"></span>
+                        <span class="colon">:</span>
+                        <span class="seconds"></span>
+                        <span class="centi-seconds"></span>
+                    </div>
                 </div>
 
                 <button id="new-game-btn" onclick="newGame()">
@@ -25,7 +30,12 @@
                 <!-- white -->
                 <div id="player-white" class="player">
                     <div id="player-name-white" class="player-name"></div>
-                    <div id="clock-white" class="clock"></div>
+                    <div id="clock-white" class="clock">
+                        <span class="minutes"></span>
+                        <span class="colon">:</span>
+                        <span class="seconds"></span>
+                        <span class="centi-seconds"></span>
+                    </div>
                 </div>
 
             </div>

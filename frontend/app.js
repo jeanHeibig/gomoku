@@ -11,25 +11,29 @@ let lastUpdate = Date.now();
 let clockInterval = null;
 let finished = false;
 
-for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-        const cell = document.createElement("div");
+createBoard()
 
-        cell.classList.add("cell");
+function createBoard() {
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const cell = document.createElement("div");
 
-        if ((row + col) % 2 === 0) {
-            cell.classList.add("light");
-        } else {
-            cell.classList.add("dark");
+            cell.classList.add("cell");
+
+            if ((row + col) % 2 === 0) {
+                cell.classList.add("light");
+            } else {
+                cell.classList.add("dark");
+            }
+
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            cell.dataset.index = row * 8 + col;
+
+            cell.onclick = () => play(row, col);
+
+            board.appendChild(cell);
         }
-
-        cell.dataset.row = row;
-        cell.dataset.col = col;
-        cell.dataset.index = row * 8 + col;
-
-        cell.onclick = () => play(row, col);
-
-        board.appendChild(cell);
     }
 }
 
@@ -48,10 +52,7 @@ async function newGame() {
 }
 
 async function play(i, j) {
-    if (lastBoard[i][j] !== 0)  {
-        console.log("Illegal move.");
-        return;
-    }
+    if (lastBoard[i][j] !== 0 | finished) return;
 
     await fetch(`/move?gid=${gid}&i=${i}&j=${j}`, { method: "POST" });
 
@@ -134,29 +135,42 @@ function renderPlayers() {
 function renderNicknames() {
     bNN = players[0].nickname;
     wNN = players[1].nickname;
+    blackStone = ' <span class="stone label black"></span>'
+    whiteStone = ' <span class="stone label white"></span>'
     botSpan = ' <span class="bot-label">BOT</span>';
 
     document.title = `Game ${bNN} - ${wNN}`;
 
     blackNickname = document.getElementById("player-name-black");
-    blackNickname.innerHTML = `${bNN} (Black)` + (players[0].isBot ? botSpan : "");
+    blackNickname.innerHTML = blackStone + bNN + (players[0].isBot ? botSpan : "");
 
     whiteNickname = document.getElementById("player-name-white");
-    whiteNickname.innerHTML = `${wNN} (White)` + (players[1].isBot ? botSpan : "");
+    whiteNickname.innerHTML = whiteStone + wNN + (players[1].isBot ? botSpan : "");
 
 }
 
 function renderClocks() {
     cBlack = document.getElementById("clock-black")
     cWhite = document.getElementById("clock-white")
-    cBlack.innerHTML = formatTime(displayTimes[0]);
-    cWhite.innerHTML = formatTime(displayTimes[1]);
+
+    updateClockDisplay(cBlack, displayTimes[0])
+    updateClockDisplay(cWhite, displayTimes[1])
 
     cBlack.classList.toggle("low-time", (displayTimes[0] < 10));
     cWhite.classList.toggle("low-time", (displayTimes[1] < 10));
 
     cBlack.classList.toggle("active-clock", currentPlayer === 0);
     cWhite.classList.toggle("active-clock", currentPlayer === 1);
+}
+
+function updateClockDisplay(el, t) {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    const cs = Math.floor((t * 100) % 100);
+
+    el.querySelector(".minutes").textContent = m.toString().padStart(2, "0")
+    el.querySelector(".seconds").textContent = s.toString().padStart(2, "0")
+    el.querySelector(".centi-seconds").textContent = (t >= 20) ? "" : cs.toString().padStart(2, "0");
 }
 
 function startClock() {
@@ -176,21 +190,7 @@ function startClock() {
 
         checkTimeout();
         renderClocks();
-    }, 100);
-}
-
-function formatTime(t) {
-    if (t >= 20) {
-        const m = Math.floor(t / 60);
-        const s = Math.floor(t % 60);
-
-        return `${m.toString().padStart(2, "0")}<span class="colon">:</span>${s.toString().padStart(2, "0")}`;
-    } else {
-        const s = Math.floor(t);
-        const cs = Math.floor((t - s) * 100);
-
-        return `${s.toString().padStart(2, "0")}<span class="centi-seconds">${cs.toString().padStart(2, "0")}</span>`;
-    }
+    }, 73);
 }
 
 document.addEventListener("keydown", (e) => {

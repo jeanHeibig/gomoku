@@ -206,8 +206,13 @@ def open_spots(bb: list[int]) -> int:
     return ~taken_spots(bb)
 
 
-def pretty(bb: int) -> str:
+def pretty(bb: int, reverse=True) -> str:
     """Return pretty string for bitboard."""
+    if bb < 0:
+        bb += 2**64
     s = bin(bb)[2:]
     s = (64 - len(s)) * '0' + s
-    return '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
+    p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
+    if reverse:
+        return p[::-1]
+    return p

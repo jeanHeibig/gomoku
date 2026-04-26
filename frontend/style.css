@@ -77,8 +77,19 @@ body {
 }
 
 .player-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 18px;
     font-weight: bold;
+}
+
+.stone.label {
+    width: 26px;
+    height: 24px;
+
+    position: static;
+    transform: scale(0.9) rotate(-10deg);
 }
 
 #new-game-btn {
@@ -145,5 +156,5 @@ body {
 }
 
 .active {
-    border: 3px solid #4caf50;
+    outline: 3px solid #4caf50;
 }

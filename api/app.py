@@ -79,7 +79,7 @@ def new_game():
     else:
         players = [player2, player1]
 
-    timer = Timer(300.0, 1.0)
+    timer = Timer(900.0, 15.0)
     game = Game(gid, players, timer)
 
     if not human_starts:  # if bot starts
