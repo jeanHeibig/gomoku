@@ -35,9 +35,9 @@ start_position = None
 # ]
 
 scores = {}
-for i in range(1, 8):
+for i in range(1, 7):
     playerA = all_players[i]
-    for j in range(1, 8):
+    for j in range(1, 7):
         playerB = all_players[j]
         players = [playerA, playerB]
         print(f"Match {playerA.nickname} vs. {playerB.nickname}")
