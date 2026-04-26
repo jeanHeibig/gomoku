@@ -20,8 +20,6 @@ player8 = Player("Harry-bot", True, ...)
 
 all_players = [player1, player2, player3, player4, player5, player6, player7, player8]
 
-timer = Timer(3.0, 0.1)
-
 start_position = None
 # start_position = [
 #     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -43,9 +41,9 @@ for i in range(1, 7):
         print(f"Match {playerA.nickname} vs. {playerB.nickname}")
         s = 0
         for gid in range(100):
+            timer = Timer(3.0, 0.1)
             g = Game(f"test-gid-{i}-{j}-{gid}", players, timer, start_position)
             s += g.run()
-            timer.restart()
         print(s)
         scores[(i, j)] = s
 

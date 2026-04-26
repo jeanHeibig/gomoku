@@ -5,8 +5,6 @@ Gomoku Server and AI training
 
 - Review code and inline TODOs
 - Refactor JS / HTML
-- Clearly define the Timer class and its public attributes since they must be visible and documented for bots
-- Also pass currentPlayer: allows analyzing threats and handicap matches
 - Allow a bot to retain memory from one turn to another via a memory parameter of any type
 - Board and/or bitboard class
 - Improve performance: port the latest bot to C, optimize the long blocking of double threats

@@ -128,7 +128,7 @@ class Game:
         Returns:
             tuple: A tuple (i, j) representing the row and column of the move.
         """
-        return self.players[self.current_player].move_fn(self.board, self.timer)
+        return self.players[self.current_player].move_fn(self.board, self.current_player, self.timer.get_times())
 
     def move(self):
         """Execute one move in the game by getting and playing the current player's move."""

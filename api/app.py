@@ -194,7 +194,7 @@ def serialize(game: Game):
         "lastMove": game.last_move(),
         "winningTiles": game.winningTiles,
         "times": game.timer.get_times(),
-        "clockPly": game.timer.ply,
+        "clockPly": game.timer.get_ply(),
         "currentPlayer": game.current_player,
         "finished": game.finished,
         "winner": game.winner,

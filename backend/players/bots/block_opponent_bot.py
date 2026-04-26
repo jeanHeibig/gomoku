@@ -23,11 +23,10 @@ def _get_winning_moves(bb_player, bb_open):
     return bb_to_moves(wm)
 
 
-def block_opponent_bot(position, timer):
+def block_opponent_bot(position, current_player, timer):
     # Get all possible moves (empty spots)
     moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
-    current_player = len(moves) % 2  # Determine current player (0 or 1)
-    times = timer.get_times()["times"]
+    times = timer["times"]
     remaining_time = times[current_player]
 
     start_time = time.time()

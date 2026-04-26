@@ -8,12 +8,13 @@ without any strategic consideration.
 import random
 
 
-def random_bot(position, _):
+def random_bot(position, _, __):
     """Return a random valid move on the board.
 
     Args:
         position: 8x8 board matrix (0=empty, 1=player1, 2=player2).
-        _: Timer object (ignored by this bot).
+        _: current_player (ignored by this bot).
+        __: Timer object (ignored by this bot).
 
     Returns:
         Tuple (i, j) of the randomly chosen move.
