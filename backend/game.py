@@ -32,6 +32,7 @@ class Game:
         self.bitboards = board_to_bitboards(self.board)
         self.ply = len([(i, j) for i in range(8) for j in range(8) if self.board[i][j]])
         self.current_player = self.ply % 2
+        self.moves = []
 
         self.finished = False
         self.draw = False
@@ -98,6 +99,7 @@ class Game:
         self.board[i][j] = self.current_player + 1
         self.ply += 1
         self.bitboards[self.current_player] = set_bit(self.bitboards[self.current_player], i, j)
+        self.moves.append((i, j))
 
         if is_last_move_winning(self.bitboards[self.current_player], i, j):
             self._win_game(self.current_player)
@@ -111,6 +113,12 @@ class Game:
         # game continues
         self.current_player = self._opponent()
         self.timer.move_end()
+
+    def last_move(self):
+        """Return the last move made. None if no move was made."""
+        if self.moves:
+            return self.moves[-1]
+        return None
 
     def get_move(self):
         """Get the next move from the current player.

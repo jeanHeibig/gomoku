@@ -6,6 +6,7 @@ let gid = null
 let displayTimes = [0, 0];
 let clockPly = 0;
 let currentPlayer = 0;
+let lastMove = null;
 let lastBoard = null;
 let lastUpdate = Date.now();
 let clockInterval = null;
@@ -81,12 +82,21 @@ async function update() {
 
 function renderBoard(data) {
     lastBoard = data.board;
+    lastMove = data.lastMove;
 
     const cells = document.getElementsByClassName("cell");
 
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const cell = cells[row * 8 + col];
+
+            cell.classList.remove("last-move");
+
+            if (lastMove !== null) {
+                if (lastMove[0] === row && lastMove[1] === col) {
+                    cell.classList.add("last-move");
+                }
+            }
 
             cell.innerHTML = "";
 

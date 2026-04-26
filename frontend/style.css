@@ -37,6 +37,14 @@ body {
     background-color: #b58863;
 }
 
+.cell.light.last-move {
+    background-color: #c6d26b;
+}
+
+.cell.dark.last-move {
+    background-color: #a9a23b;
+}
+
 .stone {
     width: 52px;
     height: 48px;
