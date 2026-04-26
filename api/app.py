@@ -22,6 +22,7 @@ Game Rules:
 import os
 import uuid
 import random
+import time
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -117,6 +118,8 @@ def play_move(gid: str, i: int, j: int):
     game.play_move(i, j)
 
     if not game.finished:
+        r = 1 + 3 * random.random()
+        time.sleep(r)
         game.move()
 
     return serialize(game)

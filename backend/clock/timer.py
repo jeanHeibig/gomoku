@@ -94,6 +94,7 @@ class Timer:
             SingleTimer(initial_time[0], increment[0]),
             SingleTimer(initial_time[1], increment[1])
         ]
+        self.increments = increment
 
         self.ply = 0
 
@@ -157,6 +158,7 @@ class Timer:
         return {
             "server_time": time.time(),
             "times": [t.get_remaining_time() for t in self.timers],
+            "increments": self.increments,
         }
 
     def move_begin(self):

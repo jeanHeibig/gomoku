@@ -1,9 +1,11 @@
 const board = document.getElementById("board")
 const btn = document.getElementById("new-game-btn");
 
-let gid = null
+let gid = null;
+let players = null;
 
 let displayTimes = [0, 0];
+let increments = [0, 0];
 let clockPly = 0;
 let currentPlayer = 0;
 let lastMove = null;
@@ -50,11 +52,30 @@ async function newGame() {
     players = data.players;
 
     renderNicknames();
-    update()
+    update();
 }
 
 async function play(i, j) {
-    if (lastBoard[i][j] !== 0 | finished) return;
+    if (lastBoard[i][j] !== 0 || finished || !lastBoard) return;
+
+    lastBoard[i][j] = currentPlayer + 1;
+    lastMove = [i, j];
+    displayTimes[currentPlayer] += increments[currentPlayer]
+    currentPlayer = 1 - currentPlayer;
+    lastUpdate = Date.now();
+    renderBoard({
+        gid: gid,
+        players: players,
+        board: lastBoard,
+        lastMove: lastMove,
+        winningTiles: [],
+        times: { server_time: Date.now(), times: displayTimes, increments: increments },
+        clockPly: clockPly,
+        currentPlayer: currentPlayer,
+        finished: false,
+        winner: null,
+    });
+    renderClocks();
 
     await fetch(`/move?gid=${gid}&i=${i}&j=${j}`, { method: "POST" });
 
@@ -117,6 +138,7 @@ function renderBoard(data) {
     }
 
     displayTimes = [...data.times["times"]];
+    increments = [...data.times["increments"]];
     clockPly = data.clockPly;
     currentPlayer = data.currentPlayer;
     finished = data.finished;

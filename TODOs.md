@@ -4,8 +4,6 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Separate and improve clock graphical rendering
-- Stop player's clock once move is sent and display the piece
 - Manage end-of-game displays (cursor / timer)
 - Refactor JS / HTML
 - Clearly define the Timer class and its public attributes since they must be visible and documented for bots
@@ -23,6 +21,7 @@ Gomoku Server and AI training
 - Endgame tables: "kill" stones that can no longer contribute to an alignment
 - Switch to websockets for GUI
 - Switch to websockets for BOT tournaments and allow players to submit bots online after verification
+- Prevent player from moving out-of-turn !
 - Handle timeouts by the server
 - Deploy server online so players can connect via link to play against the bot
 - Login page
