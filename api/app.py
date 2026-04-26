@@ -118,7 +118,7 @@ def play_move(gid: str, i: int, j: int):
     game.play_move(i, j)
 
     if not game.finished:
-        r = 1 + 3 * random.random()
+        r = 0.1 + 1 * random.random()
         time.sleep(r)
         game.move()
 

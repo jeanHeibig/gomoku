@@ -29,6 +29,10 @@ body {
     cursor: pointer;
 }
 
+#app.finished .cell {
+    cursor: auto;
+}
+
 .cell.light {
     background-color: #f0d9b5;
 }
@@ -144,6 +148,10 @@ body {
 
 .colon {
     display: inline-block;
+}
+
+#app.finished .colon {
+    animation: none !important;
 }
 
 .active-clock .colon {

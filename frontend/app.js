@@ -1,3 +1,4 @@
+const container = document.getElementById("app")
 const board = document.getElementById("board")
 const btn = document.getElementById("new-game-btn");
 
@@ -43,6 +44,7 @@ function createBoard() {
 
 async function newGame() {
     if (clockInterval) clearInterval(clockInterval);
+    container.classList.remove("finished");
     btn.style.display = "none";
 
     const res = await fetch("/new_game", { method: "POST" });
@@ -149,6 +151,8 @@ function renderBoard(data) {
     if (!finished) {
         startClock()
     } else {
+        btn.style.display = "block";
+        container.classList.add("finished");
         setTimeout(() => {
             if (data.winner === 0) {
                 alert("Black wins !");
@@ -158,7 +162,6 @@ function renderBoard(data) {
                 alert("Draw.");
             }
         }, 50);
-        btn.style.display = "block";
     }
 }
 

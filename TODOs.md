@@ -4,7 +4,6 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Manage end-of-game displays (cursor / timer)
 - Refactor JS / HTML
 - Clearly define the Timer class and its public attributes since they must be visible and documented for bots
 - Also pass currentPlayer: allows analyzing threats and handicap matches
