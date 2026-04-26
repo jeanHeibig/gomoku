@@ -45,6 +45,13 @@ body {
     background-color: #a9a23b;
 }
 
+.cell.win .stone {
+    box-shadow:
+        0 0 12px rgba(255, 0, 0, 0.8),
+        inset -4px -6px 8px rgba(0, 0, 0, 0.4),
+        inset 3px 4px 6px rgba(255, 255, 255, 0.2);
+}
+
 .stone {
     width: 52px;
     height: 48px;

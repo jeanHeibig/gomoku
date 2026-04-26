@@ -4,7 +4,6 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Highlight winning alignment
 - Separate and improve clock graphical rendering
 - Stop player's clock once move is sent and display the piece
 - Manage end-of-game displays (cursor / timer)

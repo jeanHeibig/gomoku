@@ -8,6 +8,7 @@ let clockPly = 0;
 let currentPlayer = 0;
 let lastMove = null;
 let lastBoard = null;
+let winningTiles = [];
 let lastUpdate = Date.now();
 let clockInterval = null;
 let finished = false;
@@ -83,6 +84,7 @@ async function update() {
 function renderBoard(data) {
     lastBoard = data.board;
     lastMove = data.lastMove;
+    winningTiles = data.winningTiles
 
     const cells = document.getElementsByClassName("cell");
 
@@ -96,6 +98,12 @@ function renderBoard(data) {
                 if (lastMove[0] === row && lastMove[1] === col) {
                     cell.classList.add("last-move");
                 }
+            }
+
+            cell.classList.remove("win")
+
+            if (winningTiles.some(([x, y]) => x === row && y === col)) {
+                cell.classList.add("win");
             }
 
             cell.innerHTML = "";

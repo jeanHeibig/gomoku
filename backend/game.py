@@ -6,7 +6,7 @@ including move validation, win detection, and game state management for
 an 8x8 Gomoku board.
 """
 
-from .bitboard import is_last_move_winning, set_bit, board_to_bitboards
+from .bitboard import is_last_move_winning, set_bit, board_to_bitboards, winning_tiles_from_last_move, bb_to_moves
 from .players.player import Player
 from .clock.timer import Timer
 # from .clock.timeout import run_with_timeout
@@ -37,6 +37,7 @@ class Game:
         self.finished = False
         self.draw = False
         self.winner = None  # 0: P1, 1: P2
+        self.winningTiles = []
 
     def __repr__(self):
         s = str(self.timer)
@@ -103,6 +104,7 @@ class Game:
 
         if is_last_move_winning(self.bitboards[self.current_player], i, j):
             self._win_game(self.current_player)
+            self.winningTiles = bb_to_moves(winning_tiles_from_last_move(self.bitboards[self.current_player], i, j))
             return
 
         # Test draws

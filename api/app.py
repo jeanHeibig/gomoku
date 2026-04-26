@@ -177,6 +177,7 @@ def serialize(game: Game):
             - players: List of player objects
             - board: 8x8 game board matrix (0=empty, 1=player1, 2=player2)
             - lastMove: (i, j) move last played or None
+            - winningTiles: List of winning tiles
             - times: Dictionary with server time and player remaining times
             - clockPly: Current ply number for timing purposes
             - currentPlayer: Index of current player (0 or 1)
@@ -188,6 +189,7 @@ def serialize(game: Game):
         "players": game.players,
         "board": game.board,
         "lastMove": game.last_move(),
+        "winningTiles": game.winningTiles,
         "times": game.timer.get_times(),
         "clockPly": game.timer.ply,
         "currentPlayer": game.current_player,
