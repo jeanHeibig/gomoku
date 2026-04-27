@@ -23,7 +23,7 @@ def _get_winning_moves(bb_player, bb_open):
     return bb_to_moves(wm)
 
 
-def block_opponent_bot(position, current_player, timer):
+def block_opponent_bot(position, current_player, timer, _):
     # Get all possible moves (empty spots)
     moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
     times = timer["times"]
@@ -35,13 +35,13 @@ def block_opponent_bot(position, current_player, timer):
         bb = board_to_bitboards(position)
         winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
         if winning_moves:
-            return random.choice(winning_moves)
+            return random.choice(winning_moves), None
 
         elapsed = time.time() - start_time
         if remaining_time - elapsed > _MIN_TIME:
             opponent_winning_moves = _get_winning_moves(bb[1 - current_player], open_spots(bb))
             if opponent_winning_moves:
-                return random.choice(opponent_winning_moves)
+                return random.choice(opponent_winning_moves), None
 
     # Fallback to random move if no winning move or low time
-    return random.choice(moves)
+    return random.choice(moves), None

@@ -27,6 +27,7 @@ class Game:
         self.players = players
         self.timer = timer
         self.board = Board(starting_position)
+        self.memory = [None, None]
 
         self.moves = []
         self.finished = False
@@ -106,7 +107,10 @@ class Game:
         Returns:
             tuple: A tuple (i, j) representing the row and column of the move.
         """
-        return self.players[self.board.current_player].move_fn(self.board, self.board.current_player, self.timer.get_times())
+        memory = self.memory[self.board.current_player]
+        move, memory = self.players[self.board.current_player].move_fn(self.board, self.board.current_player, self.timer.get_times(), memory)
+        self.memory[self.board.current_player] = memory
+        return move
 
     def move(self):
         """Execute one move in the game by getting and playing the current player's move."""

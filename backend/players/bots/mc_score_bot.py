@@ -67,7 +67,7 @@ def _get_mc_score(moves, bb, current_player, N):
     return scores
 
 
-def mc_score_bot(position, current_player, timer):
+def mc_score_bot(position, current_player, timer, _):
     # Get all possible moves (empty spots)
     moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
     times = timer["times"]
@@ -81,7 +81,7 @@ def mc_score_bot(position, current_player, timer):
         if winning_moves:
             elapsed = time.time() - start_time
             print("Find winning moves:", elapsed)
-            return random.choice(winning_moves)
+            return random.choice(winning_moves), None
 
     elapsed = time.time() - start_time
     print("Find winning moves:", elapsed)
@@ -91,7 +91,7 @@ def mc_score_bot(position, current_player, timer):
         if opponent_winning_moves:
             elapsed += time.time() - start_time
             print("Block threats:", elapsed)
-            return random.choice(opponent_winning_moves)
+            return random.choice(opponent_winning_moves), None
 
     elapsed += time.time() - start_time
     print("Block threats:", elapsed)
@@ -101,7 +101,7 @@ def mc_score_bot(position, current_player, timer):
         if double_threat_moves:
             elapsed += time.time() - start_time
             print("Find double threats:", elapsed)
-            return random.choice(double_threat_moves)
+            return random.choice(double_threat_moves), None
 
     elapsed += time.time() - start_time
     print("Find double threats:", elapsed)
@@ -114,7 +114,7 @@ def mc_score_bot(position, current_player, timer):
             if counter_moves:  # if we did not find any counter, too bad...
                 elapsed += time.time() - start_time
                 print("Block double threats:", elapsed)
-                return random.choice(counter_moves)
+                return random.choice(counter_moves), None
 
     elapsed += time.time() - start_time
     print("Block double threats:", elapsed)
@@ -130,8 +130,8 @@ def mc_score_bot(position, current_player, timer):
                 imax, jmax, smax = i, j, scores[(i, j)]
         elapsed += time.time() - start_time
         print("Monte Carlo:", elapsed)
-        return (imax, jmax)
+        return (imax, jmax), None
 
 
     # Fallback to random move if no winning move or low time
-    return random.choice(moves)
+    return random.choice(moves), None

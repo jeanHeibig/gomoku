@@ -30,7 +30,7 @@ def _get_winning_moves(bb_player, bb_open):
     return bb_to_moves(wm)
 
 
-def take_win_in_one_bot(position, current_player, timer):
+def take_win_in_one_bot(position, current_player, timer, _):
     """Bot that prioritizes immediate winning moves, else random.
 
     Args:
@@ -50,7 +50,7 @@ def take_win_in_one_bot(position, current_player, timer):
         bb = board_to_bitboards(position)
         winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
         if winning_moves:
-            return random.choice(winning_moves)
+            return random.choice(winning_moves), None
 
     # Fallback to random move if no winning move or low time
-    return random.choice(moves)
+    return random.choice(moves), None
