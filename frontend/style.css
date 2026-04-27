@@ -64,20 +64,37 @@ body {
     box-shadow:
         inset -4px -6px 8px rgba(0, 0, 0, 0.4),
         inset 3px 4px 6px rgba(255, 255, 255, 0.2);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
-    cursor: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
+        cursor: auto;
+
+    transition: opacity 0.15s ease, transform 0.1s ease;
+
+    display: none;
 }
 
-.black {
+.cell:hover .stone.preview {
+    transform: translate(-50%, -50%) scale(0.95) rotate(-10deg);
+}
+
+.stone.black, .stone.white {
+    display: block;
+}
+
+.stone.black {
     background: radial-gradient(circle at 30% 30%, #555, #000);
 }
 
-.white {
+.stone.white {
     background: radial-gradient(circle at 30% 30%, #fff, #ccc);
     border: 1px solid #999;
+}
+
+.stone.preview {
+    opacity: 0.35;
+    filter: brightness(1.2);
 }
 
 /* players + clock */
@@ -101,6 +118,10 @@ body {
     gap: 8px;
     font-size: 18px;
     font-weight: bold;
+}
+
+.hidden {
+    display: none;
 }
 
 .stone.label {

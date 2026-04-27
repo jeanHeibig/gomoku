@@ -36,10 +36,39 @@ function createBoard() {
             cell.dataset.index = row * 8 + col;
 
             cell.onclick = () => play(row, col);
+            cell.addEventListener("mouseenter", () => showPreview(cell, row, col));
+            cell.addEventListener("mouseleave", () => hidePreview(cell, row, col));
+
+            const stone = document.createElement("div");
+            stone.classList.add("stone");
 
             board.appendChild(cell);
+            cell.appendChild(stone);
         }
     }
+}
+
+function showPreview(cell, i, j) {
+    if (finished) return;
+    if (!lastBoard || lastBoard[i][j] !== 0) return;
+
+    const stone = cell.querySelector(".stone");
+
+    stone.classList.add(
+        currentPlayer === 0 ? "black" : "white",
+        "preview"
+    )
+}
+
+function hidePreview(cell, i, j) {
+    if (finished) return;
+
+    const stone = cell.querySelector(".stone");
+    stone.classList.remove("preview");
+
+    if (!lastBoard || lastBoard[i][j] !== 0) return;
+
+    stone.classList.remove("black", "white");
 }
 
 async function newGame() {
@@ -116,6 +145,7 @@ function renderBoard(data) {
             const cell = cells[row * 8 + col];
 
             cell.classList.remove("last-move");
+            hidePreview(cell, row, col);
 
             if (lastMove !== null) {
                 if (lastMove[0] === row && lastMove[1] === col) {
@@ -129,12 +159,13 @@ function renderBoard(data) {
                 cell.classList.add("win");
             }
 
-            cell.innerHTML = "";
+            const stone = cell.querySelector(".stone");
+            stone.classList.remove("black", "white");
 
             if (data.board[row][col] === 1) {
-                cell.innerHTML = '<div class="stone black"></div>';
+                stone.classList.add("black");
             } else if (data.board[row][col] === 2) {
-                cell.innerHTML = '<div class="stone white"></div>';
+                stone.classList.add("white");
             }
         }
     }
@@ -176,20 +207,18 @@ function renderPlayers() {
 }
 
 function renderNicknames() {
-    bNN = players[0].nickname;
-    wNN = players[1].nickname;
-    blackStone = ' <span class="stone label black"></span>'
-    whiteStone = ' <span class="stone label white"></span>'
-    botSpan = ' <span class="bot-label">BOT</span>';
+    b = players[0];
+    w = players[1];
 
-    document.title = `Game ${bNN} - ${wNN}`;
+    document.title = `Game ${b.nickname} - ${w.nickname}`;
 
-    blackNickname = document.getElementById("player-name-black");
-    blackNickname.innerHTML = blackStone + bNN + (players[0].isBot ? botSpan : "");
+    const black = document.getElementById("player-name-black");
+    black.querySelector(".name").textContent = b.nickname;
+    black.querySelector(".bot-label").classList.toggle("hidden", !b.isBot);
 
-    whiteNickname = document.getElementById("player-name-white");
-    whiteNickname.innerHTML = whiteStone + wNN + (players[1].isBot ? botSpan : "");
-
+    const white = document.getElementById("player-name-white");
+    white.querySelector(".name").textContent = w.nickname;
+    white.querySelector(".bot-label").classList.toggle("hidden", !w.isBot);
 }
 
 function renderClocks() {

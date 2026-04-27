@@ -7,7 +7,7 @@ Gomoku Server and AI training
 - Allow a bot to retain memory from one turn to another via a memory parameter of any type
 - Refactor Python package -> add structures and classes -> add GamePlay class
 - Clean existing bots level 0 -> 5
-- Refactor JS / HTML
+- Add myPlayer in JS to prevent sending moves and hover
 - Improve Board and move structure so that it is numpy efficient
 - Improve performance: port the latest bot to C, optimize the long blocking of double threats
 - Add a logger that saves games
