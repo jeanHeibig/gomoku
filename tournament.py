@@ -1,13 +1,6 @@
-from backend.game import Game
-from backend.players.player import Player
-from backend.clock.timer import Timer
-from backend.players.human import human
-from backend.players.bots.random_bot import random_bot
-from backend.players.bots.take_win_in_one_bot import take_win_in_one_bot
-from backend.players.bots.block_opponent_bot import block_opponent_bot
-from backend.players.bots.double_threats_bot import double_threats_bot
-from backend.players.bots.prevent_double_threats_bot import prevent_double_threats_bot
-from backend.players.bots.mc_score_bot import mc_score_bot
+from backend import Timer, Game, Player
+from backend.players import human
+from backend.players.bots import random_bot, take_win_in_one_bot, block_opponent_bot, double_threats_bot, prevent_double_threats_bot, mc_score_bot
 
 player1 = Player("Alice-human", False, human)
 player2 = Player("Bob-bot", True, random_bot)
@@ -39,12 +32,12 @@ for i in range(1, 7):
         playerB = all_players[j]
         players = [playerA, playerB]
         print(f"Match {playerA.nickname} vs. {playerB.nickname}")
-        s = 0
+        score = 0
         for gid in range(100):
             timer = Timer(3.0, 0.1)
             g = Game(f"test-gid-{i}-{j}-{gid}", players, timer, start_position)
-            s += g.run()
-        print(s)
-        scores[(i, j)] = s
+            score += g.run()
+        print(score)
+        scores[(i, j)] = score
 
 print(scores)

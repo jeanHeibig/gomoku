@@ -28,9 +28,8 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.clock import Timer
-from backend.game import Game
-from backend.players import human, online_bot, Player
+from backend import Timer, Game, Player
+from backend.players import human, online_bot
 
 app = FastAPI()
 
