@@ -6,7 +6,8 @@ including move validation, win detection, and game state management for
 an 8x8 Gomoku board.
 """
 
-from .bitboard import is_last_move_winning, set_bit, board_to_bitboards, winning_tiles_from_last_move, bb_to_moves
+from .board import Board
+# from .board.bitboard import is_last_move_winning, set_bit, board_to_bitboards, winning_tiles_from_last_move, bb_to_moves
 from .players.player import Player
 from .clock.timer import Timer
 # from .clock.timeout import run_with_timeout
@@ -15,7 +16,7 @@ from .clock.timer import Timer
 class Game:
     """A class representing a Gomoku game."""
 
-    def __init__(self, gid: str, players: list[Player], timer: Timer, board=None):
+    def __init__(self, gid: str, players: list[Player], timer: Timer, starting_position=None):
         """Initialize the game with a list of players and a timer.
 
         Args:
@@ -25,40 +26,21 @@ class Game:
         self.gid = gid
         self.players = players
         self.timer = timer
+        self.board = Board(starting_position)
 
-        if board is None:
-            board = [[0]*8 for _ in range(8)]
-        self.board = board
-        self.bitboards = board_to_bitboards(self.board)
-        self.ply = len([(i, j) for i in range(8) for j in range(8) if self.board[i][j]])
-        self.current_player = self.ply % 2
         self.moves = []
-
         self.finished = False
         self.draw = False
         self.winner = None  # 0: P1, 1: P2
         self.winningTiles = []
 
     def __repr__(self):
-        s = str(self.timer)
+        s = f"Game {self.gid}\n"
+        s += str(self.timer)
         s += '\n-----------------------\n'
-        lines = []
-        for i in range(8):
-            l = ""
-            for j in range(8):
-                if self.board[i][j] == 1:
-                    l += 'x'
-                elif self.board[i][j] == 2:
-                    l += 'o'
-                else:
-                    l += '.'
-            lines.append(l)
-        s += '\n'.join(lines)
+        s += str(self.board)
         s += '\n-----------------------'
         return s
-
-    def _opponent(self):
-        return 1 - self.current_player
 
     def _win_game(self, winner):
         """Set the game as finished with the given winner.
@@ -81,7 +63,7 @@ class Game:
         the game is ended with the opponent declared as the winner.
         """
         if self.timer.has_flagged():
-            self._win_game(self._opponent())
+            self._win_game(self.board.opponent())
 
     def play_move(self, i: int, j: int):
         """Make a move at position (i, j).
@@ -93,27 +75,23 @@ class Game:
         flagged = self.timer.move_begin()
 
         if flagged or (self.board[i][j] != 0):  # game lost if illegal move
-            self._win_game(self._opponent())
+            self._win_game(self.board.opponent())
             return
 
         # update board
-        self.board[i][j] = self.current_player + 1
-        self.ply += 1
-        self.bitboards[self.current_player] = set_bit(self.bitboards[self.current_player], i, j)
         self.moves.append((i, j))
-
-        if is_last_move_winning(self.bitboards[self.current_player], i, j):
-            self._win_game(self.current_player)
-            self.winningTiles = bb_to_moves(winning_tiles_from_last_move(self.bitboards[self.current_player], i, j))
+        if self.board.add_move(i, j):
+            self._win_game(self.board.current_player)
+            self.winningTiles = self.board.get_winning_tiles(i, j)
             return
 
         # Test draws
-        if self.ply == 64:
+        if self.board.is_full():
             self._draw_game()
             return
 
         # game continues
-        self.current_player = self._opponent()
+        self.board.switch_player()
         self.timer.move_end()
 
     def last_move(self):
@@ -128,7 +106,7 @@ class Game:
         Returns:
             tuple: A tuple (i, j) representing the row and column of the move.
         """
-        return self.players[self.current_player].move_fn(self.board, self.current_player, self.timer.get_times())
+        return self.players[self.board.current_player].move_fn(self.board, self.board.current_player, self.timer.get_times())
 
     def move(self):
         """Execute one move in the game by getting and playing the current player's move."""

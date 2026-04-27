@@ -1,8 +1,8 @@
 import time
 import random
 
-from ...masks.board_tiles import BOARD_TILES
-from ...bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves, set_bit, ij_to_bit
+from ...board.masks.board_tiles import BOARD_TILES
+from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves, set_bit, ij_to_bit
 
 _MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
 
@@ -85,23 +85,32 @@ def mc_score_bot(position, current_player, timer):
         bb = board_to_bitboards(position)
         winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
         if winning_moves:
+            elapsed = time.time() - start_time
+            print("Find winning moves:", elapsed)
             return random.choice(winning_moves)
 
     elapsed = time.time() - start_time
+    print("Find winning moves:", elapsed)
     start_time = time.time()
     if remaining_time - elapsed > _MIN_TIME:
         opponent_winning_moves = _get_winning_moves(bb[1 - current_player], open_spots(bb))
         if opponent_winning_moves:
+            elapsed += time.time() - start_time
+            print("Block threats:", elapsed)
             return random.choice(opponent_winning_moves)
 
     elapsed += time.time() - start_time
+    print("Block threats:", elapsed)
     start_time = time.time()
     if remaining_time - elapsed > _MIN_TIME:
         double_threat_moves = _get_double_threat_moves(moves, bb[current_player], open_spots(bb))
         if double_threat_moves:
+            elapsed += time.time() - start_time
+            print("Find double threats:", elapsed)
             return random.choice(double_threat_moves)
 
     elapsed += time.time() - start_time
+    print("Find double threats:", elapsed)
     start_time = time.time()
     if remaining_time - elapsed > _MIN_TIME:
         if _get_double_threat_moves(moves, bb[1 - current_player], open_spots(bb)):
@@ -109,9 +118,12 @@ def mc_score_bot(position, current_player, timer):
             # We must counter that, either by having a threat or by removing double threats.
             counter_moves = _get_counter_moves(moves, bb, current_player)
             if counter_moves:  # if we did not find any counter, too bad...
+                elapsed += time.time() - start_time
+                print("Block double threats:", elapsed)
                 return random.choice(counter_moves)
 
     elapsed += time.time() - start_time
+    print("Block double threats:", elapsed)
     start_time = time.time()
     if remaining_time - elapsed > _MIN_TIME:
         # We do a random evaluation function:
@@ -122,7 +134,10 @@ def mc_score_bot(position, current_player, timer):
         for (i, j) in moves:
             if scores[(i, j)] > smax:
                 imax, jmax, smax = i, j, scores[(i, j)]
+        elapsed += time.time() - start_time
+        print("Monte Carlo:", elapsed)
         return (imax, jmax)
+
 
     # Fallback to random move if no winning move or low time
     return random.choice(moves)

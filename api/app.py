@@ -190,12 +190,12 @@ def serialize(game: Game):
     return {
         "gid": game.gid,
         "players": game.players,
-        "board": game.board,
+        "board": game.board.position,
         "lastMove": game.last_move(),
         "winningTiles": game.winningTiles,
         "times": game.timer.get_times(),
         "clockPly": game.timer.get_ply(),
-        "currentPlayer": game.current_player,
+        "currentPlayer": game.board.current_player,
         "finished": game.finished,
         "winner": game.winner,
     }

@@ -4,9 +4,11 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Refactor JS / HTML
 - Allow a bot to retain memory from one turn to another via a memory parameter of any type
 - Board and/or bitboard class
+- Refactor Python package -> add structures and classes -> add GamePlay class
+- Clean existing bots level 0 -> 5
+- Refactor JS / HTML
 - Improve performance: port the latest bot to C, optimize the long blocking of double threats
 - Add a logger that saves games
 - Add a logger that saves everything possible for debugging (external logging library?)

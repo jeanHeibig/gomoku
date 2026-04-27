@@ -8,8 +8,8 @@ time is low, it falls back to random moves.
 
 import random
 
-from ...masks.board_tiles import BOARD_TILES
-from ...bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves
+from ...board.masks.board_tiles import BOARD_TILES
+from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves
 
 _MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
 
