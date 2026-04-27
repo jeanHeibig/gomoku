@@ -5,11 +5,17 @@ This module provides functions for manipulating bitboards and checking for
 winning conditions in a Gomoku game using precomputed winning masks.
 """
 
+import numpy as np
+
+
 from .masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
 from .masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
 
+WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=np.uint64)
+WMC = [np.array(WIN_MASKS_BY_CELL[k], dtype=np.uint64) for k in range(64)]  # TODO
 
-def is_winning(bb: int) -> bool:
+
+def is_winning_aux(bb: int) -> bool:
     """Check if the bitboard represents a winning position.
 
     Args:
@@ -18,10 +24,12 @@ def is_winning(bb: int) -> bool:
     Returns:
         True if there are five consecutive stones in any direction, False otherwise.
     """
-    return any((bb & mask) == mask for mask in WIN_MASKS_ALL_BOARD)
+    return any((bb & WMA) == WMA)
+
+is_winning = np.vectorize(is_winning_aux)
 
 
-def winning_tiles(bb: int) -> int:
+def winning_tiles_aux(bb: int) -> int:
     """Return a bitboard of all tiles that are part of winning lines.
 
     Args:
@@ -30,11 +38,9 @@ def winning_tiles(bb: int) -> int:
     Returns:
         A bitboard where bits are set for tiles in winning five-in-a-row lines.
     """
-    wt = 0
-    for mask in WIN_MASKS_ALL_BOARD:
-        if (bb & mask) == mask:
-            wt |= mask
-    return wt
+    return np.bitwise_or.reduce(WMA[(bb & WMA) == WMA])
+
+winning_tiles = np.vectorize(winning_tiles_aux)
 
 
 def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
@@ -48,11 +54,8 @@ def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
     Returns:
         True if five consecutive pieces are aligned, False otherwise.
     """
-    k = last_i * 8 + last_j
-    for mask in WIN_MASKS_BY_CELL[k]:
-        if (bb & mask) == mask:
-            return True
-    return False
+    masks = WMC[last_i * 8 + last_j]  # TODO: Think whether its best to repeat ints so that you have an np.array and no dictionnary
+    return any((bb & masks) == masks)
 
 
 def winning_tiles_from_last_move(bb: int, last_i: int, last_j: int) -> int:
@@ -66,14 +69,8 @@ def winning_tiles_from_last_move(bb: int, last_i: int, last_j: int) -> int:
     Returns:
         A bitboard of tiles in winning lines that pass through the last move.
     """
-    k = last_i * 8 + last_j
-
-    wt = 0
-    for mask in WIN_MASKS_BY_CELL[k]:
-        if (bb & mask) == mask:
-            wt |= mask
-
-    return wt
+    masks = WMC[last_i * 8 + last_j]  # TODO: same -> replace dict ?
+    return np.bitwise_or.reduce(masks[(bb & masks) == masks])
 
 
 def ij_to_bit(i: int, j: int) -> int:
@@ -103,19 +100,19 @@ def set_bit(bb: int, i: int, j: int) -> int:
     return bb | ij_to_bit(i, j)
 
 
-def bb_from_int_indexes(indexes: list[int]) -> int:
-    """Create a bitboard from a list of integer bit indexes.
+# def bb_from_int_indexes(indexes: list[int]) -> int:
+#     """Create a bitboard from a list of integer bit indexes.
 
-    Args:
-        indexes: A list of integer bit positions (0-63) to set in the bitboard.
+#     Args:
+#         indexes: A list of integer bit positions (0-63) to set in the bitboard.
 
-    Returns:
-        An integer bitboard with the specified bits set.
-    """
-    bb = 0
-    for i in indexes:
-        bb |= (1 << i)
-    return bb
+#     Returns:
+#         An integer bitboard with the specified bits set.
+#     """
+#     bb = 0
+#     for i in indexes:
+#         bb |= (1 << i)
+#     return bb
 
 
 def board_to_bitboards(position: list[list[int]]) -> list[int]:
@@ -133,6 +130,7 @@ def board_to_bitboards(position: list[list[int]]) -> list[int]:
     Returns:
         A list of two bitboards `[player1_bb, player2_bb]`.
     """
+    # TODO: find a board structure np friendly
     bitboards = [0, 0]
     for i in range(8):
         for j in range(8):
@@ -191,7 +189,7 @@ def taken_spots(bb: list[int]) -> int:
         A bitboard where bits are set only for positions occupied by either
         player 1 or player 2.
     """
-    return bb[0] | bb[1]
+    return bb[0] | bb[1]  # TODO: Manage numpy dimensions
 
 
 def open_spots(bb: list[int]) -> int:
@@ -203,7 +201,7 @@ def open_spots(bb: list[int]) -> int:
     Returns:
         A bitboard where bits are set for empty positions.
     """
-    return ~taken_spots(bb)
+    return ~taken_spots(np.uint64(bb))
 
 
 def pretty(bb: int, reverse=True) -> str:

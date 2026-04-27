@@ -1,58 +1,52 @@
 import time
 import random
 
+import numpy as np
+
 from ...board.masks.board_tiles import BOARD_TILES
 from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves, set_bit, ij_to_bit
 
-_MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
+BT = np.array(BOARD_TILES, dtype=np.uint64)  # TODO import directly from a numpy precomputed masks library
+
+_MIN_TIME = 1  # Seconds allowed to do the search. Otherwise, play random.
 
 
-def _get_winning_moves(bb_player, bb_open):
-    """Get moves that would complete a five-in-a-row for the player.
-
-    Args:
-        bb_player: Bitboard of the current player's stones.
-        bb_open: Bitboard of open spots on the board.
-
-    Returns:
-        List of (i, j) tuples representing winning moves.
-    """
-    wm = 0
-    for bb_check in BOARD_TILES:
-        wm |= bb_open & winning_tiles(bb_player | (bb_check & bb_open))
-    return bb_to_moves(wm)
+def get_winning_moves(bb_player, bb_open):
+    return bb_to_moves(np.bitwise_or.reduce(bb_open & winning_tiles(bb_player | (BT & bb_open))))
+    # return np.bitwise_or.reduce(bb_open & winning_tiles(bb_player | (BT & bb_open)))
+# v_get_winning_moves = np.vectorize(get_winning_moves)  # TODO: vectorize where needed
 
 
 def _get_double_threat_moves(moves, bb_player, bb_open):
-    dt = 0
+    dt = np.uint64(0)
     for (i, j) in moves:  # TODO: Do not look at all moves, only d <= 2
         current_bit = ij_to_bit(i, j)
-        bb_threat = set_bit(bb_player, i, j)
-        bb_remaining = bb_open ^ current_bit
-        if len(_get_winning_moves(bb_threat, bb_remaining)) > 1:
+        bb_threat = np.uint64(set_bit(bb_player, i, j))
+        bb_remaining = np.uint64(bb_open ^ current_bit)
+        if len(get_winning_moves(bb_threat, bb_remaining)) > 1:
             dt |= current_bit
     return bb_to_moves(dt)
 
 
 def _get_counter_moves(moves, bb, currentPlayer):
-    bb_open = open_spots(bb)
-    cm = 0
+    bb_open = np.uint64(open_spots(bb))
+    cm = np.uint64(0)
     for (i, j) in moves:
-        current_bit = ij_to_bit(i, j)
-        bb_counter = set_bit(bb[currentPlayer], i, j)
+        current_bit = np.uint64(ij_to_bit(i, j))
+        bb_counter = np.uint64(set_bit(bb[currentPlayer], i, j))
         bb_remaining = bb_open ^ current_bit
-        if _get_winning_moves(bb_counter, bb_remaining):
+        if get_winning_moves(bb_counter, bb_remaining):
             # We found a counter-attack !
             cm |= current_bit
         else:
             # We need to prevent double threats
-            dt = 0
+            dt = np.uint64(0)
             for (k, l) in moves:
                 if (k, l) != (i, j):
-                    current_bit2 = ij_to_bit(k, l)
-                    bb_threat = set_bit(bb[1 - currentPlayer], k, l)
+                    current_bit2 = np.uint64(ij_to_bit(k, l))
+                    bb_threat = np.uint64(set_bit(bb[1 - currentPlayer], k, l))
                     bb_remaining2 = bb_remaining ^ current_bit2
-                    if len(_get_winning_moves(bb_threat, bb_remaining2)) > 1:
+                    if len(get_winning_moves(bb_threat, bb_remaining2)) > 1:
                         dt |= current_bit2
             if not dt:  # If there's no more double threat
                 cm |= current_bit
@@ -61,11 +55,11 @@ def _get_counter_moves(moves, bb, currentPlayer):
 
 def _get_mc_score(moves, bb, current_player, N):
     scores = {(i, j): 0 for (i, j) in moves}
-    bb_open = open_spots(bb)
+    bb_open = np.uint64(open_spots(bb))
     I64 = 2 ** 64 - 1
     for _ in range(N):
-        r_current = random.randint(0, I64)
-        bb_current = bb[current_player] | (r_current & bb_open)
+        r_current = np.uint64(random.randint(0, I64))
+        bb_current = np.uint64(bb[current_player]) | (r_current & bb_open)
         movesCurrent = bb_to_moves(bb_open & winning_tiles(bb_current))
         for (i, j) in movesCurrent:
             scores[(i, j)] += 1
@@ -83,7 +77,7 @@ def mc_score_bot(position, current_player, timer):
     if remaining_time > _MIN_TIME:
         # Convert board to bitboards and find winning moves
         bb = board_to_bitboards(position)
-        winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
+        winning_moves = get_winning_moves(bb[current_player], open_spots(bb))
         if winning_moves:
             elapsed = time.time() - start_time
             print("Find winning moves:", elapsed)
@@ -93,7 +87,7 @@ def mc_score_bot(position, current_player, timer):
     print("Find winning moves:", elapsed)
     start_time = time.time()
     if remaining_time - elapsed > _MIN_TIME:
-        opponent_winning_moves = _get_winning_moves(bb[1 - current_player], open_spots(bb))
+        opponent_winning_moves = get_winning_moves(bb[1 - current_player], open_spots(bb))
         if opponent_winning_moves:
             elapsed += time.time() - start_time
             print("Block threats:", elapsed)
