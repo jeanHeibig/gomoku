@@ -8,26 +8,20 @@ time is low, it falls back to random moves.
 
 import random
 
+import numpy as np
+
 from ...board.masks.board_tiles import BOARD_TILES
 from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves
 
-_MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
+_MIN_TIME = 1  # Seconds allowed to do the search. Otherwise, play random.
+
+BT = np.array(BOARD_TILES, dtype=np.uint64)  # TODO import directly from a numpy precomputed masks library
+MOVES = np.uint64(1) << np.arange(64, dtype=np.uint64)
 
 
-def _get_winning_moves(bb_player, bb_open):
-    """Get moves that would complete a five-in-a-row for the player.
-
-    Args:
-        bb_player: Bitboard of the current player's stones.
-        bb_open: Bitboard of open spots on the board.
-
-    Returns:
-        List of (i, j) tuples representing winning moves.
-    """
-    wm = 0
-    for bb_check in BOARD_TILES:
-        wm |= bb_open & winning_tiles(bb_player | (bb_check & bb_open))
-    return bb_to_moves(wm)
+@np.vectorize
+def get_winning_moves(bb_player, bb_open):
+    return np.bitwise_or.reduce(bb_open & winning_tiles(bb_player | (BT & bb_open)))
 
 
 def take_win_in_one_bot(position, current_player, timer, _):
@@ -35,22 +29,22 @@ def take_win_in_one_bot(position, current_player, timer, _):
 
     Args:
         position: 8x8 board matrix (0=empty, 1=player1, 2=player2).
-        timer: Timer object with get_times() method.
+        timer: Timer object with method.
 
     Returns:
         Tuple (i, j) of the chosen move.
     """
     # Get all possible moves (empty spots)
-    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
+    bitboards = board_to_bitboards(position)
     times = timer["times"]
     remaining_time = times[current_player]
 
     if remaining_time > _MIN_TIME:
         # Convert board to bitboards and find winning moves
-        bb = board_to_bitboards(position)
-        winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
+        winning_moves = get_winning_moves(np.uint64(bitboards[current_player]), open_spots(bitboards))
         if winning_moves:
             return random.choice(winning_moves), None
 
     # Fallback to random move if no winning move or low time
+    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
     return random.choice(moves), None

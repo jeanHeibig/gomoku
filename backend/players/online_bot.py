@@ -1,3 +1,1 @@
-from .bots import mc_score_bot
-
-online_bot = mc_score_bot
+from .bots import mc_score_bot as online_bot

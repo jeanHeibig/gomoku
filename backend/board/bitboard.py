@@ -29,7 +29,8 @@ def is_winning_aux(bb: int) -> bool:
 is_winning = np.vectorize(is_winning_aux)
 
 
-def winning_tiles_aux(bb: int) -> int:
+@np.vectorize
+def winning_tiles(bb: int) -> int:
     """Return a bitboard of all tiles that are part of winning lines.
 
     Args:
@@ -39,8 +40,6 @@ def winning_tiles_aux(bb: int) -> int:
         A bitboard where bits are set for tiles in winning five-in-a-row lines.
     """
     return np.bitwise_or.reduce(WMA[(bb & WMA) == WMA])
-
-winning_tiles = np.vectorize(winning_tiles_aux)
 
 
 def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
@@ -192,7 +191,7 @@ def taken_spots(bb: list[int]) -> int:
     return bb[0] | bb[1]  # TODO: Manage numpy dimensions
 
 
-def open_spots(bb: list[int]) -> int:
+def open_spots(bitboards: list[int]) -> int:
     """Return a bitboard of positions that are not taken.
 
     Args:
@@ -201,7 +200,7 @@ def open_spots(bb: list[int]) -> int:
     Returns:
         A bitboard where bits are set for empty positions.
     """
-    return ~taken_spots(np.uint64(bb))
+    return ~np.uint64(taken_spots(bitboards))
 
 
 def pretty(bb: int, reverse=True) -> str:
