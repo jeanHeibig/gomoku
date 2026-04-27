@@ -5,7 +5,6 @@ Gomoku Server and AI training
 
 - Review code and inline TODOs
 - Clean existing bots level 0 -> 5
-- Add myPlayer in JS to prevent sending moves and hover
 - Improve Board and move structure so that it is numpy efficient
 - Improve performance: port the latest bot to C, optimize the long blocking of double threats
 - Add a logger that saves games

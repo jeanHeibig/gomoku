@@ -15,6 +15,7 @@ let winningTiles = [];
 let lastUpdate = Date.now();
 let clockInterval = null;
 let finished = false;
+let myPlayer = null;
 
 createBoard()
 
@@ -50,7 +51,7 @@ function createBoard() {
 
 function showPreview(cell, i, j) {
     if (finished) return;
-    if (!lastBoard || lastBoard[i][j] !== 0) return;
+    if (!lastBoard || myPlayer !== currentPlayer || lastBoard[i][j] !== 0) return;
 
     const stone = cell.querySelector(".stone");
 
@@ -87,7 +88,7 @@ async function newGame() {
 }
 
 async function play(i, j) {
-    if (lastBoard[i][j] !== 0 || finished || !lastBoard) return;
+    if (!lastBoard || myPlayer === null || lastBoard[i][j] !== 0 || myPlayer !== currentPlayer || finished) return;
 
     lastBoard[i][j] = currentPlayer + 1;
     lastMove = [i, j];
@@ -219,6 +220,12 @@ function renderNicknames() {
     const white = document.getElementById("player-name-white");
     white.querySelector(".name").textContent = w.nickname;
     white.querySelector(".bot-label").classList.toggle("hidden", !w.isBot);
+
+    if (!b.isBot) {
+        myPlayer = 0;
+    } else {
+        myPlayer = 1;
+    }
 }
 
 function renderClocks() {
