@@ -82,16 +82,16 @@ def new_game():
     timer = Timer(900.0, 15.0)
 
     start_position = None
-    start_position = [
-        [0, 0, 1, 0, 0, 0, 0, 1],
-        [0, 1, 2, 1, 0, 0, 0, 0],
-        [0, 0, 2, 2, 1, 0, 0, 0],
-        [2, 0, 2, 2, 1, 2, 0, 0],
-        [0, 1, 2, 2, 2, 2, 1, 0],
-        [0, 0, 1, 2, 0, 2, 0, 0],
-        [0, 0, 0, 1, 0, 0, 1, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0],
-    ]
+    # start_position = [
+    #     [0, 0, 1, 0, 0, 0, 0, 1],
+    #     [0, 1, 2, 1, 0, 0, 0, 0],
+    #     [0, 0, 2, 2, 1, 0, 0, 0],
+    #     [2, 0, 2, 2, 1, 2, 0, 0],
+    #     [0, 1, 2, 2, 2, 2, 1, 0],
+    #     [0, 0, 1, 2, 0, 2, 0, 0],
+    #     [0, 0, 0, 1, 0, 0, 1, 0],
+    #     [0, 0, 0, 0, 1, 1, 0, 0],
+    # ]
 
     game = Game(gid, players, timer, start_position)
 
@@ -130,8 +130,8 @@ def play_move(gid: str, i: int, j: int):
     game.play_move(i, j)
 
     if not game.finished:
-        r = 0.1 + 1 * random.random()
-        time.sleep(r)
+        # r = 0.1 + 1 * random.random()
+        # time.sleep(r)
         game.move()
 
     return serialize(game)
