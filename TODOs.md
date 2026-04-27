@@ -17,6 +17,7 @@ Gomoku Server and AI training
 - Endgame tables: "kill" stones that can no longer contribute to an alignment
 - Switch to websockets for GUI
 - Switch to websockets for BOT tournaments and allow players to submit bots online after verification
+- Add resign button
 - Prevent player from moving out-of-turn !
 - Handle timeouts by the server
 - Deploy server online so players can connect via link to play against the bot

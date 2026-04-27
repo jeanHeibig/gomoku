@@ -1,101 +1,167 @@
 import time
 import random
 
+import numba as nb
+import numpy as np
+
 from ...board.masks.board_tiles import BOARD_TILES
-from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves, set_bit, ij_to_bit
+from ...board.masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
+from ...board.bitboard import board_to_bitboards, open_spots, bb_to_moves
 
-_MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
+BT = np.array(BOARD_TILES, dtype=np.uint64)
+WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=np.uint64)
+MOVES = np.uint64(1) << np.arange(64, dtype=np.uint64)
 
+MIN_TIME = 1
 
-def _get_winning_moves(bb_player, bb_open):
-    """Get moves that would complete a five-in-a-row for the player.
-
-    Args:
-        bb_player: Bitboard of the current player's stones.
-        bb_open: Bitboard of open spots on the board.
-
-    Returns:
-        List of (i, j) tuples representing winning moves.
-    """
-    wm = 0
-    for bb_check in BOARD_TILES:
-        wm |= bb_open & winning_tiles(bb_player | (bb_check & bb_open))
-    return bb_to_moves(wm)
+prettyprint = lambda bb: print('\n'.join([((66 - len(bin(bb))) * '0' + bin(bb)[2:])[i:i+8] for i in range(0, 64, 8)])[::-1])
 
 
-def _get_double_threat_moves(moves, bb_player, bb_open):
-    dt = 0
-    for (i, j) in moves:  # TODO: Do not look at all moves, only d <= 2
-        current_bit = ij_to_bit(i, j)
-        bb_threat = set_bit(bb_player, i, j)
-        bb_remaining = bb_open ^ current_bit
-        if len(_get_winning_moves(bb_threat, bb_remaining)) > 1:
-            dt |= current_bit
-    return bb_to_moves(dt)
+@nb.njit
+def bitwise_count(bb):  # np.bitwise_count not implemented yet in numba
+    c = 0
+    while bb != 0:
+        bb &= bb - np.uint64(1)
+        c +=1
+    return c
 
 
-def _get_counter_moves(moves, bb, currentPlayer):
-    bb_open = open_spots(bb)
-    cm = 0
-    for (i, j) in moves:
-        current_bit = ij_to_bit(i, j)
-        bb_counter = set_bit(bb[currentPlayer], i, j)
-        bb_remaining = bb_open ^ current_bit
-        if _get_winning_moves(bb_counter, bb_remaining):
-            # We found a counter-attack !
-            cm |= current_bit
-        else:
-            # We need to prevent double threats
-            dt = 0
-            for (k, l) in moves:
-                if (k, l) != (i, j):
-                    current_bit2 = ij_to_bit(k, l)
-                    bb_threat = set_bit(bb[1 - currentPlayer], k, l)
-                    bb_remaining2 = bb_remaining ^ current_bit2
-                    if len(_get_winning_moves(bb_threat, bb_remaining2)) > 1:
-                        dt |= current_bit2
-            if not dt:  # If there's no more double threat
-                cm |= current_bit
-    return bb_to_moves(cm)
+@nb.njit
+def get_winning_tiles_bb(bb):
+    WMA_local = WMA
+    res = np.uint64(0)
+
+    for i in range(96):
+        m = WMA_local[i]
+        if (bb & m) == m:
+            res |= m
+
+    return res
+
+
+@nb.njit
+def get_winning_moves_bb(bb_current, bb_open):
+    BT_local = BT
+    res = np.uint64(0)
+
+    for k in range(5):  # 5 non-concurrent masks
+        move = BT_local[k] & bb_open
+        bb_after = bb_current | move
+
+        wt = get_winning_tiles_bb(bb_after)
+
+        if wt != 0:
+            res |= (wt & move)
+
+    return res
+
+
+@nb.njit
+def get_double_threat_moves_bb(bb_current, bb_open):
+    M_local = MOVES
+    res = np.uint64(0)
+
+    for k in range(64):
+        move = M_local[k]
+
+        if (move & bb_open) != 0:
+            bb_after = bb_current | move
+            bb_remaining = bb_open ^ move
+
+            wm = get_winning_moves_bb(bb_after, bb_remaining)
+
+            if bitwise_count(wm) > 1:
+                res |= move
+
+    return res
+
+
+@nb.njit
+def get_counter_moves_bb(bb_current, bb_open):
+    M_local = MOVES
+    res = np.uint64(0)
+
+    bb_opponent = ~bb_open ^ bb_current
+
+    for k in range(64):
+        move = M_local[k]
+
+        if (move & bb_open) != 0:
+            bb_after = bb_current | move
+            bb_remaining = bb_open ^ move
+
+            # Counter-attack
+            if get_winning_moves_bb(bb_after, bb_remaining) != 0:
+                res |= move
+
+            # Otherwise, prevent double threats
+            else:
+                odt = get_double_threat_moves_bb(bb_opponent, bb_remaining)
+                if odt == 0:
+                    res |= move
+
+    return res
 
 
 def prevent_double_threats_bot(position, current_player, timer, _):
-    # Get all possible moves (empty spots)
-    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
-    times = timer["times"]
-    remaining_time = times[current_player]
+    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j] == 0]
 
-    start_time = time.time()
-    if remaining_time > _MIN_TIME:
-        # Convert board to bitboards and find winning moves
-        bb = board_to_bitboards(position)
-        winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
-        if winning_moves:
-            return random.choice(winning_moves), None
+    remaining_time = timer["times"][current_player]
+    start_total = time.time()
 
-    elapsed = time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        opponent_winning_moves = _get_winning_moves(bb[1 - current_player], open_spots(bb))
-        if opponent_winning_moves:
-            return random.choice(opponent_winning_moves), None
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
 
-    elapsed += time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        double_threat_moves = _get_double_threat_moves(moves, bb[current_player], open_spots(bb))
-        if double_threat_moves:
-            return random.choice(double_threat_moves), None
+    bitboards = board_to_bitboards(position)
+    bb_current = np.uint64(bitboards[current_player])
+    bb_opponent = np.uint64(bitboards[1 - current_player])
+    bb_open = open_spots(bitboards)
 
-    elapsed += time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        if _get_double_threat_moves(moves, bb[1 - current_player], open_spots(bb)):
-            # Opponent has lethal threat !
-            # We must counter that, either by having a threat or by removing double threats.
-            counter_moves = _get_counter_moves(moves, bb, current_player)
-            if counter_moves:  # if we did not find any counter, too bad...
-                return random.choice(counter_moves), None
+    # 1. Win immediately
+    winning_moves = get_winning_moves_bb(bb_current, bb_open)
+    if winning_moves:
+        print("Find winning moves:", time.time() - start_total)
+        prettyprint(winning_moves)
+        return random.choice(bb_to_moves(winning_moves)), None
 
-    # Fallback to random move if no winning move or low time
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    # 2. Block opponent immediate win
+    opponent_winning_moves = get_winning_moves_bb(bb_opponent, bb_open)
+    if opponent_winning_moves:
+        print("Block threats:", time.time() - start_total)
+        prettyprint(opponent_winning_moves)
+        return random.choice(bb_to_moves(opponent_winning_moves)), None
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    # 3. Create double threat
+    double_threat_moves = get_double_threat_moves_bb(bb_current, bb_open)
+    if double_threat_moves:
+        print("Find double threats:", time.time() - start_total)
+        prettyprint(double_threat_moves)
+        return random.choice(bb_to_moves(double_threat_moves)), None
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    # 4. Block opponent double threats
+    opponent_double_threats = get_double_threat_moves_bb(bb_opponent, bb_open)
+    if opponent_double_threats:
+        counter_moves = get_counter_moves_bb(bb_current, bb_open)
+        if counter_moves:
+            print("Block double threats:", time.time() - start_total)
+            prettyprint(counter_moves)
+            return random.choice(bb_to_moves(counter_moves)), None
+        # Better block one threat than nothing
+        print("Block one of multiple threats:", time.time() - start_total)
+        prettyprint(opponent_double_threats)
+        return random.choice(bb_to_moves(opponent_double_threats)), None
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    print("Default:", time.time() - start_total)
     return random.choice(moves), None

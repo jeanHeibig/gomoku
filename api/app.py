@@ -80,7 +80,20 @@ def new_game():
         players = [player2, player1]
 
     timer = Timer(900.0, 15.0)
-    game = Game(gid, players, timer)
+
+    start_position = None
+    start_position = [
+        [0, 0, 1, 0, 0, 0, 0, 1],
+        [0, 1, 2, 1, 0, 0, 0, 0],
+        [0, 0, 2, 2, 1, 0, 0, 0],
+        [2, 0, 2, 2, 1, 2, 0, 0],
+        [0, 1, 2, 2, 2, 2, 1, 0],
+        [0, 0, 1, 2, 0, 2, 0, 0],
+        [0, 0, 0, 1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0],
+    ]
+
+    game = Game(gid, players, timer, start_position)
 
     if not human_starts:  # if bot starts
         game.move()
