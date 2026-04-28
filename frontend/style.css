@@ -185,6 +185,20 @@ body {
     transform: scale(1.05);
 }
 
+.level-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+#level {
+    width: 150px;
+    cursor: pointer;
+    accent-color: #b58863;
+}
+
 .bot-label {
     color: #8a4f22;
     background: #f0d9b5;
@@ -235,5 +249,5 @@ body {
 }
 
 .active {
-    outline: 3px solid #4caf50;
+    outline: 3px solid #b58863;
 }

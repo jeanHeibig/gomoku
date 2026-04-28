@@ -29,14 +29,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import Timer, Game, Player
-from backend.players import human, online_bot
+from backend.players import human, basic_bots
 
 app = FastAPI()
 
 games = {}
 player1 = Player("Alice", False, human)
-player2 = Player("Bob", True, online_bot)
-
 
 app.mount("/static", StaticFiles(directory="./frontend"), name="static")
 
@@ -54,7 +52,7 @@ def serve_game():
 
 
 @app.post("/new_game")
-def new_game():
+def new_game(level: int):
     """Create a new Gomoku game.
 
     Initializes a new game with random player order (human vs bot),
@@ -72,6 +70,8 @@ def new_game():
             - winner: Winner index (0, 1) or None
     """
     gid = str(uuid.uuid4())
+
+    player2 = Player("Bob", True, basic_bots[level])
 
     human_starts = random.randint(0, 1)
     if human_starts:  # random choice for the side

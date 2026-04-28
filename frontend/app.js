@@ -1,6 +1,16 @@
 const container = document.getElementById("app")
 const board = document.getElementById("board")
 const btn = document.getElementById("new-game-btn");
+const slider = document.getElementById("level");
+const levelValue = document.getElementById("level-value");
+const levelLabels = ["Random", "Basic", "Very easy", "Easy", "Medium", "Hard"]
+
+slider.value = localStorage.getItem("level") || 5;
+levelValue.textContent = levelLabels[slider.value];
+slider.addEventListener("input", () => {
+    levelValue.textContent = levelLabels[slider.value];
+    localStorage.setItem("level", slider.value)
+})
 
 let gid = null;
 let players = null;
@@ -77,7 +87,7 @@ async function newGame() {
     container.classList.remove("finished");
     btn.style.display = "none";
 
-    const res = await fetch("/new_game", { method: "POST" });
+    const res = await fetch(`/new_game?level=${slider.value}`, { method: "POST" });
     const data = await res.json();
 
     gid = data.gid;

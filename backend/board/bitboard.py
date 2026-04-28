@@ -45,7 +45,7 @@ def get_winning_tiles_bb(bb):
     Returns:
         np.uint64: Bitboard with bits set for tiles that are part of winning combinations.
     """
-    WMA_LOCAL = WMA
+    WMA_LOCAL = WMA  # pylint: disable=invalid-name
     res = np.uint64(0)
 
     for i in range(96):
@@ -71,7 +71,7 @@ def wm_bb(bb_current, bb_open):
     Returns:
         np.uint64: Bitboard with bits set for winning moves.
     """
-    BT_LOCAL = BT
+    BT_LOCAL = BT  # pylint: disable=invalid-name
     res = np.uint64(0)
 
     for k in range(5):  # 5 non-concurrent masks
@@ -101,7 +101,7 @@ def dt_bb(bb_current, bb_open):
     Returns:
         np.uint64: Bitboard with bits set for double threat moves.
     """
-    MOVES_LOCAL = MOVES
+    MOVES_LOCAL = MOVES  # pylint: disable=invalid-name
     res = np.uint64(0)
 
     for k in range(64):
@@ -134,7 +134,7 @@ def cm_bb(bb_current, bb_open):
     Returns:
         np.uint64: Bitboard with bits set for counter moves.
     """
-    MOVES_LOCAL = MOVES
+    MOVES_LOCAL = MOVES  # pylint: disable=invalid-name
     res = np.uint64(0)
 
     bb_opponent = ~bb_open ^ bb_current
@@ -192,11 +192,11 @@ def mc_bb(bb_current, bb_open, rs):
     Returns:
         np.uint64: Bitboard with the single best move selected.
     """
-    MOVES_local = MOVES
-    N = rs.shape[0]
+    MOVES_LOCAL = MOVES  # pylint: disable=invalid-name
+    n = rs.shape[0]
 
     scores = np.zeros(64, dtype=np.int64)
-    for t in range(N):
+    for t in range(n):
         bb_random = bb_current | (rs[t] & bb_open)
 
         wt = get_winning_tiles_bb(bb_random) & bb_open
@@ -207,7 +207,7 @@ def mc_bb(bb_current, bb_open, rs):
     best_score = -1
 
     for k in range(64):  # TODO: return multiple moves in case of tie
-        move = MOVES_local[k]
+        move = MOVES_LOCAL[k]
 
         if (move & bb_open) != 0:
             s = scores[k]

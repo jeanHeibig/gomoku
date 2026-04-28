@@ -1,5 +1,9 @@
 from .human import human
-from .online_bot import online_bot
 from .player import Player
+from .bots import basic_bots
 
-__all__ = ["human", "online_bot", "Player"]
+__all__ = [
+    "human",
+    "Player",
+    "basic_bots",
+]
