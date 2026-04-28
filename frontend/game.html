@@ -7,17 +7,17 @@
     </head>
 
     <body>
-        <div id="app" class="container morpion-mode">
+        <div id="app" class="app-container morpion-mode">
 
             <div id="board" class="board"></div>
 
             <div class="sidebar">
                 <!-- black -->
-                <div id="player-black" class="player active">
+                <div id="player-black" class="player player-active">
                     <div id="player-name-black" class="player-name">
-                        <span class="stone label black"></span>
-                        <span class="name"></span>
-                        <span class="bot-label hidden">BOT</span>
+                        <span class="stone stone-label black"></span>
+                        <span class="player-name-text"></span>
+                        <span class="bot-label bot-hidden">BOT</span>
                     </div>
                     <div id="clock-black" class="clock">
                         <span class="minutes"></span>
@@ -31,16 +31,16 @@
                     NEW GAME
                 </button>
                 <div class="level-selector">
-                    <label id="level-value" for="level">5</label>
+                    <label id="level-label" for="level">5</label>
                     <input type="range" id="level" min="0" max="5" value="5" step="1">
                 </div>
 
                 <!-- white -->
                 <div id="player-white" class="player">
                     <div id="player-name-white" class="player-name">
-                        <span class="stone label white"></span>
-                        <span class="name"></span>
-                        <span class="bot-label hidden">BOT</span>
+                        <span class="stone stone-label white"></span>
+                        <span class="player-name-text"></span>
+                        <span class="bot-label bot-hidden">BOT</span>
                     </div>
                     <div id="clock-white" class="clock">
                         <span class="minutes"></span>

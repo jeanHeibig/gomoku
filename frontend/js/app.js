@@ -1,6 +1,6 @@
 // 1. DOM refs
 // const dom = {
-//     container: document.getElementById("app"),
+//     appEl: document.getElementById("app"),
 //     board: document.getElementById("board"),
 
 //     controls: {
@@ -11,12 +11,12 @@
 
 //     players: {
 //         black: {
-//             container: document.getElementById("player-black"),
+//             appEl: document.getElementById("player-black"),
 //             clock: document.getElementById("clock-black"),
 //             name: document.getElementById("player-name-black"),
 //         },
 //         white: {
-//             container: document.getElementById("player-white"),
+//             appEl: document.getElementById("player-white"),
 //             clock: document.getElementById("clock-white"),
 //             name: document.getElementById("player-name-white"),
 //         }
@@ -28,13 +28,13 @@
 // };
 
 
-const container = document.getElementById("app");
-const board = document.getElementById("board");
+const appEl = document.getElementById("app");
+const boardEl = document.getElementById("board");
 
-const btn = document.getElementById("new-game-btn");
+const newGameBtn = document.getElementById("new-game-btn");
 
-const slider = document.getElementById("level");
-const levelValue = document.getElementById("level-value");
+const levelSlider = document.getElementById("level");
+const levelLabel = document.getElementById("level-label");
 const levelLabels = {
     0: "Random",
     1: "Very easy",
@@ -44,20 +44,20 @@ const levelLabels = {
     5: "Very hard",
 };
 
-const clockBlack = document.getElementById("clock-black");
-const clockWhite = document.getElementById("clock-white");
+const clockBlackEl = document.getElementById("clock-black");
+const clockWhiteEl = document.getElementById("clock-white");
 
-const playerBlack = document.getElementById("player-black");
-const playerWhite = document.getElementById("player-white");
+const playerBlackEl = document.getElementById("player-black");
+const playerWhiteEl = document.getElementById("player-white");
 
-const nameBlack = document.getElementById("player-name-black");
-const nameWhite = document.getElementById("player-name-white");
+const playerNameBlackEl = document.getElementById("player-name-black");
+const playerNameWhiteEl = document.getElementById("player-name-white");
 
 const editorIndicator = document.getElementById("editor-indicator");
 
 // 2. state
 const state = {
-    gid: null,
+    gameId: null,
     players: null,
 
     board: null,
@@ -66,9 +66,9 @@ const state = {
 
     currentPlayer: 0,
     finished: false,
-    myPlayer: 0,
+    localPlayerIndex: 0,
 
-    displayTimes: [0, 0],
+    remainingTimes: [0, 0],
     increments: [0, 0],
     clockPly: 0,
     lastUpdate: Date.now(),
@@ -89,17 +89,17 @@ function init() {
 }
 
 function initSlider() {
-    slider.value = localStorage.getItem("level") || 5;
-    levelValue.textContent = levelLabels[slider.value];
+    levelSlider.value = localStorage.getItem("level") || 5;
+    levelLabel.textContent = levelLabels[levelSlider.value];
 
-    slider.addEventListener("input", () => {
-        levelValue.textContent = levelLabels[slider.value];
-        localStorage.setItem("level", slider.value);
+    levelSlider.addEventListener("input", () => {
+        levelLabel.textContent = levelLabels[levelSlider.value];
+        localStorage.setItem("level", levelSlider.value);
     });
 }
 
 function createBoard() {
-    board.innerHTML = "";
+    boardEl.innerHTML = "";
 
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -116,7 +116,7 @@ function createBoard() {
             stone.classList.add("stone");
 
             cell.appendChild(stone);
-            board.appendChild(cell);
+            boardEl.appendChild(cell);
         }
     }
 }
@@ -136,7 +136,7 @@ function initKeyboard() {
 
         switch (e.key.toLowerCase()) {
             case "m":
-                container.classList.toggle("morpion-mode");
+                appEl.classList.toggle("morpion-mode");
                 break;
 
             case "e":
@@ -194,10 +194,10 @@ async function newGame() {
     stopClock();
     setFinished(false);
 
-    const data = await api(`/new_game?level=${slider.value}`, {
+    const data = await api(`/new_game?level=${levelSlider.value}`, {
         method: 'POST',
     });
-    state.gid = data.gid;
+    state.gameId = data.gid;
     state.players = data.players;
 
     renderNicknames();
@@ -222,7 +222,7 @@ async function play(cell) {
     state.board[i][j] = state.currentPlayer + 1;
     hidePreview(cell);
     state.lastMove = [i, j];
-    state.displayTimes[state.currentPlayer] += state.increments[state.currentPlayer];
+    state.remainingTimes[state.currentPlayer] += state.increments[state.currentPlayer];
 
     state.currentPlayer = 1 - state.currentPlayer;
     state.lastUpdate = Date.now();
@@ -230,7 +230,7 @@ async function play(cell) {
     renderBoard();
     renderClocks();
 
-    await api(`/move?gid=${state.gid}&i=${i}&j=${j}`, {
+    await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, {
         method: 'POST',
     });
 
@@ -238,7 +238,7 @@ async function play(cell) {
 }
 
 async function update() {
-    const data = await api(`/state?gid=${state.gid}`);
+    const data = await api(`/state?gid=${state.gameId}`);
 
     applyServerState(data);
     render();
@@ -250,11 +250,11 @@ function setFinished(finished) {
 
     if (finished) {
         stopClock();
-        container.classList.add("finished");
-        btn.style.display = "block";
+        appEl.classList.add("finished");
+        newGameBtn.style.display = "block";
     } else {
-        container.classList.remove("finished");
-        btn.style.display = "none";
+        appEl.classList.remove("finished");
+        newGameBtn.style.display = "none";
     }
 }
 
@@ -263,7 +263,7 @@ function applyServerState(data) {
     state.lastMove = data.last_move;
     state.winningTiles = data.winningTiles;
 
-    state.displayTimes = [...data.times.times];
+    state.remainingTimes = [...data.times.times];
     state.increments = [...data.times.increments];
     state.clockPly = data.clockPly;
     state.currentPlayer = data.currentPlayer;
@@ -323,25 +323,25 @@ function renderNicknames() {
     document.title = `Game ${b.nickname} - ${w.nickname}`;
 
     const black = document.getElementById("player-name-black");
-    black.querySelector(".name").textContent = b.nickname;
+    black.querySelector(".player-name-text").textContent = b.nickname;
     black.querySelector(".bot-label").classList.toggle("hidden", !b.isBot);
 
     const white = document.getElementById("player-name-white");
-    white.querySelector(".name").textContent = w.nickname;
+    white.querySelector(".player-name-text").textContent = w.nickname;
     white.querySelector(".bot-label").classList.toggle("hidden", !w.isBot);
 
-    state.myPlayer = b.isBot ? 1 : 0;
+    state.localPlayerIndex = b.isBot ? 1 : 0;
 }
 
 function renderClocks() {
     const cBlack = document.getElementById("clock-black");
     const cWhite = document.getElementById("clock-white");
 
-    updateClockDisplay(cBlack, state.displayTimes[0]);
-    updateClockDisplay(cWhite, state.displayTimes[1]);
+    updateClockDisplay(cBlack, state.remainingTimes[0]);
+    updateClockDisplay(cWhite, state.remainingTimes[1]);
 
-    cBlack.classList.toggle("low-time", state.displayTimes[0] < 10);
-    cWhite.classList.toggle("low-time", state.displayTimes[1] < 10);
+    cBlack.classList.toggle("low-time", state.remainingTimes[0] < 10);
+    cWhite.classList.toggle("low-time", state.remainingTimes[1] < 10);
 
     cBlack.classList.toggle("active-clock", state.currentPlayer === 0);
     cWhite.classList.toggle("active-clock", state.currentPlayer === 1);
@@ -354,8 +354,8 @@ function renderEndGame() {
     }
 
     stopClock();
-    container.classList.add("finished");
-    btn.style.display = "block";
+    appEl.classList.add("finished");
+    newGameBtn.style.display = "block";
 
     setTimeout(() => {
         alert(
@@ -373,7 +373,7 @@ function canPlay(cell) {
 
     return (
         state.board &&
-        state.myPlayer === state.currentPlayer &&
+        state.localPlayerIndex === state.currentPlayer &&
         state.board[i][j] === 0 &&
         !state.finished &&
         !state.editorMode
@@ -418,7 +418,7 @@ function startClock() {
         const dt = (now - state.lastUpdate) / 1000;
 
         state.lastUpdate = now;
-        state.displayTimes[state.currentPlayer] -= dt;
+        state.remainingTimes[state.currentPlayer] -= dt;
 
         checkTimeout();
         renderClocks();
@@ -437,11 +437,11 @@ async function checkTimeout() {
         return;
     }
 
-    if (state.displayTimes[state.currentPlayer] <= 0) {
-        state.displayTimes[state.currentPlayer] = 0;
+    if (state.remainingTimes[state.currentPlayer] <= 0) {
+        state.remainingTimes[state.currentPlayer] = 0;
 
         try {
-            await api(`/flag?gid=${state.gid}`, {
+            await api(`/flag?gid=${state.gameId}`, {
                 method: 'POST',
             });
         } catch (e) {
@@ -468,10 +468,10 @@ function toggleEditorMode() {
 
     if (state.editorMode) {
         state.editorBoard = structuredClone(state.board);
-        container.classList.add("editor-mode");
+        appEl.classList.add("editor-mode");
     } else {
         state.editorBoard = null;
-        container.classList.remove("editor-mode");
+        appEl.classList.remove("editor-mode");
     }
 
     renderBoard();
@@ -495,15 +495,15 @@ async function submitEditorBoard() {
         body: JSON.stringify({
             board: state.editorBoard,
             player: state.editorPlayer,
-            level: slider.value,
+            level: levelSlider.value,
         })
     });
 
     state.editorMode = false;
     state.editorBoard = null;
-    container.classList.remove("editor-mode");
+    appEl.classList.remove("editor-mode");
 
-    state.gid = data.gid;
+    state.gameId = data.gid;
     state.players = data.players;
 
     renderNicknames();

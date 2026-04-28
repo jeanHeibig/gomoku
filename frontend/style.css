@@ -8,7 +8,7 @@ body {
     height: 100vh;
 }
 
-.container {
+.app-container {
     display: flex;
     gap: 30px;
 }
@@ -98,7 +98,7 @@ body {
     cursor: pointer;
 }
 
-.stone.label {
+.stone-label {
     width: 26px;
     height: 24px;
 
@@ -131,7 +131,7 @@ body {
     content: "O";
 }
 
-#app.morpion-mode .stone.label {
+#app.morpion-mode .stone-label {
     transform: translate(-10%, -10%) scale(0.5);
 }
 
@@ -164,7 +164,7 @@ body {
     font-weight: bold;
 }
 
-.hidden {
+.bot-hidden {
     display: none;
 }
 
@@ -261,6 +261,6 @@ body {
     opacity: 0.8;
 }
 
-.active {
+.player-active {
     outline: 3px solid #b58863;
 }
