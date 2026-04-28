@@ -4,7 +4,7 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- add MC to all levels, otherwise, they are really bad
+- add UI timer selection
 - Fix Game UI editor
 - Find an evaluation function for a position -> core of the problem
 - Add "real" (concrete games based on simple bots) Monte-Carlo for fast eval function

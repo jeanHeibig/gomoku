@@ -55,7 +55,7 @@ class Board:
         >>> print(board)  # Display board state
     """
     @staticmethod
-    def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
+    def is_last_move_winning(bb, last_i: int, last_j: int) -> bool:
         """Check if the last move results in five in a row.
 
         Args:
@@ -70,7 +70,7 @@ class Board:
         return any((bb & masks) == masks)
 
     @staticmethod
-    def winning_tiles_from_last_move(bb: int, last_i: int, last_j: int) -> int:
+    def winning_tiles_from_last_move(bb, last_i: int, last_j: int) -> int:
         """Return winning tiles that include the last move position.
 
         Args:
@@ -124,7 +124,7 @@ class Board:
 
 
     @staticmethod
-    def bb_to_moves(bb: int) -> list[tuple[int, int]]:
+    def bb_to_moves(bb) -> list[tuple[int, int]]:
         """Convert a bitboard into a list of (i, j) move positions.
 
         Args:
@@ -142,7 +142,7 @@ class Board:
         return moves
 
     @staticmethod
-    def prettyprint(bb: int, reverse=True, end='\n') -> str:
+    def prettyprint(bb, reverse=True, end='\n') -> None:
         """Return pretty string for bitboard."""
         if bb < 0:
             bb += 2**64

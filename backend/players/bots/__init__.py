@@ -3,7 +3,6 @@ from .basic_bots import take_win_in_one_bot
 from .basic_bots import block_opponent_bot
 from .basic_bots import double_threats_bot
 from .basic_bots import prevent_double_threats_bot
-from .basic_bots import mc_score_bot
 
 basic_bots = [
     random_bot,
@@ -11,7 +10,6 @@ basic_bots = [
     block_opponent_bot,
     double_threats_bot,
     prevent_double_threats_bot,
-    mc_score_bot,
 ]
 
 __all__ = [
@@ -20,6 +18,5 @@ __all__ = [
     "block_opponent_bot",
     "double_threats_bot",
     "prevent_double_threats_bot",
-    "mc_score_bot",
     "basic_bots",
 ]

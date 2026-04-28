@@ -33,7 +33,6 @@ const levelLabels = {
     2: "Easy",
     3: "Medium",
     4: "Hard",
-    5: "Very hard",
 };
 
 const editorIndicator = document.getElementById("editor-indicator");
@@ -86,7 +85,7 @@ function loadSystemPreferences() {
 }
 
 function initSlider() {
-    dom.controls.levelSlider.value = localStorage.getItem("level") || 5;
+    dom.controls.levelSlider.value = localStorage.getItem("level") || 4;
     dom.controls.levelLabel.textContent = levelLabels[dom.controls.levelSlider.value];
 
     dom.controls.levelSlider.addEventListener("input", () => {

@@ -35,7 +35,7 @@ app = FastAPI()
 
 games = {}
 player1 = Player("Alice", False, human)
-BOT_NAMES = ["Bob", "Charlie", "Damian", "Edgar", "Ferdinand", "Gaston"]
+BOT_NAMES = ["Bob", "Charlie", "Damian", "Edgar", "Ferdinand"]
 
 app.mount("/static", StaticFiles(directory="./frontend"), name="static")
 
