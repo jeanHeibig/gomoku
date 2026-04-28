@@ -280,6 +280,10 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && finished) {
         newGame();
     }
+
+    if (e.key.toLowerCase() === "m") {
+        document.getElementById("app").classList.toggle("morpion-mode");
+    }
 });
 
 newGame();

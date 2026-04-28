@@ -97,6 +97,49 @@ body {
     filter: brightness(1.2);
 }
 
+.stone.label {
+    width: 26px;
+    height: 24px;
+
+    position: static;
+    transform: scale(0.9) rotate(-10deg);
+}
+
+#app.morpion-mode .stone {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 42px;
+    font-weight: 800;
+    font-family: Arial, sans-serif;
+    color: #222;
+}
+
+#app.morpion-mode .stone.black::before {
+    content: "X";
+}
+
+#app.morpion-mode .stone.white::before {
+    content: "O";
+}
+
+#app.morpion-mode .stone.label {
+    transform: translate(-10%, -10%) scale(0.5);
+}
+
+#app.morpion-mode .cell.win .stone {
+    text-shadow:
+        0 0 2px #d32f2f,
+        0 0 4px #d32f2f;
+}
+
 /* players + clock */
 .sidebar {
     display: flex;
@@ -122,14 +165,6 @@ body {
 
 .hidden {
     display: none;
-}
-
-.stone.label {
-    width: 26px;
-    height: 24px;
-
-    position: static;
-    transform: scale(0.9) rotate(-10deg);
 }
 
 #new-game-btn {
