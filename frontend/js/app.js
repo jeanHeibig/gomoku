@@ -1,40 +1,32 @@
 // 1. DOM refs
-// const dom = {
-//     appEl: document.getElementById("app"),
-//     board: document.getElementById("board"),
+const dom = {
+    app: document.getElementById("app"),
+    board: document.getElementById("board"),
 
-//     controls: {
-//         newGameBtn: document.getElementById("new-game-btn"),
-//         levelSlider: document.getElementById("level"),
-//         levelValue: document.getElementById("level-value"),
-//     },
+    controls: {
+        newGameBtn: document.getElementById("new-game-btn"),
+        levelSlider: document.getElementById("level"),
+        levelLabel: document.getElementById("level-label"),
+    },
 
-//     players: {
-//         black: {
-//             appEl: document.getElementById("player-black"),
-//             clock: document.getElementById("clock-black"),
-//             name: document.getElementById("player-name-black"),
-//         },
-//         white: {
-//             appEl: document.getElementById("player-white"),
-//             clock: document.getElementById("clock-white"),
-//             name: document.getElementById("player-name-white"),
-//         }
-//     },
+    players: {
+        black: {
+            app: document.getElementById("player-black"),
+            clock: document.getElementById("clock-black"),
+            name: document.getElementById("player-name-black"),
+        },
+        white: {
+            app: document.getElementById("player-white"),
+            clock: document.getElementById("clock-white"),
+            name: document.getElementById("player-name-white"),
+        }
+    },
 
-//     editor: {
-//         indicator: document.getElementById("editor-indicator"),
-//     },
-// };
+    editor: {
+        indicator: document.getElementById("editor-indicator"),
+    },
+};
 
-
-const appEl = document.getElementById("app");
-const boardEl = document.getElementById("board");
-
-const newGameBtn = document.getElementById("new-game-btn");
-
-const levelSlider = document.getElementById("level");
-const levelLabel = document.getElementById("level-label");
 const levelLabels = {
     0: "Random",
     1: "Very easy",
@@ -43,15 +35,6 @@ const levelLabels = {
     4: "Hard",
     5: "Very hard",
 };
-
-const clockBlackEl = document.getElementById("clock-black");
-const clockWhiteEl = document.getElementById("clock-white");
-
-const playerBlackEl = document.getElementById("player-black");
-const playerWhiteEl = document.getElementById("player-white");
-
-const playerNameBlackEl = document.getElementById("player-name-black");
-const playerNameWhiteEl = document.getElementById("player-name-white");
 
 const editorIndicator = document.getElementById("editor-indicator");
 
@@ -82,7 +65,7 @@ const state = {
 // 3. init
 function init() {
 
-    loadDarkModeFromSystemPreference();
+    loadSystemPreferences();
     initSlider();
     createBoard();
     initEvents();
@@ -90,25 +73,30 @@ function init() {
     newGame();  // initialize a new game on page load
 }
 
-function loadDarkModeFromSystemPreference() {
-    const isDark = localStorage.getItem("darkMode") === true;
-    if (isDark) {
+function loadSystemPreferences() {
+    const isMorpionMode = localStorage.getItem("morpionMode");
+    if (isMorpionMode === "false") {
+        dom.app.classList.remove("morpion-mode");
+    }
+
+    const isDark = localStorage.getItem("darkMode");
+    if (isDark === "true") {
         document.body.classList.add("dark-mode");
     }
 }
 
 function initSlider() {
-    levelSlider.value = localStorage.getItem("level") || 5;
-    levelLabel.textContent = levelLabels[levelSlider.value];
+    dom.controls.levelSlider.value = localStorage.getItem("level") || 5;
+    dom.controls.levelLabel.textContent = levelLabels[dom.controls.levelSlider.value];
 
-    levelSlider.addEventListener("input", () => {
-        levelLabel.textContent = levelLabels[levelSlider.value];
-        localStorage.setItem("level", levelSlider.value);
+    dom.controls.levelSlider.addEventListener("input", () => {
+        dom.controls.levelLabel.textContent = levelLabels[dom.controls.levelSlider.value];
+        localStorage.setItem("level", dom.controls.levelSlider.value);
     });
 }
 
 function createBoard() {
-    boardEl.innerHTML = "";
+    dom.board.innerHTML = "";
 
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -125,7 +113,7 @@ function createBoard() {
             stone.classList.add("stone");
 
             cell.appendChild(stone);
-            boardEl.appendChild(cell);
+            dom.board.appendChild(cell);
         }
     }
 }
@@ -145,7 +133,7 @@ function initKeyboard() {
 
         switch (e.key.toLowerCase()) {
             case "m":
-                appEl.classList.toggle("morpion-mode");
+                toggleMorpionMode();
                 break;
 
             case "e":
@@ -175,24 +163,26 @@ function initKeyboard() {
 }
 
 function initBoardEvents() {
-    const cells = document.getElementsByClassName('cell');
-    for (let n = 0; n < cells.length; n++) {
-        const cell = cells[n];
+    dom.board.addEventListener("click", (e) => {
+        const cell = e.target.closest(".cell");
+        if (cell) {
+            play(cell);
+        }
+    });
 
-        cell.addEventListener("click", () => play(cell));
+    dom.board.addEventListener("mouseover", (e) => {
+        const cell = e.target.closest(".cell");
+        if (cell && !state.editorMode) {
+            showPreview(cell);
+        }
+    });
 
-        cell.addEventListener("mouseenter", () => {
-            if (!state.editorMode) {
-                showPreview(cell);
-            }
-        });
-
-        cell.addEventListener("mouseleave", () => {
-            if (!state.editorMode) {
-                hidePreview(cell);
-            }
-        });
-    }
+    dom.board.addEventListener("mouseout", (e) => {
+        const cell = e.target.closest(".cell");
+        if (cell && !state.editorMode) {
+            hidePreview(cell);
+        }
+    });
 }
 
 // 5. api
@@ -207,7 +197,7 @@ async function newGame() {
     stopClock();
     setFinished(false);
 
-    const data = await api(`/new_game?level=${levelSlider.value}`, {
+    const data = await api(`/new_game?level=${dom.controls.levelSlider.value}`, {
         method: 'POST',
     });
     state.gameId = data.gid;
@@ -263,11 +253,11 @@ function setFinished(finished) {
 
     if (finished) {
         stopClock();
-        appEl.classList.add("finished");
-        newGameBtn.style.display = "block";
+        dom.app.classList.add("finished");
+        dom.controls.newGameBtn.style.display = "block";
     } else {
-        appEl.classList.remove("finished");
-        newGameBtn.style.display = "none";
+        dom.app.classList.remove("finished");
+        dom.controls.newGameBtn.style.display = "none";
     }
 }
 
@@ -320,13 +310,15 @@ function renderBoard() {
             } else if (v === 2) {
                 stone.classList.add("white");
             }
+
+            cell.classList.toggle("occupied", v !== 0);
         }
     }
 }
 
 function renderPlayers() {
-    document.getElementById("player-black").classList.toggle("active", state.currentPlayer === 0);
-    document.getElementById("player-white").classList.toggle("active", state.currentPlayer === 1);
+    dom.players.black.app.classList.toggle("active", state.currentPlayer === 0);
+    dom.players.white.app.classList.toggle("active", state.currentPlayer === 1);
 }
 
 function renderNicknames() {
@@ -335,29 +327,24 @@ function renderNicknames() {
 
     document.title = `Game ${b.nickname} - ${w.nickname}`;
 
-    const black = document.getElementById("player-name-black");
-    black.querySelector(".player-name-text").textContent = b.nickname;
-    black.querySelector(".bot-label").classList.toggle("bot-hidden", !b.isBot);
+    dom.players.black.name.querySelector(".player-name-text").textContent = b.nickname;
+    dom.players.black.name.querySelector(".bot-label").classList.toggle("bot-hidden", !b.isBot);
 
-    const white = document.getElementById("player-name-white");
-    white.querySelector(".player-name-text").textContent = w.nickname;
-    white.querySelector(".bot-label").classList.toggle("bot-hidden", !w.isBot);
+    dom.players.white.name.querySelector(".player-name-text").textContent = w.nickname;
+    dom.players.white.name.querySelector(".bot-label").classList.toggle("bot-hidden", !w.isBot);
 
     state.localPlayerIndex = b.isBot ? 1 : 0;
 }
 
 function renderClocks() {
-    const cBlack = document.getElementById("clock-black");
-    const cWhite = document.getElementById("clock-white");
+    updateClockDisplay(dom.players.black.clock, state.remainingTimes[0]);
+    updateClockDisplay(dom.players.white.clock, state.remainingTimes[1]);
 
-    updateClockDisplay(cBlack, state.remainingTimes[0]);
-    updateClockDisplay(cWhite, state.remainingTimes[1]);
+    dom.players.black.clock.classList.toggle("low-time", state.remainingTimes[0] < 10);
+    dom.players.white.clock.classList.toggle("low-time", state.remainingTimes[1] < 10);
 
-    cBlack.classList.toggle("low-time", state.remainingTimes[0] < 10);
-    cWhite.classList.toggle("low-time", state.remainingTimes[1] < 10);
-
-    cBlack.classList.toggle("active-clock", state.currentPlayer === 0);
-    cWhite.classList.toggle("active-clock", state.currentPlayer === 1);
+    dom.players.black.clock.classList.toggle("active-clock", state.currentPlayer === 0);
+    dom.players.white.clock.classList.toggle("active-clock", state.currentPlayer === 1);
 }
 
 function renderEndGame() {
@@ -367,8 +354,8 @@ function renderEndGame() {
     }
 
     stopClock();
-    appEl.classList.add("finished");
-    newGameBtn.style.display = "block";
+    dom.app.classList.add("finished");
+    dom.controls.newGameBtn.style.display = "block";
 
     setTimeout(() => {
         alert(
@@ -414,10 +401,13 @@ function hidePreview(cell) {
     }
 }
 
-function toggleDarkMode() {
-    document.body.classList.toggle("dark-mode");
+function toggleMorpionMode() {
+    const isMorpionMode = dom.app.classList.toggle("morpion-mode");
+    localStorage.setItem("morpionMode", isMorpionMode);
+}
 
-    const isDark = document.body.classList.contains("dark-mode");
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle("dark-mode");
     localStorage.setItem("darkMode", isDark);
 }
 
@@ -488,10 +478,10 @@ function toggleEditorMode() {
 
     if (state.editorMode) {
         state.editorBoard = structuredClone(state.board);
-        appEl.classList.add("editor-mode");
+        dom.app.classList.add("editor-mode");
     } else {
         state.editorBoard = null;
-        appEl.classList.remove("editor-mode");
+        dom.app.classList.remove("editor-mode");
     }
 
     renderBoard();
@@ -515,13 +505,13 @@ async function submitEditorBoard() {
         body: JSON.stringify({
             board: state.editorBoard,
             player: state.editorPlayer,
-            level: levelSlider.value,
+            level: dom.controls.levelSlider.value,
         })
     });
 
     state.editorMode = false;
     state.editorBoard = null;
-    appEl.classList.remove("editor-mode");
+    dom.app.classList.remove("editor-mode");
 
     state.gameId = data.gid;
     state.players = data.players;

@@ -31,6 +31,10 @@ body {
     cursor: pointer;
 }
 
+.cell.occupied {
+    cursor: default;
+}
+
 #app.finished .cell {
     cursor: auto;
 }
@@ -65,14 +69,14 @@ body {
     height: 48px;
     border-radius: 50%;
 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
+
     box-shadow:
         inset -4px -6px 8px rgba(0, 0, 0, 0.4),
         inset 3px 4px 6px rgba(255, 255, 255, 0.2);
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
-        cursor: auto;
 
     transition: opacity 0.15s ease, transform 0.1s ease;
 
@@ -130,9 +134,7 @@ body {
 }
 
 #app.morpion-mode .cell.win .stone {
-    text-shadow:
-        0 0 2px #d32f2f,
-        0 0 4px #d32f2f;
+    color: #d32f2f;
 }
 
 /* UI */
@@ -284,12 +286,16 @@ body.dark-mode .stone.black {
 }
 
 body.dark-mode .stone.white {
-    background: radial-gradient(circle at 30% 30%, #bbb, #666);
+    background: radial-gradient(circle at 30% 30%, #ddd, #999);
     border: 1px solid #777;
 }
 
 body.dark-mode #app.morpion-mode .stone {
     color: #ddd;
+}
+
+body.dark-mode #app.morpion-mode .cell.win .stone {
+    color: #ad2929;
 }
 
 body.dark-mode .player {
