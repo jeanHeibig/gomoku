@@ -255,7 +255,7 @@ class Timer:
             "server_time": time.time(),
             "times": [t.get_remaining_time() for t in self._timers],
             "increments": self._increments,
-        }
+        }  # TODO: Add clockPly
 
     def get_ply(self):
         """
