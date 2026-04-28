@@ -95,6 +95,7 @@ body {
 .stone.preview {
     opacity: 0.35;
     filter: brightness(1.2);
+    cursor: pointer;
 }
 
 .stone.label {
@@ -197,6 +198,18 @@ body {
     width: 150px;
     cursor: pointer;
     accent-color: #b58863;
+}
+
+#app:not(.finished) .level-selector {
+    display: none;
+}
+
+#app.editor-mode .cell, #app.editor-mode .stone {
+    cursor: crosshair;
+}
+
+#app.editor-mode .cell, #app.editor-mode .board {
+    outline: 1px dashed #999;
 }
 
 .bot-label {

@@ -35,6 +35,7 @@ app = FastAPI()
 
 games = {}
 player1 = Player("Alice", False, human)
+BOT_NAMES = ["Bob", "Charlie", "Damian", "Edgar", "Ferdinand", "Gaston"]
 
 app.mount("/static", StaticFiles(directory="./frontend"), name="static")
 
@@ -71,7 +72,7 @@ def new_game(level: int):
     """
     gid = str(uuid.uuid4())
 
-    player2 = Player("Bob", True, basic_bots[level])
+    player2 = Player(BOT_NAMES[level], True, basic_bots[level])
 
     human_starts = random.randint(0, 1)
     if human_starts:  # random choice for the side
@@ -81,22 +82,39 @@ def new_game(level: int):
 
     timer = Timer(900.0, 15.0)
 
-    start_position = None
-    # start_position = [
-    #     [0, 0, 1, 0, 0, 0, 0, 1],
-    #     [0, 1, 2, 1, 0, 0, 0, 0],
-    #     [0, 0, 2, 2, 1, 0, 0, 0],
-    #     [2, 0, 2, 2, 1, 2, 0, 0],
-    #     [0, 1, 2, 2, 2, 2, 1, 0],
-    #     [0, 0, 1, 2, 0, 2, 0, 0],
-    #     [0, 0, 0, 1, 0, 0, 1, 0],
-    #     [0, 0, 0, 0, 1, 1, 0, 0],
-    # ]
-
-    game = Game(gid, players, timer, start_position)
+    game = Game(gid, players, timer)
 
     if not human_starts:  # if bot starts
         game.move()
+
+    games[gid] = game
+    return serialize(game)
+
+
+@app.post("/editor")
+def editor(req: dict):  # TODO: merge this with newgame
+    gid = str(uuid.uuid4())
+
+    position = req["board"]
+    print(position)
+    human_starts = int(req["player"])
+    level = int(req["level"])
+
+    player2 = Player(BOT_NAMES[level], True, basic_bots[level])
+
+    timer = Timer(900.0, 15.0)
+
+    human_starts = random.randint(0, 1)
+    if human_starts:  # random choice for the side
+        players = [player1, player2]
+    else:
+        players = [player2, player1]
+
+    game = Game(gid, players, timer, position)
+    print(game)
+
+    if not human_starts:  # if bot starts
+            game.move()
 
     games[gid] = game
     return serialize(game)

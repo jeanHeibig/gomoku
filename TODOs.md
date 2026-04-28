@@ -4,6 +4,8 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
+- bug UI : les cells occupées ont un mauvais curseur
+- Fix Game UI editor
 - Find an evaluation function for a position -> core of the problem
 - Add "real" (concrete games based on simple bots) Monte-Carlo for fast eval function
 - Implement iterative α-β search

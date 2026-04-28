@@ -27,6 +27,10 @@ let clockInterval = null;
 let finished = false;
 let myPlayer = null;
 
+let editorMode = false;
+let editorPlayer = 0;
+let editorBoard = null;
+
 createBoard()
 
 function createBoard() {
@@ -98,6 +102,12 @@ async function newGame() {
 }
 
 async function play(i, j) {
+    if (editorMode) {
+        editorBoard[i][j] = (editorBoard[i][j] + 1) % 3;
+        renderEditor();
+        return;
+    }
+
     if (!lastBoard || myPlayer === null || lastBoard[i][j] !== 0 || myPlayer !== currentPlayer || finished) return;
 
     lastBoard[i][j] = currentPlayer + 1;
@@ -287,13 +297,85 @@ document.addEventListener("keydown", (e) => {
 
     if (tag === "INPUT" || tag === "TEXTAREA") return;
 
-    if (e.key === "Enter" && finished) {
-        newGame();
-    }
-
     if (e.key.toLowerCase() === "m") {
         document.getElementById("app").classList.toggle("morpion-mode");
     }
+
+    if (e.key.toLowerCase() === "e") {
+        toggleEditorMode();
+    }
+
+    if (e.key === " " && editorMode) {
+        editorPlayer = 1 - editorPlayer;
+        updateEditorIndicator();
+    }
+
+    if (e.key === "Enter") {
+        if (editorMode) {
+            submitEditorBoard();
+        } else if (finished) {
+            newGame();
+        }
+    }
+
 });
+
+function toggleEditorMode() {
+    editorMode = !editorMode;
+
+    if (editorMode) {
+        editorBoard = JSON.parse(JSON.stringify(lastBoard));
+        container.classList.add("editor-mode");
+    } else {
+        container.classList.remove("editor-mode");
+    }
+
+    renderEditor();
+}
+
+function renderEditor() {
+    renderBoard({
+        gid: gid,
+        players: players,
+        board: editorMode ? editorBoard : lastBoard,
+        lastMove: lastMove,
+        winningTiles: [],
+        times: { server_time: Date.now(), times: displayTimes, increments: increments },
+        clockPly: clockPly,
+        currentPlayer: editorPlayer,
+        finished: false,
+        winner: null,
+    });
+}
+
+async function submitEditorBoard() {
+    if (clockInterval) clearInterval(clockInterval);
+    container.classList.remove("finished");
+    btn.style.display = "none";
+
+    const res = await fetch("/editor", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            board: editorBoard,
+            player: editorPlayer,
+            level: slider.value,
+        })
+    });
+
+    const data = await res.json();
+    console.log(data)
+
+    editorMode = false;
+    container.remove("editor-mode");
+
+    createBoard();
+
+    gid = data.gid
+    players = data.players
+
+    renderNicknames();
+    update();
+}
 
 newGame();
