@@ -53,7 +53,7 @@ def serve_game():
 
 
 @app.post("/new_game")
-def new_game(level: int):
+def new_game(level: int, time: int, increment: int):
     """Create a new Gomoku game.
 
     Initializes a new game with random player order (human vs bot),
@@ -80,7 +80,7 @@ def new_game(level: int):
     else:
         players = [player2, player1]
 
-    timer = Timer(900.0, 15.0)
+    timer = Timer(float(time), float(increment))
 
     game = Game(gid, players, timer)
 
@@ -99,10 +99,12 @@ def editor(req: dict):  # TODO: merge this with newgame
     print(position)
     human_starts = int(req["player"])
     level = int(req["level"])
+    time = float(req["time"])
+    increment = float(req["increment"])
 
     player2 = Player(BOT_NAMES[level], True, basic_bots[level])
 
-    timer = Timer(900.0, 15.0)
+    timer = Timer(time, increment)
 
     human_starts = random.randint(0, 1)
     if human_starts:  # random choice for the side

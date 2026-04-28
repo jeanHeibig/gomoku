@@ -4,7 +4,7 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- add UI timer selection
+- Add a board editor function
 - Fix Game UI editor
 - Find an evaluation function for a position -> core of the problem
 - Add "real" (concrete games based on simple bots) Monte-Carlo for fast eval function
@@ -12,7 +12,6 @@ Gomoku Server and AI training
 - Use board symmetries
 - Opening tables
 - Endgame tables: "kill" stones that can no longer contribute to an alignment
-- Add a board editor function
 - Add draw and resign button
 - Add SQLite to saves games (with moves) and players (with ELO)
 - Switch to websockets for GUI

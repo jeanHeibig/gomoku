@@ -241,7 +241,7 @@ body {
     transform: scale(1.05);
 }
 
-.level-selector {
+.timer-selector, .level-selector {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -249,11 +249,11 @@ body {
     font-size: 1.2em;
 }
 
-#app:not(.finished) .level-selector {
+#app:not(.finished) .timer-selector, #app:not(.finished) .level-selector {
     display: none;
 }
 
-#level {
+#time-slider, #increment-slider, #level {
     width: 150px;
     cursor: pointer;
     accent-color: #b58863;
@@ -323,6 +323,6 @@ body.dark-mode #new-game-btn:hover {
     background: #666;
 }
 
-body.dark-mode #level {
+body.dark-mode #time-slider, body.dark-mode #increment-slider, body.dark-mode #level {
     accent-color: #aaa;
 }

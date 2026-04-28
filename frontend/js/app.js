@@ -5,6 +5,10 @@ const dom = {
 
     controls: {
         newGameBtn: document.getElementById("new-game-btn"),
+        timeSlider: document.getElementById("time-slider"),
+        timeLabel: document.getElementById("time-label"),
+        incrementSlider: document.getElementById("increment-slider"),
+        incrementLabel: document.getElementById("increment-label"),
         levelSlider: document.getElementById("level"),
         levelLabel: document.getElementById("level-label"),
     },
@@ -26,6 +30,14 @@ const dom = {
         indicator: document.getElementById("editor-indicator"),
     },
 };
+
+const TIME_PRESETS = [
+    3, 15, 30, 60, 120, 180, 300, 600, 900, 1800, 3600
+];
+
+const INCREMENT_PRESETS = [
+    0, 1, 2, 3, 5, 10, 15, 30, 60
+];
 
 const levelLabels = {
     0: "Random",
@@ -65,7 +77,7 @@ const state = {
 function init() {
 
     loadSystemPreferences();
-    initSlider();
+    initSliders();
     createBoard();
     initEvents();
 
@@ -84,7 +96,18 @@ function loadSystemPreferences() {
     }
 }
 
-function initSlider() {
+function initSliders() {
+    dom.controls.timeSlider.max = TIME_PRESETS.length - 1;
+    dom.controls.incrementSlider.max = INCREMENT_PRESETS.length - 1;
+
+    dom.controls.timeSlider.value = localStorage.getItem("time") || 6;  // defaut 5+2
+    dom.controls.incrementSlider.value = localStorage.getItem("increment") || 2;
+
+    updateTimeLabels();
+
+    dom.controls.timeSlider.addEventListener("input", updateTimeLabels);
+    dom.controls.incrementSlider.addEventListener("input", updateTimeLabels);
+
     dom.controls.levelSlider.value = localStorage.getItem("level") || 4;
     dom.controls.levelLabel.textContent = levelLabels[dom.controls.levelSlider.value];
 
@@ -196,7 +219,10 @@ async function newGame() {
     stopClock();
     setFinished(false);
 
-    const data = await api(`/new_game?level=${dom.controls.levelSlider.value}`, {
+    const time = TIME_PRESETS[dom.controls.timeSlider.value];
+    const increment = INCREMENT_PRESETS[dom.controls.incrementSlider.value];
+
+    const data = await api(`/new_game?level=${dom.controls.levelSlider.value}&time=${time}&increment=${increment}`, {
         method: 'POST',
     });
     state.gameId = data.gid;
@@ -273,6 +299,27 @@ function applyServerState(data) {
     state.winner = data.winner;
 
     state.lastUpdate = Date.now();
+}
+
+function updateTimeLabels() {
+    localStorage.setItem("time", dom.controls.timeSlider.value);
+    localStorage.setItem("increment", dom.controls.incrementSlider.value);
+
+    const time = TIME_PRESETS[dom.controls.timeSlider.value];
+    const increment = INCREMENT_PRESETS[dom.controls.incrementSlider.value];
+
+    dom.controls.timeLabel.textContent = formatTime(time);
+    dom.controls.incrementLabel.textContent = formatTime(increment);
+}
+
+function formatTime(seconds) {
+    if (seconds < 60) {
+        return `${seconds}s`;
+    } else if (seconds < 3600) {
+        return `${Math.floor(seconds / 60)}m`;
+    } else {
+        return `${Math.floor(seconds / 3600)}h`;
+    }
 }
 
 // 8. render
