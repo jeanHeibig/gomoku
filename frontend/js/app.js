@@ -81,11 +81,20 @@ const state = {
 
 // 3. init
 function init() {
+
+    loadDarkModeFromSystemPreference();
     initSlider();
     createBoard();
     initEvents();
 
     newGame();  // initialize a new game on page load
+}
+
+function loadDarkModeFromSystemPreference() {
+    const isDark = localStorage.getItem("darkMode") === true;
+    if (isDark) {
+        document.body.classList.add("dark-mode");
+    }
 }
 
 function initSlider() {
@@ -141,6 +150,10 @@ function initKeyboard() {
 
             case "e":
                 toggleEditorMode();
+                break;
+
+            case "d":
+                toggleDarkMode();
                 break;
         }
 
@@ -260,7 +273,7 @@ function setFinished(finished) {
 
 function applyServerState(data) {
     state.board = data.board;
-    state.lastMove = data.last_move;
+    state.lastMove = data.lastMove;
     state.winningTiles = data.winningTiles;
 
     state.remainingTimes = [...data.times.times];
@@ -324,11 +337,11 @@ function renderNicknames() {
 
     const black = document.getElementById("player-name-black");
     black.querySelector(".player-name-text").textContent = b.nickname;
-    black.querySelector(".bot-label").classList.toggle("hidden", !b.isBot);
+    black.querySelector(".bot-label").classList.toggle("bot-hidden", !b.isBot);
 
     const white = document.getElementById("player-name-white");
     white.querySelector(".player-name-text").textContent = w.nickname;
-    white.querySelector(".bot-label").classList.toggle("hidden", !w.isBot);
+    white.querySelector(".bot-label").classList.toggle("bot-hidden", !w.isBot);
 
     state.localPlayerIndex = b.isBot ? 1 : 0;
 }
@@ -399,6 +412,13 @@ function hidePreview(cell) {
     if (state.board?.[i][j] !== 0) {
         stone.classList.add(state.board[i][j] === 1 ? "black" : "white");
     }
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+
+    const isDark = document.body.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", isDark);
 }
 
 // 10. clock

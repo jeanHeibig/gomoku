@@ -4,9 +4,6 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Deal with preview with css ?
-- Homogenize names across html JS and Python
-- Add dark mode
 - Add board.addEventListener click onstead of 64 cells.
 - rewrite js with dom const
 - optimize rendering by only updating changed cells, times, etc. instead of re-rendering everything

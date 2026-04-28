@@ -1,3 +1,4 @@
+/* Base */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -13,6 +14,7 @@ body {
     gap: 30px;
 }
 
+/* Board */
 .board {
     display: grid;
     grid-template-columns: repeat(8, 70px);
@@ -41,6 +43,7 @@ body {
     background-color: #b58863;
 }
 
+/* Game states */
 .cell.light.last-move {
     background-color: #c6d26b;
 }
@@ -56,6 +59,7 @@ body {
         inset 3px 4px 6px rgba(255, 255, 255, 0.2);
 }
 
+/* Stones */
 .stone {
     width: 52px;
     height: 48px;
@@ -75,10 +79,6 @@ body {
     display: none;
 }
 
-.cell:hover .stone.preview {
-    transform: translate(-50%, -50%) scale(0.95) rotate(-10deg);
-}
-
 .stone.black, .stone.white {
     display: block;
 }
@@ -92,20 +92,18 @@ body {
     border: 1px solid #999;
 }
 
+/* Preview */
 .stone.preview {
     opacity: 0.35;
     filter: brightness(1.2);
     cursor: pointer;
 }
 
-.stone-label {
-    width: 26px;
-    height: 24px;
-
-    position: static;
-    transform: scale(0.9) rotate(-10deg);
+.cell:hover .stone.preview {
+    transform: translate(-50%, -50%) scale(0.95) rotate(-10deg);
 }
 
+/* Morpion mode */
 #app.morpion-mode .stone {
     background: none;
     border: none;
@@ -131,17 +129,13 @@ body {
     content: "O";
 }
 
-#app.morpion-mode .stone-label {
-    transform: translate(-10%, -10%) scale(0.5);
-}
-
 #app.morpion-mode .cell.win .stone {
     text-shadow:
         0 0 2px #d32f2f,
         0 0 4px #d32f2f;
 }
 
-/* players + clock */
+/* UI */
 .sidebar {
     display: flex;
     flex-direction: column;
@@ -156,6 +150,18 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.stone-label {
+    width: 26px;
+    height: 24px;
+
+    position: static;
+    transform: scale(0.9) rotate(-10deg);
+}
+
+#app.morpion-mode .stone-label {
+    transform: translate(-10%, -10%) scale(0.5);
+}
+
 .player-name {
     display: flex;
     align-items: center;
@@ -164,10 +170,57 @@ body {
     font-weight: bold;
 }
 
+.bot-label {
+    color: #8a4f22;
+    background: #f0d9b5;
+    border: 1px solid #b58863;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
 .bot-hidden {
     display: none;
 }
 
+/* clock */
+.clock {
+    font-size: 24px;
+    margin-top: 10px;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.active-clock .colon {
+    animation : blink 2s infinite;
+}
+
+@keyframes blink {
+    0%   { opacity: 1; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#app.finished .colon, .clock:not(.active-clock) .colon {
+    animation: none;
+}
+
+.centi-seconds {
+    font-size: 0.6em;
+    margin-left: 2px;
+    opacity: 0.8;
+}
+
+.clock.low-time {
+    color: #d32f2f;
+}
+
+.player-active {
+    outline: 3px solid #b58863;
+}
+
+/* inputs */
 #new-game-btn {
     margin: 20px 0;
     padding: 15px;
@@ -194,73 +247,76 @@ body {
     font-size: 1.2em;
 }
 
+#app:not(.finished) .level-selector {
+    display: none;
+}
+
 #level {
     width: 150px;
     cursor: pointer;
     accent-color: #b58863;
 }
 
-#app:not(.finished) .level-selector {
-    display: none;
+/* Dark mode */
+body.dark-mode {
+    background: #222;
+    color: #ddd;
 }
 
-#app.editor-mode .cell, #app.editor-mode .stone {
-    cursor: crosshair;
+body.dark-mode .cell.light {
+    background-color: #4a4a4a;
 }
 
-#app.editor-mode .cell, #app.editor-mode .board {
-    outline: 1px dashed #999;
+body.dark-mode .cell.dark {
+    background-color: #2b2b2b;
 }
 
-.bot-label {
-    color: #8a4f22;
-    background: #f0d9b5;
-    border: 1px solid #b58863;
-    border-radius: 6px;
-    padding: 2px 6px;
-    font-size: 0.75em;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+body.dark-mode .cell.light.last-move {
+    background-color: #5c6f2f;
 }
 
-.clock {
-    font-size: 24px;
-    margin-top: 10px;
-    transition: color 0.2s, transform 0.1s;
+body.dark-mode .cell.dark.last-move {
+    background-color: #4a5a26;
 }
 
-.colon {
-    display: inline-block;
+body.dark-mode .stone.black {
+    background: radial-gradient(circle at 30% 30%, #333, #000);
 }
 
-#app.finished .colon {
-    animation: none !important;
+body.dark-mode .stone.white {
+    background: radial-gradient(circle at 30% 30%, #bbb, #666);
+    border: 1px solid #777;
 }
 
-.active-clock .colon {
-    animation : blink 2s infinite;
+body.dark-mode #app.morpion-mode .stone {
+    color: #ddd;
 }
 
-.clock:not(.active-clock) .colon {
-    animation: none;
+body.dark-mode .player {
+    background: #333;
 }
 
-@keyframes blink {
-    0%   { opacity: 1; }
-    50%  { opacity: 0; }
-    100% { opacity: 1; }
+body.dark-mode .player-active {
+    outline: 3px solid #777;
 }
 
-.clock.low-time {
-    color: #d32f2f;
+body.dark-mode .bot-label {
+    color: #aaa;
+    background: #555;
+    border: 1px solid #777;
 }
 
-.centi-seconds {
-    font-size: 0.6em;
-    margin-left: 2px;
-    opacity: 0.8;
+body.dark-mode #new-game-btn {
+    color: #ddd;
+    background: #555;
+    border: 1px solid grey;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
 }
 
-.player-active {
-    outline: 3px solid #b58863;
+body.dark-mode #new-game-btn:hover {
+    background: #666;
+}
+
+body.dark-mode #level {
+    accent-color: #aaa;
 }
