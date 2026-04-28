@@ -91,8 +91,8 @@ def new_game(level: int, time: int, increment: int):
     return serialize(game)
 
 
-@app.post("/editor")
-def editor(req: dict):  # TODO: merge this with newgame
+@app.post("/submit_board")
+def submit_board(req: dict):  # TODO: merge this with newgame
     gid = str(uuid.uuid4())
 
     position = req["board"]
@@ -106,8 +106,7 @@ def editor(req: dict):  # TODO: merge this with newgame
 
     timer = Timer(time, increment)
 
-    human_starts = random.randint(0, 1)
-    if human_starts:  # random choice for the side
+    if human_starts:
         players = [player1, player2]
     else:
         players = [player2, player1]
@@ -116,7 +115,7 @@ def editor(req: dict):  # TODO: merge this with newgame
     print(game)
 
     if not human_starts:  # if bot starts
-            game.move()
+        game.move()
 
     games[gid] = game
     return serialize(game)

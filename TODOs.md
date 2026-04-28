@@ -4,8 +4,9 @@ Gomoku Server and AI training
 # TODO
 
 - Review code and inline TODOs
-- Add a board editor function
-- Fix Game UI editor
+- Editor mode : remove winning tiles red ?
+- Editor mode : starting a Game should accept currentPlayer...
+- Editor mode : missing editor indicator in html (found in js)
 - Find an evaluation function for a position -> core of the problem
 - Add "real" (concrete games based on simple bots) Monte-Carlo for fast eval function
 - Implement iterative α-β search

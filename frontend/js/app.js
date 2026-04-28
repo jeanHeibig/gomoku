@@ -551,6 +551,8 @@ async function submitEditorBoard() {
         body: JSON.stringify({
             board: state.editorBoard,
             player: state.editorPlayer,
+            time: TIME_PRESETS[dom.controls.timeSlider.value],
+            increment: INCREMENT_PRESETS[dom.controls.incrementSlider.value],
             level: dom.controls.levelSlider.value,
         })
     });
