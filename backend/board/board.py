@@ -18,14 +18,12 @@ Key Features:
 
 Classes:
     Board: Main game board class with move handling and win detection
-
-Constants:
-    BOARD_SIZE: Fixed board dimension (8x8)
 """
+import numpy as np
 
-from .bitboard import board_to_bitboards, ij_to_bit, is_last_move_winning, bb_to_moves, winning_tiles_from_last_move
+from .masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
 
-BOARD_SIZE = 8
+WMC = tuple(np.array(WIN_MASKS_BY_CELL[k], dtype=np.uint64) for k in range(64))
 
 
 class Board:
@@ -56,6 +54,105 @@ class Board:
         >>> board.add_move(3, 4)  # Player 2 places adjacent
         >>> print(board)  # Display board state
     """
+    @staticmethod
+    def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
+        """Check if the last move results in five in a row.
+
+        Args:
+            bb: The bitboard representing the current game state.
+            last_i: The row index of the last move.
+            last_j: The column index of the last move.
+
+        Returns:
+            True if five consecutive pieces are aligned, False otherwise.
+        """
+        masks = WMC[last_i * 8 + last_j]
+        return any((bb & masks) == masks)
+
+    @staticmethod
+    def winning_tiles_from_last_move(bb: int, last_i: int, last_j: int) -> int:
+        """Return winning tiles that include the last move position.
+
+        Args:
+            bb: The bitboard representing a player's stones.
+            last_i: The row index of the last move.
+            last_j: The column index of the last move.
+
+        Returns:
+            A bitboard of tiles in winning lines that pass through the last move.
+        """
+        masks = WMC[last_i * 8 + last_j]
+        return np.bitwise_or.reduce(masks[(bb & masks) == masks])
+
+    @staticmethod
+    def move_to_bb(i: int, j: int) -> int:
+        """Convert row and column indices to a bitboard bit position.
+
+        Args:
+            i: The row index (0-7).
+            j: The column index (0-7).
+
+        Returns:
+            An integer with the bit set at position i*8 + j.
+        """
+        return 1 << (i * 8 + j)
+
+    @staticmethod
+    def board_to_bitboards(position: list[list[int]]) -> list[int]:
+        """Convert a 2D board matrix into two bitboards.
+
+        The returned list contains two integers: the first integer encodes
+        player 1 stones and the second encodes player 2 stones. Each board
+        cell maps to a bit at position `i * 8 + j` for row `i` and column
+        `j`.
+
+        Args:
+            position: An 8x8 matrix of integers where 0 means empty, 1 means
+                player 1, and 2 means player 2.
+
+        Returns:
+            A list of two bitboards `[player1_bb, player2_bb]`.
+        """
+        bitboards = [0, 0]
+        for i in range(8):
+            for j in range(8):
+                if position[i][j] == 1:
+                    bitboards[0] |= Board.move_to_bb(i, j)
+                if position[i][j] == 2:
+                    bitboards[1] |= Board.move_to_bb(i, j)
+        return bitboards
+
+
+    @staticmethod
+    def bb_to_moves(bb: int) -> list[tuple[int, int]]:
+        """Convert a bitboard into a list of (i, j) move positions.
+
+        Args:
+            bb: A bitboard representing positions.
+
+        Returns:
+            A list of tuples (i, j) for each set bit in the bitboard.
+        """
+        moves = []
+        for i in range(8):
+            for j in range(8):
+                b = Board.move_to_bb(i, j)
+                if bb & b:
+                    moves.append((i, j))
+        return moves
+
+    @staticmethod
+    def prettyprint(bb: int, reverse=True, end='\n') -> str:
+        """Return pretty string for bitboard."""
+        if bb < 0:
+            bb += 2**64
+        s = bin(bb)[2:]
+        s = (64 - len(s)) * '0' + s
+        p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
+        if reverse:
+            print(p[::-1], end=end)
+        print(p, end=end)
+
 
     def __init__(self, starting_position=None, current_player=None):
         """
@@ -81,7 +178,7 @@ class Board:
             >>> board = Board(position, current_player=1)
         """
         if starting_position is None:
-            starting_position = [[0]*BOARD_SIZE for _ in range(BOARD_SIZE)]
+            starting_position = [[0]*8 for _ in range(8)]
         self.position = starting_position
 
         self.ply = len(self.get_taken_spots())
@@ -90,7 +187,7 @@ class Board:
             current_player = self.ply % 2
         self.current_player = current_player
 
-        self.bitboards = board_to_bitboards(self.position)
+        self.bitboards = Board.board_to_bitboards(self.position)
 
     def __repr__(self):
         """
@@ -167,8 +264,8 @@ class Board:
         """
         return [
             (i, j)
-            for i in range(BOARD_SIZE)
-            for j in range(BOARD_SIZE)
+            for i in range(8)
+            for j in range(8)
             if self.position[i][j]
         ]
 
@@ -198,8 +295,8 @@ class Board:
         """
         self.position[i][j] = self.current_player + 1
         self.ply += 1
-        self.bitboards[self.current_player] |= ij_to_bit(i, j)
-        return is_last_move_winning(self.bitboards[self.current_player], i, j)
+        self.bitboards[self.current_player] |= Board.move_to_bb(i, j)
+        return Board.is_last_move_winning(self.bitboards[self.current_player], i, j)
 
     def get_winning_tiles(self, i, j):
         """
@@ -224,8 +321,8 @@ class Board:
             >>> winning_tiles = board.get_winning_tiles(3, 3)
             >>> print(winning_tiles)  # [(3,1), (3,2), (3,3), (3,4), (3,5)]
         """
-        bb_tiles = winning_tiles_from_last_move(self.bitboards[self.current_player], i, j)
-        return bb_to_moves(bb_tiles)
+        bb_tiles = Board.winning_tiles_from_last_move(self.bitboards[self.current_player], i, j)
+        return Board.bb_to_moves(bb_tiles)
 
     def is_full(self):
         """
@@ -241,7 +338,7 @@ class Board:
             >>> # ... fill all squares ...
             >>> print(board.is_full())  # True when 64 moves played
         """
-        return self.ply == BOARD_SIZE * BOARD_SIZE
+        return self.ply == 64
 
     def switch_player(self):
         """

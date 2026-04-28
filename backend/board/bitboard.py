@@ -4,212 +4,215 @@ Bitboard utilities for Gomoku game evaluation.
 This module provides functions for manipulating bitboards and checking for
 winning conditions in a Gomoku game using precomputed winning masks.
 """
-
+import numba as nb
 import numpy as np
 
 
-from .masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
-from .masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
+from . import BT, WMA, MOVES
 
-WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=np.uint64)
-WMC = [np.array(WIN_MASKS_BY_CELL[k], dtype=np.uint64) for k in range(64)]  # TODO
+@nb.njit
+def bitwise_count(bb):  # np.bitwise_count not implemented yet in numba
+    """
+    Count the number of set bits (1s) in a 64-bit integer using bitwise operations.
 
-
-def is_winning_aux(bb: int) -> bool:
-    """Check if the bitboard represents a winning position.
+    This function implements a bit counting algorithm that iterates through each set bit
+    by clearing the least significant set bit in each iteration.
 
     Args:
-        bb: The bitboard representing a player's stones.
+        bb (np.uint64): The 64-bit integer to count bits in.
 
     Returns:
-        True if there are five consecutive stones in any direction, False otherwise.
+        int: The number of set bits in the input.
     """
-    return any((bb & WMA) == WMA)
+    c = 0
+    while bb != 0:
+        bb &= bb - np.uint64(1)
+        c +=1
+    return c
 
-is_winning = np.vectorize(is_winning_aux)
 
+@nb.njit
+def get_winning_tiles_bb(bb):
+    """
+    Find all tiles that are part of winning combinations for the given bitboard.
 
-@np.vectorize
-def winning_tiles(bb: int) -> int:
-    """Return a bitboard of all tiles that are part of winning lines.
+    This function checks all precomputed winning masks against the current bitboard
+    and returns a bitboard containing all tiles that belong to winning lines.
 
     Args:
-        bb: The bitboard representing a player's stones.
+        bb (np.uint64): Bitboard representing current stone positions.
 
     Returns:
-        A bitboard where bits are set for tiles in winning five-in-a-row lines.
+        np.uint64: Bitboard with bits set for tiles that are part of winning combinations.
     """
-    return np.bitwise_or.reduce(WMA[(bb & WMA) == WMA])
+    WMA_LOCAL = WMA
+    res = np.uint64(0)
+
+    for i in range(96):
+        m = WMA_LOCAL[i]
+        if (bb & m) == m:
+            res |= m
+
+    return res
 
 
-def is_last_move_winning(bb: int, last_i: int, last_j: int) -> bool:
-    """Check if the last move results in five in a row.
+@nb.njit
+def wm_bb(bb_current, bb_open):
+    """
+    Find moves that would create an immediate win for the current player.
+
+    This function checks each possible move in open positions and determines
+    if placing a stone there would complete a winning combination.
 
     Args:
-        bb: The bitboard representing the current game state.
-        last_i: The row index of the last move.
-        last_j: The column index of the last move.
+        bb_current (np.uint64): Bitboard of current player's stones.
+        bb_open (np.uint64): Bitboard of open positions on the board.
 
     Returns:
-        True if five consecutive pieces are aligned, False otherwise.
+        np.uint64: Bitboard with bits set for winning moves.
     """
-    masks = WMC[last_i * 8 + last_j]  # TODO: Think whether its best to repeat ints so that you have an np.array and no dictionnary
-    return any((bb & masks) == masks)
+    BT_LOCAL = BT
+    res = np.uint64(0)
+
+    for k in range(5):  # 5 non-concurrent masks
+        move = BT_LOCAL[k] & bb_open
+        bb_after = bb_current | move
+
+        wt = get_winning_tiles_bb(bb_after)
+
+        if wt != 0:
+            res |= (wt & move)
+
+    return res
 
 
-def winning_tiles_from_last_move(bb: int, last_i: int, last_j: int) -> int:
-    """Return winning tiles that include the last move position.
+@nb.njit
+def dt_bb(bb_current, bb_open):
+    """
+    Find moves that create multiple winning opportunities (double threats).
+
+    A double threat is a move that creates two or more different winning
+    combinations simultaneously, making it very difficult for the opponent to block.
 
     Args:
-        bb: The bitboard representing a player's stones.
-        last_i: The row index of the last move.
-        last_j: The column index of the last move.
+        bb_current (np.uint64): Bitboard of current player's stones.
+        bb_open (np.uint64): Bitboard of open positions on the board.
 
     Returns:
-        A bitboard of tiles in winning lines that pass through the last move.
+        np.uint64: Bitboard with bits set for double threat moves.
     """
-    masks = WMC[last_i * 8 + last_j]  # TODO: same -> replace dict ?
-    return np.bitwise_or.reduce(masks[(bb & masks) == masks])
+    MOVES_LOCAL = MOVES
+    res = np.uint64(0)
+
+    for k in range(64):
+        move = MOVES_LOCAL[k]
+
+        if (move & bb_open) != 0:
+            bb_after = bb_current | move
+            bb_remaining = bb_open ^ move
+
+            wm = wm_bb(bb_after, bb_remaining)
+
+            if bitwise_count(wm) > 1:
+                res |= move
+
+    return res
 
 
-def ij_to_bit(i: int, j: int) -> int:
-    """Convert row and column indices to a bitboard bit position.
+@nb.njit
+def cm_bb(bb_current, bb_open):
+    """
+    Find moves that counter the opponent's threats.
+
+    This function prioritizes moves that either create immediate counter-attacks
+    or prevent the opponent from creating double threats.
 
     Args:
-        i: The row index (0-7).
-        j: The column index (0-7).
+        bb_current (np.uint64): Bitboard of current player's stones.
+        bb_open (np.uint64): Bitboard of open positions on the board.
 
     Returns:
-        An integer with the bit set at position i*8 + j.
+        np.uint64: Bitboard with bits set for counter moves.
     """
-    return (1 << (i * 8 + j))
+    MOVES_LOCAL = MOVES
+    res = np.uint64(0)
+
+    bb_opponent = ~bb_open ^ bb_current
+
+    for k in range(64):
+        move = MOVES_LOCAL[k]
+
+        if (move & bb_open) != 0:
+            bb_after = bb_current | move
+            bb_remaining = bb_open ^ move
+
+            # Counter-attack
+            if wm_bb(bb_after, bb_remaining) != 0:
+                res |= move
+
+            # Otherwise, prevent double threats
+            else:
+                odt = dt_bb(bb_opponent, bb_remaining)
+                if odt == 0:
+                    res |= move
+
+    return res
 
 
-def set_bit(bb: int, i: int, j: int) -> int:
-    """Set the bit at position (i, j) in the bitboard.
+@nb.njit
+def add_bits_to_scores(scores, bb):
+    """
+    Add the bit values from a bitboard to corresponding score indices.
+
+    For each set bit in the bitboard, increment the corresponding score
+    in the scores array. This is used to accumulate Monte Carlo simulation results.
 
     Args:
-        bb: The current bitboard.
-        i: The row index.
-        j: The column index.
-
-    Returns:
-        The updated bitboard with the bit set.
+        scores (np.ndarray): Array of scores for each board position (length 64).
+        bb (np.uint64): Bitboard containing positions to score.
     """
-    return bb | ij_to_bit(i, j)
+    for k in range(64):
+        scores[k] += (bb >> k) & 1
 
 
-# def bb_from_int_indexes(indexes: list[int]) -> int:
-#     """Create a bitboard from a list of integer bit indexes.
+@nb.njit
+def mc_bb(bb_current, bb_open, rs):
+    """
+    Select the best move using Monte Carlo simulation.
 
-#     Args:
-#         indexes: A list of integer bit positions (0-63) to set in the bitboard.
-
-#     Returns:
-#         An integer bitboard with the specified bits set.
-#     """
-#     bb = 0
-#     for i in indexes:
-#         bb |= (1 << i)
-#     return bb
-
-
-def board_to_bitboards(position: list[list[int]]) -> list[int]:
-    """Convert a 2D board matrix into two bitboards.
-
-    The returned list contains two integers: the first integer encodes
-    player 1 stones and the second encodes player 2 stones. Each board
-    cell maps to a bit at position `i * 8 + j` for row `i` and column
-    `j`.
+    This function runs multiple random game simulations from the current position
+    and scores each possible move based on how often it leads to winning positions.
+    The move with the highest score is selected.
 
     Args:
-        position: An 8x8 matrix of integers where 0 means empty, 1 means
-            player 1, and 2 means player 2.
+        bb_current (np.uint64): Bitboard of current player's stones.
+        bb_open (np.uint64): Bitboard of open positions on the board.
+        rs (np.ndarray): Array of random uint64 values for simulations.
 
     Returns:
-        A list of two bitboards `[player1_bb, player2_bb]`.
+        np.uint64: Bitboard with the single best move selected.
     """
-    # TODO: find a board structure np friendly
-    bitboards = [0, 0]
-    for i in range(8):
-        for j in range(8):
-            if position[i][j] == 1:
-                bitboards[0] = set_bit(bitboards[0], i, j)
-            if position[i][j] == 2:
-                bitboards[1] = set_bit(bitboards[1], i, j)
-    return bitboards
+    MOVES_local = MOVES
+    N = rs.shape[0]
 
+    scores = np.zeros(64, dtype=np.int64)
+    for t in range(N):
+        bb_random = bb_current | (rs[t] & bb_open)
 
-def bitboards_to_board(bitboards: list[int]) -> list[list[int]]:
-    """Convert two bitboards back into a 2D board matrix.
+        wt = get_winning_tiles_bb(bb_random) & bb_open
 
-    Args:
-        bitboards: A list of two bitboards `[player1_bb, player2_bb]`.
+        add_bits_to_scores(scores, wt)
 
-    Returns:
-        An 8x8 matrix where 0 means empty, 1 means player 1, and 2 means player 2.
-    """
-    board = [[0]*8 for _ in range(8)]
-    for i in range(8):
-        for j in range(8):
-            b = ij_to_bit(i, j)
-            if bitboards[0] & b:
-                board[i][j] = 1
-            if bitboards[1] & b:
-                board[i][j] = 2
-    return board
+    best_k = -1
+    best_score = -1
 
+    for k in range(64):  # TODO: return multiple moves in case of tie
+        move = MOVES_local[k]
 
-def bb_to_moves(bb: int) -> list[tuple[int, int]]:
-    """Convert a bitboard into a list of (i, j) move positions.
+        if (move & bb_open) != 0:
+            s = scores[k]
+            if s > best_score:
+                best_score = s
+                best_k = k
 
-    Args:
-        bb: A bitboard representing positions.
-
-    Returns:
-        A list of tuples (i, j) for each set bit in the bitboard.
-    """
-    moves = []
-    for i in range(8):
-        for j in range(8):
-            b = ij_to_bit(i, j)
-            if bb & b:
-                moves.append((i, j))
-    return moves
-
-
-def taken_spots(bb: list[int]) -> int:
-    """Return a bitboard representing positions occupied by both players.
-
-    Args:
-        bb: A list of two bitboards `[player1_bb, player2_bb]`.
-
-    Returns:
-        A bitboard where bits are set only for positions occupied by either
-        player 1 or player 2.
-    """
-    return bb[0] | bb[1]  # TODO: Manage numpy dimensions
-
-
-def open_spots(bitboards: list[int]) -> int:
-    """Return a bitboard of positions that are not taken.
-
-    Args:
-        bb: A list of two bitboards `[player1_bb, player2_bb]`.
-
-    Returns:
-        A bitboard where bits are set for empty positions.
-    """
-    return ~np.uint64(taken_spots(bitboards))
-
-
-def pretty(bb: int, reverse=True) -> str:
-    """Return pretty string for bitboard."""
-    if bb < 0:
-        bb += 2**64
-    s = bin(bb)[2:]
-    s = (64 - len(s)) * '0' + s
-    p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
-    if reverse:
-        return p[::-1]
-    return p
+    return np.uint64(1) << np.uint64(best_k)

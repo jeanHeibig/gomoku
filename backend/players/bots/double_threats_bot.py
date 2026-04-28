@@ -1,65 +1,76 @@
 import time
 import random
 
-from ...board.masks.board_tiles import BOARD_TILES
-from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves, set_bit, ij_to_bit
+import numpy as np
 
-_MIN_TIME = 2  # Seconds allowed to do the search. Otherwise, play random.
-
-
-def _get_winning_moves(bb_player, bb_open):
-    """Get moves that would complete a five-in-a-row for the player.
-
-    Args:
-        bb_player: Bitboard of the current player's stones.
-        bb_open: Bitboard of open spots on the board.
-
-    Returns:
-        List of (i, j) tuples representing winning moves.
-    """
-    wm = 0
-    for bb_check in BOARD_TILES:
-        wm |= bb_open & winning_tiles(bb_player | (bb_check & bb_open))
-    return bb_to_moves(wm)
+from ...board import b2b, bb2m  #, prettyprint
+from ...board.bitboard import wm_bb, dt_bb
 
 
-def _get_double_threat_moves(moves, bb_player, bb_open):
-    dt = 0
-    for (i, j) in moves:  # TODO: Do not look at all moves, only d <= 2
-        bb_threat = set_bit(bb_player, i, j)
-        bb_remaining = bb_open ^ ij_to_bit(i, j)
-        if len(_get_winning_moves(bb_threat, bb_remaining)) > 1:
-            dt |= (bb_threat ^ bb_player)
-    return bb_to_moves(dt)
+MIN_TIME = 1
 
 
 def double_threats_bot(position, current_player, timer, _):
-    # Get all possible moves (empty spots)
-    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
-    times = timer["times"]
-    remaining_time = times[current_player]
+    """
+    A bot that plays Gomoku by prioritizing strategic moves.
 
-    start_time = time.time()
-    if remaining_time > _MIN_TIME:
-        # Convert board to bitboards and find winning moves
-        bb = board_to_bitboards(position)
-        winning_moves = _get_winning_moves(bb[current_player], open_spots(bb))
-        if winning_moves:
-            return random.choice(winning_moves), None
+    This bot evaluates the board position and selects moves in the following order:
+    1. Win immediately if possible.
+    2. Block opponent's immediate winning moves.
+    3. Create double threats (positions that threaten multiple wins).
+    4. Fall back to a random valid move.
 
-    elapsed = time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        opponent_winning_moves = _get_winning_moves(bb[1 - current_player], open_spots(bb))
-        if opponent_winning_moves:
-            return random.choice(opponent_winning_moves), None
+    The bot respects time constraints and will play a random move if time is running low.
 
-    elapsed += time.time() - start_time
-    start_time = time.time()
-    if remaining_time - elapsed > _MIN_TIME:
-        double_threat_moves = _get_double_threat_moves(moves, bb[current_player], open_spots(bb))
-        if double_threat_moves:
-            return random.choice(double_threat_moves), None
+    Args:
+        position (list of list): 8x8 board representation where 0 is empty, 1 is player 1, 2 is player 2.
+        current_player (int): The current player (0 or 1).
+        timer (dict): Timer information with 'times' key containing remaining time for each player.
+        _ : Unused parameter.
 
-    # Fallback to random move if no winning move or low time
+    Returns:
+        tuple: A tuple containing the selected move as (row, col) and None.
+    """
+    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j] == 0]
+
+    remaining_time = timer["times"][current_player]
+    start_total = time.time()
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    bitboards = b2b(position)
+    bb_current = np.uint64(bitboards[current_player])
+    bb_opponent = np.uint64(bitboards[1 - current_player])
+    bb_open = ~(bb_current | bb_opponent)
+
+    # 1. Win immediately
+    winning_moves = wm_bb(bb_current, bb_open)
+    if winning_moves:
+        # print("Find winning moves:", time.time() - start_total)
+        # prettyprint(winning_moves)
+        return random.choice(bb2m(winning_moves)), None
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    # 2. Block opponent immediate win
+    opponent_winning_moves = wm_bb(bb_opponent, bb_open)
+    if opponent_winning_moves:
+        # print("Block threats:", time.time() - start_total)
+        # prettyprint(opponent_winning_moves)
+        return random.choice(bb2m(opponent_winning_moves)), None
+
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    # 3. Create double threat
+    double_threat_moves = dt_bb(bb_current, bb_open)
+    if double_threat_moves:
+        # print("Find double threats:", time.time() - start_total)
+        # prettyprint(double_threat_moves)
+        return random.choice(bb2m(double_threat_moves)), None
+
+    # print("Default:", time.time() - start_total)
+    # prettyprint(movemc)
     return random.choice(moves), None

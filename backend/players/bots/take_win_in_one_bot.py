@@ -1,50 +1,55 @@
-"""
-Bot that takes winning moves in one turn, otherwise plays randomly.
-
-This bot checks if there are any moves that immediately lead to a win
-for the current player. If found, it plays one randomly. If not, or if
-time is low, it falls back to random moves.
-"""
-
+import time
 import random
 
 import numpy as np
 
-from ...board.masks.board_tiles import BOARD_TILES
-from ...board.bitboard import board_to_bitboards, open_spots, winning_tiles, bb_to_moves
-
-_MIN_TIME = 1  # Seconds allowed to do the search. Otherwise, play random.
-
-BT = np.array(BOARD_TILES, dtype=np.uint64)  # TODO import directly from a numpy precomputed masks library
-MOVES = np.uint64(1) << np.arange(64, dtype=np.uint64)
+from ...board import b2b, bb2m  #, prettyprint
+from ...board.bitboard import wm_bb
 
 
-@np.vectorize
-def get_winning_moves(bb_player, bb_open):
-    return np.bitwise_or.reduce(bb_open & winning_tiles(bb_player | (BT & bb_open)))
+MIN_TIME = 1
 
 
 def take_win_in_one_bot(position, current_player, timer, _):
-    """Bot that prioritizes immediate winning moves, else random.
+    """
+    A simple bot that plays Gomoku by taking immediate wins.
+
+    This bot evaluates the board position and selects moves in the following order:
+    1. Win immediately if possible.
+    2. Fall back to a random valid move.
+
+    The bot respects time constraints and will play a random move if time is running low.
+    Note: Despite the name, this bot does not block opponent moves.
 
     Args:
-        position: 8x8 board matrix (0=empty, 1=player1, 2=player2).
-        timer: Timer object with method.
+        position (list of list): 8x8 board representation where 0 is empty, 1 is player 1, 2 is player 2.
+        current_player (int): The current player (0 or 1).
+        timer (dict): Timer information with 'times' key containing remaining time for each player.
+        _ : Unused parameter.
 
     Returns:
-        Tuple (i, j) of the chosen move.
+        tuple: A tuple containing the selected move as (row, col) and None.
     """
-    # Get all possible moves (empty spots)
-    bitboards = board_to_bitboards(position)
-    times = timer["times"]
-    remaining_time = times[current_player]
+    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j] == 0]
 
-    if remaining_time > _MIN_TIME:
-        # Convert board to bitboards and find winning moves
-        winning_moves = get_winning_moves(np.uint64(bitboards[current_player]), open_spots(bitboards))
-        if winning_moves:
-            return random.choice(winning_moves), None
+    remaining_time = timer["times"][current_player]
+    start_total = time.time()
 
-    # Fallback to random move if no winning move or low time
-    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j]==0]
+    if remaining_time - (time.time() - start_total) <= MIN_TIME:
+        return random.choice(moves), None
+
+    bitboards = b2b(position)
+    bb_current = np.uint64(bitboards[current_player])
+    bb_opponent = np.uint64(bitboards[1 - current_player])
+    bb_open = ~(bb_current | bb_opponent)
+
+    # 1. Win immediately
+    winning_moves = wm_bb(bb_current, bb_open)
+    if winning_moves:
+        # print("Find winning moves:", time.time() - start_total)
+        # prettyprint(winning_moves)
+        return random.choice(bb2m(winning_moves)), None
+
+    # print("Default:", time.time() - start_total)
+    # prettyprint(movemc)
     return random.choice(moves), None

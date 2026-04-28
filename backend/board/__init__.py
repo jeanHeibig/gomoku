@@ -1,3 +1,16 @@
-from .board import Board
+from numpy import array, arange, uint64
 
-__all__ = ["Board"]
+from .board import Board
+from .masks.board_tiles import BOARD_TILES
+from .masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
+
+b2b = Board.board_to_bitboards
+bb2m = Board.bb_to_moves
+prettyprint = Board.prettyprint
+
+BT = array(BOARD_TILES, dtype=uint64)
+WMA = array(WIN_MASKS_ALL_BOARD, dtype=uint64)
+MOVES = uint64(1) << arange(64, dtype=uint64)
+
+
+__all__ = ["Board", "b2b", "bb2m", "prettyprint", "BT", "WMA", "MOVES"]
