@@ -47,8 +47,6 @@ const levelLabels = {
     4: "Hard",
 };
 
-const editorIndicator = document.getElementById("editor-indicator");
-
 // 2. state
 const state = {
     gameId: null,
@@ -70,7 +68,7 @@ const state = {
 
     editorMode: false,
     editorBoard: null,
-    editorPlayer: 0,
+    editorPlayer: null,
 };
 
 // 3. init
@@ -165,12 +163,16 @@ function initKeyboard() {
             case "d":
                 toggleDarkMode();
                 break;
+
+            case "c":
+                if (state.editorMode) {
+                    clearEditorBoard();
+                }
         }
 
         if (e.key === " ") {
             if (state.editorMode) {
-                state.editorPlayer = 1 - state.editorPlayer;
-                updateEditorIndicator();
+                toggleEditorPlayer();
             }
         }
 
@@ -216,6 +218,11 @@ async function api(path, options = {}) {
 
 // 6. actions
 async function newGame() {
+    if (state.editorMode) {
+        submitEditorBoard();
+        return;
+    }
+
     stopClock();
     setFinished(false);
 
@@ -237,7 +244,7 @@ async function play(cell) {
     const j = parseInt(cell.dataset.col);
 
     if (state.editorMode) {
-        state.editorBoard[i][j] = (state.editorBoard[i][j] + 1) % 3;
+        state.editorBoard[i][j] = state.editorBoard[i][j] !== state.editorPlayer + 1 ? state.editorPlayer + 1 : 0;
         renderBoard();
         return;
     }
@@ -279,10 +286,8 @@ function setFinished(finished) {
     if (finished) {
         stopClock();
         dom.app.classList.add("finished");
-        dom.controls.newGameBtn.style.display = "block";
     } else {
         dom.app.classList.remove("finished");
-        dom.controls.newGameBtn.style.display = "none";
     }
 }
 
@@ -332,6 +337,8 @@ function render() {
 
 function renderBoard() {
     const boardData = state.editorMode ? state.editorBoard : state.board;
+    const effectiveLastMove = state.editorMode ? null : state.lastMove;
+    const effectiveWinningTiles = state.editorMode ? [] : state.winningTiles;
     const cells = document.getElementsByClassName('cell');
 
     for (let row = 0; row < 8; row++) {
@@ -342,11 +349,11 @@ function renderBoard() {
             cell.classList.remove("last-move", "win");
             stone.classList.remove("black", "white");
 
-            if (state.lastMove?.[0] === row && state.lastMove?.[1] === col) {
+            if (effectiveLastMove && effectiveLastMove[0] === row && effectiveLastMove[1] === col) {
                 cell.classList.add("last-move");
             }
 
-            if (state.winningTiles.some(([i, j]) => i === row && j === col)) {
+            if (effectiveWinningTiles.some(([i, j]) => i === row && j === col)) {
                 cell.classList.add("win");
             }
 
@@ -363,8 +370,10 @@ function renderBoard() {
 }
 
 function renderPlayers() {
-    dom.players.black.app.classList.toggle("active", state.currentPlayer === 0);
-    dom.players.white.app.classList.toggle("active", state.currentPlayer === 1);
+    const activePlayer = state.editorMode ? state.editorPlayer : state.currentPlayer;
+
+    dom.players.black.app.classList.toggle("player-active", activePlayer === 0);
+    dom.players.white.app.classList.toggle("player-active", activePlayer === 1);
 }
 
 function renderNicknames() {
@@ -373,13 +382,29 @@ function renderNicknames() {
 
     document.title = `Game ${b.nickname} - ${w.nickname}`;
 
-    dom.players.black.name.querySelector(".player-name-text").textContent = b.nickname;
-    dom.players.black.name.querySelector(".bot-label").classList.toggle("bot-hidden", !b.isBot);
-
-    dom.players.white.name.querySelector(".player-name-text").textContent = w.nickname;
-    dom.players.white.name.querySelector(".bot-label").classList.toggle("bot-hidden", !w.isBot);
-
     state.localPlayerIndex = b.isBot ? 1 : 0;
+    updateBoardOrientation();
+
+    renderPlayerName(dom.players.black.name, b);
+    renderPlayerName(dom.players.white.name, w);
+
+}
+
+function renderPlayerName(playerDom, playerData) {
+    const nameSpan = playerDom.querySelector(".player-name-text");
+    nameSpan.textContent = playerData.nickname;
+
+    const existing = playerDom.querySelector(".bot-label");
+    if (existing) {
+        existing.remove();
+    }
+
+    if (playerData.isBot) {
+        const botLabel = document.createElement("span");
+        botLabel.classList.add("bot-label");
+        botLabel.textContent = "BOT";
+        playerDom.appendChild(botLabel);
+    }
 }
 
 function renderClocks() {
@@ -401,15 +426,24 @@ function renderEndGame() {
 
     stopClock();
     dom.app.classList.add("finished");
-    dom.controls.newGameBtn.style.display = "block";
 
     setTimeout(() => {
+        const isMorpionMode = dom.app.classList.contains("morpion-mode");
+
         alert(
-            state.winner === 0 ? "Black wins!" :
-            state.winner === 1 ? "White wins!" :
+            state.winner === 0 ? (isMorpionMode ? "X wins!" : "Black wins!") :
+            state.winner === 1 ? (isMorpionMode ? "O wins!" : "White wins!") :
             "Draw."
         );
     }, 50);
+}
+
+function updateBoardOrientation() {
+    if (state.localPlayerIndex === 0) {
+        dom.app.classList.add("local-black");
+    } else {
+        dom.app.classList.remove("local-black");
+    }
 }
 
 // 9. ui
@@ -437,19 +471,40 @@ function showPreview(cell) {
 
 function hidePreview(cell) {
     const stone = cell.querySelector('.stone');
-    stone.classList.remove("black", "white", "preview");
+    stone.classList.remove("preview");
 
     const i = parseInt(cell.dataset.row);
     const j = parseInt(cell.dataset.col);
 
-    if (state.board?.[i][j] !== 0) {
-        stone.classList.add(state.board[i][j] === 1 ? "black" : "white");
+    if (state.board?.[i][j] === 0) {
+        stone.classList.remove("black", "white");
+    }
+}
+
+function clearAllPreviews() {
+    const cells = document.getElementsByClassName('cell');
+    for (let cell of cells) {
+        const stone = cell.querySelector('.stone');
+
+        if (!stone.classList.contains("preview")) {
+            continue;
+        }
+
+        stone.classList.remove("preview");
+
+        const i = parseInt(cell.dataset.row);
+        const j = parseInt(cell.dataset.col);
+
+        if (state.board?.[i][j] === 0) {
+            stone.classList.remove("black", "white");
+        }
     }
 }
 
 function toggleMorpionMode() {
     const isMorpionMode = dom.app.classList.toggle("morpion-mode");
     localStorage.setItem("morpionMode", isMorpionMode);
+    updateEditorIndicator();
 }
 
 function toggleDarkMode() {
@@ -522,21 +577,41 @@ function updateClockDisplay(el, t) {
 function toggleEditorMode() {
     state.editorMode = !state.editorMode;
 
+    clearAllPreviews();
+
     if (state.editorMode) {
         state.editorBoard = structuredClone(state.board);
         dom.app.classList.add("editor-mode");
+        state.editorPlayer = state.currentPlayer;
+
+        dom.editor.indicator.classList.remove("indicator-hidden");
+        updateEditorIndicator();
+        renderPlayers();
     } else {
         state.editorBoard = null;
         dom.app.classList.remove("editor-mode");
+        state.editorPlayer = state.currentPlayer;
+
+        dom.editor.indicator.classList.add("indicator-hidden");
     }
 
     renderBoard();
 }
 
-function updateEditorIndicator() {
-    const el = document.getElementById("editor-indicator");
+function toggleEditorPlayer() {
+    state.editorPlayer = 1 - state.editorPlayer;
+    updateEditorIndicator();
+    renderPlayers();
+}
 
-    el.textContent = state.editorPlayer === 0 ? "Black to move" : "White to move";
+function updateEditorIndicator() {
+    const isMorpionMode = dom.app.classList.contains("morpion-mode");
+
+    const playerText = state.editorPlayer === 0
+        ? (isMorpionMode ? "X" : "Black")
+        : (isMorpionMode ? "O" : "White");
+
+    dom.editor.indicator.textContent = `${playerText} to move`;
 }
 
 async function submitEditorBoard() {
@@ -550,7 +625,8 @@ async function submitEditorBoard() {
         },
         body: JSON.stringify({
             board: state.editorBoard,
-            player: state.editorPlayer,
+            editorPlayer: state.editorPlayer,
+            localPlayer: state.localPlayerIndex,
             time: TIME_PRESETS[dom.controls.timeSlider.value],
             increment: INCREMENT_PRESETS[dom.controls.incrementSlider.value],
             level: dom.controls.levelSlider.value,
@@ -560,12 +636,19 @@ async function submitEditorBoard() {
     state.editorMode = false;
     state.editorBoard = null;
     dom.app.classList.remove("editor-mode");
+    state.editorPlayer = null;
+    dom.editor.indicator.classList.add("indicator-hidden");
 
     state.gameId = data.gid;
     state.players = data.players;
 
     renderNicknames();
     update();
+}
+
+function clearEditorBoard() {
+    state.editorBoard = Array(8).fill(0).map(() => Array(8).fill(0));
+    renderBoard();
 }
 
 document.addEventListener("DOMContentLoaded", init);

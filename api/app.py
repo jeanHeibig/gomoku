@@ -96,8 +96,8 @@ def submit_board(req: dict):  # TODO: merge this with newgame
     gid = str(uuid.uuid4())
 
     position = req["board"]
-    print(position)
-    human_starts = int(req["player"])
+    current_player = int(req["editorPlayer"])
+    localPlayer = int(req["localPlayer"])
     level = int(req["level"])
     time = float(req["time"])
     increment = float(req["increment"])
@@ -106,14 +106,12 @@ def submit_board(req: dict):  # TODO: merge this with newgame
 
     timer = Timer(time, increment)
 
-    if human_starts:
-        players = [player1, player2]
-    else:
-        players = [player2, player1]
+    players = [player2, player2]
+    players[localPlayer] = player1
 
-    game = Game(gid, players, timer, position)
-    print(game)
+    game = Game(gid, players, timer, position, current_player)
 
+    human_starts = current_player == localPlayer
     if not human_starts:  # if bot starts
         game.move()
 

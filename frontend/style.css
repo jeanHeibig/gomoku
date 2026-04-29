@@ -144,6 +144,13 @@ body {
     justify-content: space-between;
 }
 
+#player-black { order: 1; }
+#controls { order: 2; }
+#player-white { order: 3; }
+
+.local-black #player-black { order: 3; }
+.local-black #player-white { order: 1; }
+
 .player {
     background: white;
     padding: 15px;
@@ -183,10 +190,6 @@ body {
     letter-spacing: 0.08em;
 }
 
-.bot-hidden {
-    display: none;
-}
-
 /* clock */
 .clock {
     font-size: 24px;
@@ -223,6 +226,12 @@ body {
 }
 
 /* inputs */
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 #new-game-btn {
     margin: 20px 0;
     padding: 15px;
@@ -232,13 +241,28 @@ body {
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 
-    display: none;
-    transition: all 0.2s ease;
+    display: block;
+    transition: all 2.2s ease;
 }
 
 #new-game-btn:hover {
     background: #f3f3f3;
     transform: scale(1.05);
+}
+
+.editor-indicator {
+    /* background: #f0d9b5;
+    border: 1px solid #b58863;
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: 10px 0; */
+    font-size: 0.95em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.indicator-hidden {
+    display: none;
 }
 
 .timer-selector, .level-selector {
@@ -249,7 +273,7 @@ body {
     font-size: 1.2em;
 }
 
-#app:not(.finished) .timer-selector, #app:not(.finished) .level-selector {
+#app:not(.finished):not(.editor-mode) .controls {
     display: none;
 }
 
@@ -257,6 +281,17 @@ body {
     width: 150px;
     cursor: pointer;
     accent-color: #b58863;
+}
+
+/* editor mode */
+.editor-mode .board {
+    border: 1px dashed rgba(255, 0, 0, 0.9);
+}
+
+.editor-mode .cell {
+    cursor: crosshair;
+    outline: 1px dashed rgba(0, 0, 0, 0.3);
+    outline-offset: -1px;
 }
 
 /* Dark mode */
@@ -323,6 +358,15 @@ body.dark-mode #new-game-btn:hover {
     background: #666;
 }
 
+/* body.dark-mode .editor-indicator {
+    background: #555;
+    border: 1px solid #ddd;
+} */
+
 body.dark-mode #time-slider, body.dark-mode #increment-slider, body.dark-mode #level {
     accent-color: #aaa;
+}
+
+body.dark-mode .editor-mode .cell {
+    outline: 1px dashed rgba(255, 255, 255, 0.3);
 }
