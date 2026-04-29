@@ -3,8 +3,7 @@ Gomoku Server and AI training
 
 # TODO
 
-- Find an evaluation function for a position -> core of the problem
-- Add "real" (concrete games based on simple bots) Monte-Carlo for fast eval function
+- Remove X to move indicator in board editor
 - Implement iterative α-β search
 - Use board symmetries
 - Opening tables
