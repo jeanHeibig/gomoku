@@ -5,6 +5,7 @@ Gomoku Server and AI training
 
 - Remove X to move indicator in board editor
 - Implement iterative α-β search
+- Fast eval must look for tactics
 - Use board symmetries
 - Opening tables
 - Endgame tables: "kill" stones that can no longer contribute to an alignment
@@ -25,3 +26,4 @@ Gomoku Server and AI training
 - JS -> only toggle classes / CSS -> everything visual
 - Stabilize Editor Board
 - Make render fully authoritative
+- Is it faster to do MOVES[k] or 1 << k ?

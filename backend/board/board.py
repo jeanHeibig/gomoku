@@ -151,7 +151,8 @@ class Board:
         p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
         if reverse:
             print(p[::-1], end=end)
-        print(p, end=end)
+        else:
+            print(p, end=end)
 
 
     def __init__(self, starting_position=None, current_player=None):

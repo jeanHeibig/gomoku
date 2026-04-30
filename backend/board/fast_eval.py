@@ -54,9 +54,9 @@ def get_scores(bb_current, bb_opponent):
 
     for idx in range(64):
         if bb_occupied & (np.uint64(1) << idx):
-            scores[idx] = 0
+            scores[idx] = -1
 
-    return scores.reshape((8, 8))
+    return scores
 
 
 @nb.njit
@@ -84,7 +84,7 @@ def fast_eval(bb_current, bb_opponent):
     bb_open = ~bb_occupied
     score = np.int64(0)
 
-    for t in range(N):
+    for t in range(N):  # TODO Endgames : if < 20 free spots, go through all configurations
         bb_current_completed = bb_current | (RG_LOCAL[t] & bb_open)
         bb_opponent_completed = bb_opponent | (~RG_LOCAL[t] & bb_open)
 
