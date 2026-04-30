@@ -10,7 +10,7 @@ import numba as nb
 import numpy as np
 
 
-from . import WMA, WMI, RG
+from . import WMA, WMI, RG, BT
 
 
 @nb.njit
@@ -31,12 +31,62 @@ def get_scores(bb_current, bb_opponent):
     WMA_LOCAL = WMA  # pylint: disable=invalid-name
     WMI_LOCAL = WMI  # pylint: disable=invalid-name
     RG_LOCAL = RG  # pylint: disable=invalid-name
+    BT_LOCAL = BT  # pylint: disable=invalid-name
     N = RG_LOCAL.shape[0]  # pylint: disable=invalid-name
 
     bb_occupied = (bb_current | bb_opponent)
     bb_open = ~bb_occupied
     scores = np.zeros(64, dtype=np.int64)
 
+    # Winning moves:
+    res_current = np.uint64(0)
+    res_opponent = np.uint64(0)
+
+    for k in range(5):  # 5 non-concurrent masks
+        move = BT_LOCAL[k] & bb_open
+        bb_current_after = bb_current | move
+        bb_opponent_after = bb_opponent | move
+
+        wtc = np.uint64(0)
+        wto = np.uint64(0)
+
+        for i in range(96):
+            m = WMA_LOCAL[i]
+            if (bb_current_after & m) == m:
+                wtc |= m
+            elif (bb_opponent_after & m) == m:
+                wto |= m
+
+        if wtc != 0:
+            res_current |= (wtc & move)
+        if wto != 0:
+            res_opponent |= (wto & move)
+
+    if res_current != 0:  # Win in one found
+        for idx in range(64):
+            bb_idx = (np.uint64(1) << idx)
+            if bb_occupied & bb_idx:
+                scores[idx] = -1
+            elif res_current & bb_idx:
+                scores[idx] = 1
+            else:
+                scores[idx] = -2  # Legal move, but missing mate in one
+
+        return scores
+
+    if res_opponent != 0:  # Threat in one found
+        for idx in range(64):
+            bb_idx = (np.uint64(1) << idx)
+            if bb_occupied & bb_idx:
+                scores[idx] = -1
+            elif res_opponent & bb_idx:
+                scores[idx] = 1
+            else:
+                scores[idx] = -2  # Legal move, but missing mate in one
+
+        return scores
+
+    # Monte-Carlo evaluation
     for t in range(N):
         bb_current_completed = bb_current | (RG_LOCAL[t] & bb_open)
         bb_opponent_completed = bb_opponent | (~RG_LOCAL[t] & bb_open)
