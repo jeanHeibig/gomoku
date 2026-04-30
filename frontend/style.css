@@ -289,6 +289,79 @@ body {
 
 /* Dark mode */
 body.dark-mode {
+    background: #ffffff;
+
+    color: #000;
+}
+
+body.dark-mode .cell.light {
+    background-color: #fffef3;
+}
+
+body.dark-mode .cell.dark {
+    background-color: #7ca2be;
+}
+
+body.dark-mode .cell.light.last-move {
+    background-color: #c9f0bd;
+}
+
+body.dark-mode .cell.dark.last-move {
+    background-color: #80b861;
+}
+
+body.dark-mode .stone.black {
+    background: radial-gradient(circle at 30% 30%, #333, #000);
+}
+
+body.dark-mode .stone.white {
+    background: radial-gradient(circle at 30% 30%, #ddd, #999);
+    border: 1px solid #777;
+}
+
+body.dark-mode #app.morpion-mode .stone {
+    color: #bbb;
+}
+
+body.dark-mode #app.morpion-mode .cell.win .stone {
+    color: #ad2929;
+}
+
+body.dark-mode .player {
+    background: #7ca2be;
+}
+
+body.dark-mode .player-active {
+    outline: 3px solid #f6cb9a;
+}
+
+body.dark-mode .bot-label {
+    color: #000;
+    background: #f6cb9a;
+    border: 1px solid #000;
+}
+
+body.dark-mode #new-game-btn {
+    color: #000;
+    background: #f6cb9a;
+    border: 1px solid grey;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode #new-game-btn:hover {
+    background: #eca351;
+}
+
+body.dark-mode #time-slider, body.dark-mode #increment-slider, body.dark-mode #level {
+    accent-color: #f6cb9a;
+}
+
+body.dark-mode .editor-mode .cell {
+    outline: 1px dashed rgba(246, 203, 154, 0.8);
+}
+
+/* Dark mode
+body.dark-mode {
     background: #222;
     color: #ddd;
 }
@@ -351,15 +424,10 @@ body.dark-mode #new-game-btn:hover {
     background: #666;
 }
 
-/* body.dark-mode .editor-indicator {
-    background: #555;
-    border: 1px solid #ddd;
-} */
-
 body.dark-mode #time-slider, body.dark-mode #increment-slider, body.dark-mode #level {
     accent-color: #aaa;
 }
 
 body.dark-mode .editor-mode .cell {
     outline: 1px dashed rgba(255, 255, 255, 0.3);
-}
+} */

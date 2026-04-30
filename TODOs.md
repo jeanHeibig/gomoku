@@ -29,7 +29,7 @@ Gomoku Server and AI training
 - Deploy server online so players can connect via link to play against the bot
 - Login page
 - Manage matchmaking
-- Blue mode -> manage custom theme through color aliasesm
+- manage custom theme through color aliasesm
 - TODO : merge new game and submit board
 - Editor mode : at the end, only accept valid board configurations
 - Review code and inline TODOs
