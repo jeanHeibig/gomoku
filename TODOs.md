@@ -3,16 +3,18 @@ Gomoku Server and AI training
 
 # TODO
 
-- Remove X to move indicator in board editor
-- active player does not work when bot thinks
+- bot needs to do a faster search
+- active player does not work when bot thinks and cursor either
 - Add draw and resign button (t, r)
 - Declare draw as soon as no alignment is possible anymore
+- Introduce dead cells -> cells that a player can no longer have interest in, because they can't produce a win -> reduces attack search
 - Implement iterative α-β search
 - current bot is dumb at tactics
 - current eval function is biased towards X (O missing one move during the eval)
 - Get scores (and Fast eval?) must look for tactics
 - Use PV-search
 - Use Transposition tables
+- add an opening book
 - Use board symmetries
 - Use History Killer Moves
 - Opening tables

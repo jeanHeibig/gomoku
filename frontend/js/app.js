@@ -25,10 +25,6 @@ const dom = {
             name: document.getElementById("player-name-white"),
         }
     },
-
-    editor: {
-        indicator: document.getElementById("editor-indicator"),
-    },
 };
 
 const TIME_PRESETS = [
@@ -208,6 +204,15 @@ function initBoardEvents() {
             hidePreview(cell);
         }
     });
+
+    dom.board.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+
+        const cell = e.target.closest(".cell");
+        if (!cell) return;
+
+        toggleCellHighlight(cell);
+    })
 }
 
 // 5. api
@@ -505,12 +510,15 @@ function clearAllPreviews() {
 function toggleMorpionMode() {
     const isMorpionMode = dom.app.classList.toggle("morpion-mode");
     localStorage.setItem("morpionMode", isMorpionMode);
-    updateEditorIndicator();
 }
 
 function toggleDarkMode() {
     const isDark = document.body.classList.toggle("dark-mode");
     localStorage.setItem("darkMode", isDark);
+}
+
+function toggleCellHighlight(cell) {
+    cell.classList.toggle("marked");
 }
 
 // 10. clock
@@ -586,7 +594,6 @@ function toggleEditorMode() {
         state.editorPlayer = state.currentPlayer;
 
         dom.editor.indicator.classList.remove("indicator-hidden");
-        updateEditorIndicator();
         renderPlayers();
     } else {
         state.editorBoard = null;
@@ -601,19 +608,9 @@ function toggleEditorMode() {
 
 function toggleEditorPlayer() {
     state.editorPlayer = 1 - state.editorPlayer;
-    updateEditorIndicator();
     renderPlayers();
 }
 
-function updateEditorIndicator() {
-    const isMorpionMode = dom.app.classList.contains("morpion-mode");
-
-    const playerText = state.editorPlayer === 0
-        ? (isMorpionMode ? "X" : "Black")
-        : (isMorpionMode ? "O" : "White");
-
-    dom.editor.indicator.textContent = `${playerText} to move`;
-}
 
 async function submitEditorBoard() {
     stopClock();

@@ -6,7 +6,7 @@ import numpy as np
 
 from ...board import WMA, MOVES
 from ...board.fast_eval import get_scores, fast_eval
-from ...board import b2b, bb2m, prettyprint
+from ...board import b2b, bb2m  #, prettyprint
 
 
 INF = np.int64(1) << 60
@@ -124,7 +124,7 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
                 best_move = move
 
         print(f"Best move: {best_score}")
-        prettyprint(best_move)
+        # prettyprint(best_move)
 
     print(best_move)
     return bb2m(best_move)[0]
