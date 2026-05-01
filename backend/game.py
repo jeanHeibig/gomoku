@@ -87,7 +87,7 @@ class Game:
             return
 
         # Test draws
-        if self.board.is_full():
+        if self.board.is_full() or self.board.is_dead():
             self._draw_game()
             return
 

@@ -6,12 +6,14 @@ Gomoku Server and AI training
 - bot needs to do a faster search
 - active player does not work when bot thinks and cursor either
 - Add draw and resign button (t, r)
-- Declare draw as soon as no alignment is possible anymore
+- Add double threats to get_scores, then add threats
 - Introduce dead cells -> cells that a player can no longer have interest in, because they can't produce a win -> reduces attack search
+- dead cell should also allow a player to know if both players play for a win or someone already plays for a draw
+- Eval as a dead draw as soon as no alignment is possible anymore
 - Implement iterative α-β search
 - current bot is dumb at tactics
-- current eval function is biased towards X (O missing one move during the eval)
 - Get scores (and Fast eval?) must look for tactics
+- current eval function is biased towards X (O missing one move during the eval)
 - Use PV-search
 - Use Transposition tables
 - add an opening book
@@ -39,3 +41,4 @@ Gomoku Server and AI training
 - Make render fully authoritative
 - Is it faster to do MOVES[k] or 1 << k ?
 - Improve search engine
+- Backend is too python heavy, not C, should rewrite it with only np numbers...

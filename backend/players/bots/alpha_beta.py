@@ -6,13 +6,14 @@ import numpy as np
 
 from ...board import WMA, MOVES
 from ...board.fast_eval import get_scores, fast_eval
-from ...board import b2b, bb2m  #, prettyprint
+from ...board import b2b, bb2m, prettyprint
 
 
 INF = np.int64(1) << 60
+BB_64_ONES = sum([np.uint64(1) << k for k in range(64)], start=np.uint(0))
+K = 6
 
-
-# @nb.njit
+@nb.njit
 def sort_moves(move_scores): # TODO: Add PV-search, Transposition table and History Killer Moves
     MOVES_LOCAL = MOVES
     moves = np.zeros(64, dtype=np.uint64)
@@ -43,7 +44,7 @@ def sort_moves(move_scores): # TODO: Add PV-search, Transposition table and Hist
     return moves[:mv_nb], mv_nb
 
 
-# @nb.njit
+@nb.njit
 def is_winning(bb_current) -> bool:
     WMA_LOCAL = WMA
 
@@ -55,7 +56,13 @@ def is_winning(bb_current) -> bool:
     return False
 
 
-# @nb.njit
+@nb.njit
+def is_dead_draw(bb_current, bb_opponent):
+    bb_open = ~(bb_current | bb_opponent)
+    return not is_winning(bb_current | (bb_open & BB_64_ONES)) and not is_winning(bb_opponent | (bb_open & BB_64_ONES))
+
+
+@nb.njit
 def negamax(bb_current, bb_opponent, depth, alpha, beta):
     if depth == 0:
         return fast_eval(bb_current, bb_opponent)
@@ -63,15 +70,15 @@ def negamax(bb_current, bb_opponent, depth, alpha, beta):
     if is_winning(bb_current):
         return INF
 
-    move_scores = get_scores(bb_current, bb_opponent)
-    ordered_moves, mv_nb = sort_moves(move_scores)
+    if is_dead_draw(bb_current, bb_opponent):
+        return 0
 
-    if mv_nb == 0:
-        return 0  # draw
+    move_scores = get_scores(bb_current, bb_opponent)
+    ordered_moves, _ = sort_moves(move_scores)
 
     best = -INF
 
-    for move in ordered_moves:
+    for move in ordered_moves[:K]:
         bb_current ^= move  # play move
         score = -negamax(bb_opponent, bb_current, depth - 1, -beta, -alpha)
         bb_current ^= move  # undo move
@@ -126,7 +133,7 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
         print(f"Best move: {best_score}")
         # prettyprint(best_move)
 
-    print(best_move)
+    # print(best_move)
     return bb2m(best_move)[0]
 
 

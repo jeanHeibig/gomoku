@@ -22,8 +22,11 @@ Classes:
 import numpy as np
 
 from .masks.precomputed_masks_by_cell import WIN_MASKS_BY_CELL
+from .masks.precomputed_masks_all_board import WIN_MASKS_ALL_BOARD
 
+WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=np.uint64)
 WMC = tuple(np.array(WIN_MASKS_BY_CELL[k], dtype=np.uint64) for k in range(64))
+INF = sum([np.uint64(1) << k for k in range(64)], start=np.uint(0))
 
 
 class Board:
@@ -83,6 +86,10 @@ class Board:
         """
         masks = WMC[last_i * 8 + last_j]
         return np.bitwise_or.reduce(masks[(bb & masks) == masks])
+
+    @staticmethod
+    def is_winning(bb) -> bool:
+        return any((bb & WMA) == WMA)
 
     @staticmethod
     def move_to_bb(i: int, j: int) -> int:
@@ -340,6 +347,14 @@ class Board:
             >>> print(board.is_full())  # True when 64 moves played
         """
         return self.ply == 64
+
+    def is_dead(self):
+        """Return True if and only if neither player can win anymore."""
+        black, white = np.uint64(self.bitboards[0]), np.uint64(self.bitboards[1])
+        bb_open = ~(black | white)
+        black_can_win = self.is_winning(black | (bb_open & INF))
+        white_can_win = self.is_winning(white | (bb_open & INF))
+        return not black_can_win and not white_can_win
 
     def switch_player(self):
         """

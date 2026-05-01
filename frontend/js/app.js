@@ -593,14 +593,11 @@ function toggleEditorMode() {
         dom.app.classList.add("editor-mode");
         state.editorPlayer = state.currentPlayer;
 
-        dom.editor.indicator.classList.remove("indicator-hidden");
         renderPlayers();
     } else {
         state.editorBoard = null;
         dom.app.classList.remove("editor-mode");
         state.editorPlayer = state.currentPlayer;
-
-        dom.editor.indicator.classList.add("indicator-hidden");
     }
 
     renderBoard();
@@ -635,7 +632,6 @@ async function submitEditorBoard() {
     state.editorBoard = null;
     dom.app.classList.remove("editor-mode");
     state.editorPlayer = null;
-    dom.editor.indicator.classList.add("indicator-hidden");
 
     state.gameId = data.gid;
     state.players = data.players;
