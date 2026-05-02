@@ -11,6 +11,7 @@ import numpy as np
 
 
 from . import WMA, WMI, RG, BT
+from .bitboard import cm_bb, dt_bb
 
 
 @nb.njit
@@ -63,7 +64,7 @@ def get_scores(bb_current, bb_opponent):
             res_opponent |= (wto & move)
 
     if res_current != 0:  # Win in one found
-        for idx in range(64):
+        for idx in range(64):  # TODO : wrap this in a function
             bb_idx = (np.uint64(1) << idx)
             if bb_occupied & bb_idx:
                 scores[idx] = -1
@@ -85,6 +86,38 @@ def get_scores(bb_current, bb_opponent):
                 scores[idx] = -2  # Legal move, but missing mate in one
 
         return scores
+
+    # Create double threat
+    double_threat_moves = dt_bb(bb_current, bb_open)
+    if double_threat_moves:
+        for idx in range(64):
+            bb_idx = (np.uint64(1) << idx)
+            if bb_occupied & bb_idx:
+                scores[idx] = -1
+            elif double_threat_moves & bb_idx:
+                scores[idx] = 1
+            else:
+                scores[idx] = -2  # Legal move, but missing lethal threat
+
+        return scores
+
+    # Block opponent double threats
+    opponent_double_threats = dt_bb(bb_opponent, bb_open)
+    if opponent_double_threats:
+        counter_moves = cm_bb(bb_current, bb_open)
+        if counter_moves:
+            for idx in range(64):
+                bb_idx = (np.uint64(1) << idx)
+                if bb_occupied & bb_idx:
+                    scores[idx] = -1
+                elif counter_moves & bb_idx:
+                    scores[idx] = 1
+                else:
+                    scores[idx] = -2  # Legal move, but missing lethal threat
+
+            return scores
+
+    # TODO: Look for threats
 
     # Monte-Carlo evaluation
     for t in range(N):

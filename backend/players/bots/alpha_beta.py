@@ -107,7 +107,7 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
 
         best_score = -INF
         move_scores = get_scores(bb_current, bb_opponent)
-        # print(move_scores.reshape((8, 8)))
+        print(move_scores.reshape((8, 8)))
         ordered_moves, mv_nb = sort_moves(move_scores)
 
         if mv_nb == 1:

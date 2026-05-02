@@ -269,6 +269,7 @@ async function play(cell) {
     state.lastUpdate = Date.now();
 
     renderBoard();
+    renderPlayers();
     renderClocks();
 
     await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, {

@@ -4,9 +4,8 @@ Gomoku Server and AI training
 # TODO
 
 - bot needs to do a faster search
-- active player does not work when bot thinks and cursor either
 - Add draw and resign button (t, r)
-- Add double threats to get_scores, then add threats
+- Add then add threats get_scores
 - Introduce dead cells -> cells that a player can no longer have interest in, because they can't produce a win -> reduces attack search
 - dead cell should also allow a player to know if both players play for a win or someone already plays for a draw
 - Eval as a dead draw as soon as no alignment is possible anymore
