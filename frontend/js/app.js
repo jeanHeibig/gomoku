@@ -266,10 +266,12 @@ async function play(cell) {
     state.remainingTimes[state.currentPlayer] += state.increments[state.currentPlayer];
 
     state.currentPlayer = 1 - state.currentPlayer;
+    state.clockPly += 1;
     state.lastUpdate = Date.now();
 
     renderBoard();
     renderPlayers();
+    startClock();
     renderClocks();
 
     await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, {

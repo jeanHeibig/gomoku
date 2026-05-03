@@ -3,13 +3,13 @@ Gomoku Server and AI training
 
 # TODO
 
+- watch bot vs bot on gui
 - bot needs to do a faster search
 - Add draw and resign button (t, r)
-- Add then add threats get_scores
-- Introduce dead cells -> cells that a player can no longer have interest in, because they can't produce a win -> reduces attack search
-- dead cell should also allow a player to know if both players play for a win or someone already plays for a draw
-- Eval as a dead draw as soon as no alignment is possible anymore
+- Add single_threats (st_bb) threats to get_scores
+- sort with best move (iterative deepening) at given ply number
 - Implement iterative α-β search
+- watch out for time limit in iterative search : does it really produces the best move ?
 - current bot is dumb at tactics
 - Get scores (and Fast eval?) must look for tactics
 - current eval function is biased towards X (O missing one move during the eval)
@@ -30,7 +30,7 @@ Gomoku Server and AI training
 - Deploy server online so players can connect via link to play against the bot
 - Login page
 - Manage matchmaking
-- manage custom theme through color aliasesm
+- manage custom theme through color aliases
 - TODO : merge new game and submit board
 - Editor mode : at the end, only accept valid board configurations
 - Review code and inline TODOs
@@ -41,3 +41,5 @@ Gomoku Server and AI training
 - Is it faster to do MOVES[k] or 1 << k ?
 - Improve search engine
 - Backend is too python heavy, not C, should rewrite it with only np numbers...
+- improve bot speed/performance
+- solve the 8x8x5 and then go for 16x16x5 with 4 bitboards, then go for oo-te structure

@@ -11,7 +11,7 @@ import numpy as np
 
 
 from . import WMA, WMI, RG, BT
-from .bitboard import cm_bb, dt_bb
+from .bitboard import cm_bb, dt_bb, st_bb
 
 
 @nb.njit
@@ -117,7 +117,18 @@ def get_scores(bb_current, bb_opponent):
 
             return scores
 
-    # TODO: Look for threats
+    threats = st_bb(bb_current, bb_open)
+    if threats:
+        for idx in range(64):
+            bb_idx = (np.uint64(1) << idx)
+            if bb_occupied & bb_idx:
+                scores[idx] = -1
+            elif threats & bb_idx:
+                scores[idx] = 1
+            else:
+                scores[idx] = -2  # Legal move, but missing lethal threat
+
+        return scores
 
     # Monte-Carlo evaluation
     for t in range(N):

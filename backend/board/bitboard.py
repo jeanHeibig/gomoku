@@ -216,3 +216,8 @@ def mc_bb(bb_current, bb_open, rs):
                 best_k = k
 
     return np.uint64(1) << np.uint64(best_k)
+
+
+@nb.njit
+def st_bb(bb_current, bb_open):
+    return 0

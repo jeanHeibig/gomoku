@@ -11,7 +11,7 @@ from ...board import b2b, bb2m, prettyprint
 
 INF = np.int64(1) << 60
 BB_64_ONES = sum([np.uint64(1) << k for k in range(64)], start=np.uint(0))
-K = 6
+K = 5
 
 @nb.njit
 def sort_moves(move_scores): # TODO: Add PV-search, Transposition table and History Killer Moves
@@ -64,11 +64,11 @@ def is_dead_draw(bb_current, bb_opponent):
 
 @nb.njit
 def negamax(bb_current, bb_opponent, depth, alpha, beta):
-    if depth == 0:
-        return fast_eval(bb_current, bb_opponent)
-
     if is_winning(bb_current):
         return INF
+
+    if depth == 0:
+        return fast_eval(bb_current, bb_opponent)
 
     if is_dead_draw(bb_current, bb_opponent):
         return 0
@@ -101,19 +101,19 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
     start_time = time.time()
 
     for depth in range(1, max_depth + 1):
-        print(f"Depth: {depth}")
+        # print(f"Depth: {depth}")
         if time.time() - start_time >= time_limit:
             break  # Time limit reached, stop searching deeper
 
         best_score = -INF
         move_scores = get_scores(bb_current, bb_opponent)
-        print(move_scores.reshape((8, 8)))
+        # print(move_scores.reshape((8, 8)))
         ordered_moves, mv_nb = sort_moves(move_scores)
 
         if mv_nb == 1:
             return bb2m(ordered_moves)[0]
 
-        for move in ordered_moves:
+        for move in ordered_moves[:K]:
 
             if time.time() - start_time >= time_limit:
                 break  # Time limit reached, stop searching deeper
@@ -130,7 +130,7 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
                 best_score = score
                 best_move = move
 
-        print(f"Best move: {best_score}")
+        # print(f"Best move: {best_score}")
         # prettyprint(best_move)
 
     # print(best_move)
@@ -141,7 +141,7 @@ def ab_bot(position, current_player, timer, _):
     moves = [(i, j) for i in range(8) for j in range(8) if position[i][j] == 0]
 
     remaining_time = timer["times"][current_player]
-    move_time = 4 * remaining_time / (len(moves) + 1)
+    move_time = 10 * remaining_time / (len(moves) + 1)
     start_total = time.time()
 
     if remaining_time - (time.time() - start_total) <= move_time:
