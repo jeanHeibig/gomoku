@@ -215,7 +215,7 @@ def mc_bb(bb_current, bb_open, rs):
                 best_score = s
                 best_k = k
 
-    return np.uint64(1) << np.uint64(best_k)
+    return MOVES_LOCAL[best_k]
 
 
 @nb.njit

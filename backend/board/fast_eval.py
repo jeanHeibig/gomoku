@@ -10,7 +10,7 @@ import numba as nb
 import numpy as np
 
 
-from . import WMA, WMI, RG, BT
+from . import WMA, WMI, RG, BT, MOVES
 from .bitboard import cm_bb, dt_bb, st_bb
 
 
@@ -33,6 +33,7 @@ def get_scores(bb_current, bb_opponent):
     WMI_LOCAL = WMI  # pylint: disable=invalid-name
     RG_LOCAL = RG  # pylint: disable=invalid-name
     BT_LOCAL = BT  # pylint: disable=invalid-name
+    MOVES_LOCAL = MOVES  # pylint: disable=invalid-name
     N = RG_LOCAL.shape[0]  # pylint: disable=invalid-name
 
     bb_occupied = (bb_current | bb_opponent)
@@ -65,7 +66,7 @@ def get_scores(bb_current, bb_opponent):
 
     if res_current != 0:  # Win in one found
         for idx in range(64):  # TODO : wrap this in a function
-            bb_idx = (np.uint64(1) << idx)
+            bb_idx = MOVES_LOCAL[idx]
             if bb_occupied & bb_idx:
                 scores[idx] = -1
             elif res_current & bb_idx:
@@ -77,7 +78,7 @@ def get_scores(bb_current, bb_opponent):
 
     if res_opponent != 0:  # Threat in one found
         for idx in range(64):
-            bb_idx = (np.uint64(1) << idx)
+            bb_idx = MOVES_LOCAL[idx]
             if bb_occupied & bb_idx:
                 scores[idx] = -1
             elif res_opponent & bb_idx:
@@ -91,7 +92,7 @@ def get_scores(bb_current, bb_opponent):
     double_threat_moves = dt_bb(bb_current, bb_open)
     if double_threat_moves:
         for idx in range(64):
-            bb_idx = (np.uint64(1) << idx)
+            bb_idx = MOVES_LOCAL[idx]
             if bb_occupied & bb_idx:
                 scores[idx] = -1
             elif double_threat_moves & bb_idx:
@@ -107,7 +108,7 @@ def get_scores(bb_current, bb_opponent):
         counter_moves = cm_bb(bb_current, bb_open)
         if counter_moves:
             for idx in range(64):
-                bb_idx = (np.uint64(1) << idx)
+                bb_idx = MOVES_LOCAL[idx]
                 if bb_occupied & bb_idx:
                     scores[idx] = -1
                 elif counter_moves & bb_idx:
@@ -136,7 +137,7 @@ def get_scores(bb_current, bb_opponent):
     threats = st_bb(bb_current, bb_open)
 
     for idx in range(64):
-        bb_idx = (np.uint64(1) << idx)
+        bb_idx = MOVES_LOCAL[idx]
         if bb_occupied & bb_idx:
             scores[idx] = -1
         elif threats & bb_idx:
