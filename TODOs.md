@@ -3,7 +3,7 @@ Gomoku Server and AI training
 
 # TODO
 
-- Review code and inline TODOs
+- Review code and inline TODOs, add docstrings and type annotations
 - Remove unnecessary bitboard recomputation inside negamax
 - Use Transposition tables (with board symmetries and? ply number -of search- as depth?) and add PV-search (sort with best move -iterative deepening- at given ply number)
 - Use History Killer Moves

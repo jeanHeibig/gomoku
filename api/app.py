@@ -88,7 +88,7 @@ def new_game(level: int, time: int, increment: int):
 
 
 @app.post("/submit_board")
-def submit_board(req: dict):  # TODO: merge this with newgame
+def submit_board(req: dict):
     gid = str(uuid.uuid4())
 
     position = req["board"]

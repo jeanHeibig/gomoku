@@ -9,8 +9,6 @@ BOARD_SIZE = 8
 ALIGN = 5
 
 
-# TODO: merge those functions with those of masks_generator_by_cell
-# TODO: And unify mask generation with other file
 def idx(i: int, j: int) -> int:
     """Convert 2D coordinates (i, j) to a 1D index."""
     return i * BOARD_SIZE + j

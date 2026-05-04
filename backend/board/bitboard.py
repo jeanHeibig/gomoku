@@ -206,7 +206,7 @@ def mc_bb(bb_current, bb_open, rs):
     best_k = -1
     best_score = -1
 
-    for k in range(64):  # TODO: return multiple moves in case of tie
+    for k in range(64):
         move = MOVES_LOCAL[k]
 
         if (move & bb_open) != 0:

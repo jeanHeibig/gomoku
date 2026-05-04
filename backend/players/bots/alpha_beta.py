@@ -13,6 +13,7 @@ INF = np.int64(1) << 60
 BB_64_ONES = sum([np.uint64(1) << k for k in range(64)], start=np.uint(0))
 K = 5
 
+
 @nb.njit
 def sort_moves(move_scores, best_move): # TODO: Add PV-search, Transposition table and History Killer Moves
     MOVES_LOCAL = MOVES
