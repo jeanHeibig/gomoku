@@ -22,7 +22,6 @@ Game Rules:
 import os
 import uuid
 import random
-import time
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -84,9 +83,6 @@ def new_game(level: int, time: int, increment: int):
 
     game = Game(gid, players, timer)
 
-    if not human_starts:  # if bot starts
-        game.move()
-
     games[gid] = game
     return serialize(game)
 
@@ -110,10 +106,6 @@ def submit_board(req: dict):  # TODO: merge this with newgame
     players[localPlayer] = player1
 
     game = Game(gid, players, timer, position, current_player)
-
-    human_starts = current_player == localPlayer
-    if not human_starts:  # if bot starts
-        game.move()
 
     games[gid] = game
     return serialize(game)
@@ -147,8 +139,19 @@ def play_move(gid: str, i: int, j: int):
     game.play_move(i, j)
 
     if not game.finished:
-        # r = 0.1 + 1 * random.random()
-        # time.sleep(r)
+        game.move()
+
+    return serialize(game)
+
+
+@app.post("/botMove")
+def play_bot_move(gid: str):
+    game = games[gid]
+
+    if game.finished:
+        return serialize(game)
+
+    if not game.finished:
         game.move()
 
     return serialize(game)
@@ -221,6 +224,7 @@ def serialize(game: Game):
         "players": game.players,
         "board": game.board.position,
         "lastMove": game.last_move(),
+        "moveList": game.moves,
         "winningTiles": game.winningTiles,
         "times": game.timer.get_times(),
         "clockPly": game.timer.get_ply(),

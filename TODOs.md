@@ -3,39 +3,30 @@ Gomoku Server and AI training
 
 # TODO
 
+- Review code and inline TODOs
 - watch bot vs bot on gui
 - bot needs to do a faster search
-- Add draw and resign button (t, r)
-- Add single_threats (st_bb) threats to get_scores
 - sort with best move (iterative deepening) at given ply number
-- Implement iterative α-β search
-- watch out for time limit in iterative search : does it really produces the best move ?
-- current bot is dumb at tactics
-- Get scores (and Fast eval?) must look for tactics
+- current bot is dumb at tactics -> implement TSS (threat-space search)
 - current eval function is biased towards X (O missing one move during the eval)
 - Use PV-search
 - Use Transposition tables
-- add an opening book
 - Use board symmetries
+- add an opening book
 - Use History Killer Moves
-- Opening tables
-- Endgame tables: "kill" stones that can no longer contribute to an alignment
-- Initialise board before recieving first bot move ?...
-- Preview does not work after recieving a move
+- improve bot time management
 - Add SQLite to saves games (with moves) and players (with ELO)
 - Switch to websockets for GUI
 - Switch to websockets for BOT tournaments and allow players to submit bots online after verification
-- Prevent player from moving out-of-turn !
+- Prevent player from moving out-of-turn -> login system...
 - Handle timeouts by the server
 - Deploy server online so players can connect via link to play against the bot
 - Login page
 - Manage matchmaking
-- manage custom theme through color aliases
-- TODO : merge new game and submit board
 - Editor mode : at the end, only accept valid board configurations
-- Review code and inline TODOs
 - split css into base.css board.css ui.css modes.css
 - JS -> only toggle classes / CSS -> everything visual
+- Use CSS variables for THEMES (--bg, etc.)
 - Stabilize Editor Board
 - Make render fully authoritative
 - Is it faster to do MOVES[k] or 1 << k ?

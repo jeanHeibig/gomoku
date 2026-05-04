@@ -220,4 +220,14 @@ def mc_bb(bb_current, bb_open, rs):
 
 @nb.njit
 def st_bb(bb_current, bb_open):
-    return 0
+    MOVES_LOCAL = MOVES  # pylint: disable=invalid-name
+
+    res = np.uint64(0)
+
+    for k in range(64):
+        move = MOVES_LOCAL[k]
+
+        if (move & bb_open) and (wm_bb(bb_current | move, bb_open ^ move) or dt_bb(bb_current | move, bb_open ^ move)):
+            res |= move
+
+    return res

@@ -35,6 +35,8 @@ const INCREMENT_PRESETS = [
     0, 1, 2, 3, 5, 10, 15, 30, 60
 ];
 
+const THEMES = ["light", "dark", "blue"];
+
 const levelLabels = {
     0: "Random",
     1: "Very easy",
@@ -51,6 +53,7 @@ const state = {
 
     board: null,
     lastMove: null,
+    moveList: [],
     winningTiles: [],
 
     currentPlayer: 0,
@@ -85,10 +88,13 @@ function loadSystemPreferences() {
         dom.app.classList.remove("morpion-mode");
     }
 
-    const isDark = localStorage.getItem("darkMode");
-    if (isDark === "true") {
-        document.body.classList.add("dark-mode");
-    }
+    const theme = localStorage.getItem("theme") || "light";
+    setTheme(theme);
+}
+
+function setTheme(theme) {
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
 }
 
 function initSliders() {
@@ -158,7 +164,7 @@ function initKeyboard() {
                 break;
 
             case "d":
-                toggleDarkMode();
+                cycleTheme(e.shiftKey);
                 break;
 
             case "c":
@@ -242,6 +248,20 @@ async function newGame() {
     state.players = data.players;
 
     renderNicknames();
+    await update();
+
+    if (state.players[state.currentPlayer].isBot) {
+        triggerBotMove();
+    }
+}
+
+async function triggerBotMove() {
+    const res = await fetch(`botMove?gid=${state.gameId}`, {
+        method: "POST"
+    })
+
+    const data = await res.json();
+
     update();
 }
 
@@ -270,6 +290,7 @@ async function play(cell) {
     state.lastUpdate = Date.now();
 
     renderBoard();
+    renderCursor();
     renderPlayers();
     startClock();
     renderClocks();
@@ -303,6 +324,7 @@ function setFinished(finished) {
 function applyServerState(data) {
     state.board = data.board;
     state.lastMove = data.lastMove;
+    state.moveList = data.moveList;
     state.winningTiles = data.winningTiles;
 
     state.remainingTimes = [...data.times.times];
@@ -339,6 +361,8 @@ function formatTime(seconds) {
 // 8. render
 function render() {
     renderBoard();
+    renderCursor();
+    renderMoveNumbers();
     renderPlayers();
     renderClocks();
     renderEndGame();
@@ -376,6 +400,32 @@ function renderBoard() {
             cell.classList.toggle("occupied", v !== 0);
         }
     }
+}
+
+function renderCursor() {
+    const pointerCursor =
+        !state.finished &&
+        !state.editorMode &&
+        state.players &&
+        !state.players[state.currentPlayer].isBot &&
+        state.localPlayerIndex === state.currentPlayer
+
+    dom.board.classList.toggle("no-click", !pointerCursor)
+}
+
+function renderMoveNumbers() {
+    document.querySelectorAll(".move-number").forEach(el => el.remove());
+
+    if (!state.finished || !state.moveList || state.editorMode) {
+        return;
+    }
+
+    state.moveList.forEach(([i, j], idx) => {
+        label = document.createElement("div");
+        label.className = "move-number";
+        label.textContent = idx + 1;
+        dom.board.children[i * 8 + j].appendChild(label);
+    });
 }
 
 function renderPlayers() {
@@ -515,9 +565,13 @@ function toggleMorpionMode() {
     localStorage.setItem("morpionMode", isMorpionMode);
 }
 
-function toggleDarkMode() {
-    const isDark = document.body.classList.toggle("dark-mode");
-    localStorage.setItem("darkMode", isDark);
+function cycleTheme(shift) {
+    const current = document.body.getAttribute("data-theme") || "light";
+    const idx = THEMES.indexOf(current);
+
+    const next = THEMES[(idx + (shift ? THEMES.length - 1 : 1)) % THEMES.length];
+
+    setTheme(next);
 }
 
 function toggleCellHighlight(cell) {
@@ -595,7 +649,6 @@ function toggleEditorMode() {
         state.editorBoard = structuredClone(state.board);
         dom.app.classList.add("editor-mode");
         state.editorPlayer = state.currentPlayer;
-
         renderPlayers();
     } else {
         state.editorBoard = null;
@@ -604,6 +657,8 @@ function toggleEditorMode() {
     }
 
     renderBoard();
+    renderCursor();
+    renderMoveNumbers();
 }
 
 function toggleEditorPlayer() {
@@ -631,16 +686,20 @@ async function submitEditorBoard() {
         })
     });
 
+    dom.app.classList.remove("editor-mode");
     state.editorMode = false;
     state.editorBoard = null;
-    dom.app.classList.remove("editor-mode");
     state.editorPlayer = null;
 
     state.gameId = data.gid;
     state.players = data.players;
 
     renderNicknames();
-    update();
+    await update();
+
+    if (state.players[state.currentPlayer].isBot) {
+        triggerBotMove();
+    }
 }
 
 function clearEditorBoard() {

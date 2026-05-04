@@ -117,19 +117,6 @@ def get_scores(bb_current, bb_opponent):
 
             return scores
 
-    threats = st_bb(bb_current, bb_open)
-    if threats:
-        for idx in range(64):
-            bb_idx = (np.uint64(1) << idx)
-            if bb_occupied & bb_idx:
-                scores[idx] = -1
-            elif threats & bb_idx:
-                scores[idx] = 1
-            else:
-                scores[idx] = -2  # Legal move, but missing lethal threat
-
-        return scores
-
     # Monte-Carlo evaluation
     for t in range(N):
         bb_current_completed = bb_current | (RG_LOCAL[t] & bb_open)
@@ -145,10 +132,15 @@ def get_scores(bb_current, bb_opponent):
                 for wt_idx in WMI_LOCAL[k]:
                     scores[wt_idx] += 3
 
+    # Improve the score of threat moves
+    threats = st_bb(bb_current, bb_open)
 
     for idx in range(64):
-        if bb_occupied & (np.uint64(1) << idx):
+        bb_idx = (np.uint64(1) << idx)
+        if bb_occupied & bb_idx:
             scores[idx] = -1
+        elif threats & bb_idx:
+            scores[idx] += np.int64(1) << 32
 
     return scores
 

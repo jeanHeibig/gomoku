@@ -1,0 +1,141 @@
+/* UI */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#player-black { order: 1; }
+#controls { order: 2; }
+#player-white { order: 3; }
+
+.local-black #player-black { order: 3; }
+.local-black #player-white { order: 1; }
+
+.player {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.stone-label {
+    width: 26px;
+    height: 24px;
+
+    position: static;
+    transform: scale(0.9) rotate(-10deg);
+}
+
+#app.morpion-mode .stone-label {
+    transform: translate(-10%, -10%) scale(0.5);
+}
+
+.player-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.bot-label {
+    color: #8a4f22;
+    background: #f0d9b5;
+    border: 1px solid #b58863;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+/* clock */
+.clock {
+    font-size: 24px;
+    margin-top: 10px;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.active-clock .colon {
+    animation : blink 2s infinite;
+}
+
+@keyframes blink {
+    0%   { opacity: 1; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#app.finished .colon, .clock:not(.active-clock) .colon {
+    animation: none;
+}
+
+.centi-seconds {
+    font-size: 0.6em;
+    margin-left: 2px;
+    opacity: 0.8;
+}
+
+.clock.low-time {
+    color: #d32f2f;
+}
+
+.player-active {
+    outline: 3px solid #b58863;
+}
+
+/* inputs */
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#new-game-btn {
+    margin: 20px 0;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1px solid grey;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    display: block;
+    transition: all 0.2s ease;
+}
+
+#new-game-btn:hover {
+    background: #f3f3f3;
+    transform: scale(1.05);
+}
+
+.timer-selector, .level-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+#app:not(.finished):not(.editor-mode) .controls {
+    display: none;
+}
+
+#time-slider, #increment-slider, #level {
+    width: 150px;
+    cursor: pointer;
+    accent-color: #b58863;
+}
+
+/* editor mode */
+.editor-mode .board {
+    border: 1px dashed rgba(255, 0, 0, 0.9);
+}
+
+.editor-mode .cell {
+    cursor: crosshair;
+    outline: 1px dashed rgba(0, 0, 0, 0.3);
+    outline-offset: -1px;
+}
