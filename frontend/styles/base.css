@@ -2,11 +2,12 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #eee;
+    background: var(--page-bg);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    color: var(--default-color);
 }
 
 .app-container {
@@ -20,9 +21,9 @@ body {
     grid-template-columns: repeat(8, 70px);
     grid-template-rows: repeat(8, 70px);
     border-radius: 10px;
-    /* border: 10px solid #452914; */
+    border: 10px solid var(--board-border);
     overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px var(--board-shadow);
 }
 
 .cell {
@@ -42,7 +43,7 @@ body {
 
 .cell.marked {
     /* box-shadow: inset 0 0 0 4px rgba(36, 81, 17, 0.8); */
-    outline: 3px solid rgba(36, 81, 17, 0.8);
+    outline: 3px solid var(--marked-cell);
     outline-offset: -6px;
     /* border-radius: 3px; */
 }
@@ -52,27 +53,27 @@ body {
 }
 
 .cell.light {
-    background-color: #f0d9b5;
+    background-color: var(--cell-light);
 }
 
 .cell.dark {
-    background-color: #b58863;
+    background-color: var(--cell-dark);
 }
 
 /* Game states */
 .cell.light.last-move {
-    background-color: #c6d26b;
+    background-color: var(--last-move-light);
 }
 
 .cell.dark.last-move {
-    background-color: #a9a23b;
+    background-color: var(--last-move-dark);
 }
 
 .cell.win .stone {
     box-shadow:
-        0 0 12px rgba(255, 0, 0, 0.8),
-        inset -4px -6px 8px rgba(0, 0, 0, 0.4),
-        inset 3px 4px 6px rgba(255, 255, 255, 0.2);
+        0 0 12px var(--win-glow),
+        inset -4px -6px 8px var(--stone-shadow-dark),
+        inset 3px 4px 6px var(--stone-shadow-light);
 }
 
 /* Stones */
@@ -87,8 +88,8 @@ body {
     transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
 
     box-shadow:
-        inset -4px -6px 8px rgba(0, 0, 0, 0.4),
-        inset 3px 4px 6px rgba(255, 255, 255, 0.2);
+        inset -4px -6px 8px var(--stone-shadow-dark),
+        inset 3px 4px 6px var(--stone-shadow-light);
 
     transition: opacity 0.15s ease, transform 0.1s ease;
 
@@ -100,12 +101,12 @@ body {
 }
 
 .stone.black {
-    background: radial-gradient(circle at 30% 30%, #555, #000);
+    background: radial-gradient(circle at 30% 30%, var(--stone-black-light), var(--stone-black-dark));
 }
 
 .stone.white {
-    background: radial-gradient(circle at 30% 30%, #fff, #ccc);
-    border: 1px solid #999;
+    background: radial-gradient(circle at 30% 30%, var(--stone-white-light), var(--stone-white-dark));
+    border: 1px solid var(--stone-white-border);
 }
 
 /* Preview */
@@ -128,15 +129,15 @@ body {
     font-size: 0.9em;
     font-weight: bold;
 
-    color: #fff;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    color: var(--move-number-on-black);
+    text-shadow: 0 0 4px var(--move-number-shadow-dark);
 
     pointer-events: none;
 }
 
 #app:not(.morpion-mode) .cell .stone.white + .move-number {
-    color: #000;
-    text-shadow: 0 0 4px rgba(128, 128, 128, 0.8);
+    color: var(--move-number-on-white);
+    text-shadow: 0 0 4px var(--move-number-shadow-light);
 }
 
 /* Morpion mode */
@@ -154,7 +155,7 @@ body {
     font-size: 42px;
     font-weight: 800;
     font-family: Arial, sans-serif;
-    color: #222;
+    color: var(--morpion-piece);
 }
 
 #app.morpion-mode .stone.black::before {
@@ -166,5 +167,5 @@ body {
 }
 
 #app.morpion-mode .cell.win .stone {
-    color: #d32f2f;
+    color: var(--morpion-win);
 }

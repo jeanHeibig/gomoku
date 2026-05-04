@@ -13,11 +13,11 @@
 .local-black #player-white { order: 1; }
 
 .player {
-    background: white;
+    background: var(--panel-bg);
     padding: 15px;
     border-radius: 8px;
     width: 200px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px var(--panel-shadow);
 }
 
 .stone-label {
@@ -41,9 +41,9 @@
 }
 
 .bot-label {
-    color: #8a4f22;
-    background: #f0d9b5;
-    border: 1px solid #b58863;
+    color: var(--bot-label-text);
+    background: var(--bot-label-bg);
+    border: 1px solid var(--bot-label-border);
     border-radius: 6px;
     padding: 2px 6px;
     font-size: 0.75em;
@@ -79,11 +79,11 @@
 }
 
 .clock.low-time {
-    color: #d32f2f;
+    color: var(--low-time);
 }
 
 .player-active {
-    outline: 3px solid #b58863;
+    outline: 3px solid var(--player-active-outline);
 }
 
 /* inputs */
@@ -98,16 +98,17 @@
     padding: 15px;
     font-size: 18px;
     border-radius: 10px;
-    border: 1px solid grey;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px var(--button-shadow);
 
     display: block;
     transition: all 0.2s ease;
 }
 
 #new-game-btn:hover {
-    background: #f3f3f3;
+    background: var(--button-bg-hover);
     transform: scale(1.05);
 }
 
@@ -126,16 +127,16 @@
 #time-slider, #increment-slider, #level {
     width: 150px;
     cursor: pointer;
-    accent-color: #b58863;
+    accent-color: var(--slider-accent);
 }
 
 /* editor mode */
 .editor-mode .board {
-    border: 1px dashed rgba(255, 0, 0, 0.9);
+    border: 10px dashed var(--editor-board-border);
 }
 
 .editor-mode .cell {
     cursor: crosshair;
-    outline: 1px dashed rgba(0, 0, 0, 0.3);
-    outline-offset: -1px;
+    outline: 4px dashed var(--editor-cell-outline);
+    outline-offset: -2px;
 }

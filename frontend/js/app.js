@@ -405,7 +405,6 @@ function renderBoard() {
 function renderCursor() {
     const pointerCursor =
         !state.finished &&
-        !state.editorMode &&
         state.players &&
         !state.players[state.currentPlayer].isBot &&
         state.localPlayerIndex === state.currentPlayer
