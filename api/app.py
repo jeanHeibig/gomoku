@@ -28,13 +28,13 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import Timer, Game, Player
-from backend.players import human, basic_bots
+from backend.players import human, bots
 
 app = FastAPI()
 
 games = {}
 player1 = Player("Alice", False, human)
-BOT_NAMES = ["Bob", "Charlie", "Damian", "Edgar", "Ferdinand", "Gaston"]
+BOT_NAMES = ["Bob", "Charlie", "Damian", "Edgar", "Ferdinand", "Gaston", "Harry"]
 
 app.mount("/static", StaticFiles(directory="./frontend"), name="static")
 
@@ -71,7 +71,7 @@ def new_game(level: int, time: int, increment: int):
     """
     gid = str(uuid.uuid4())
 
-    player2 = Player(BOT_NAMES[level], True, basic_bots[level])
+    player2 = Player(BOT_NAMES[level], True, bots[level])
 
     human_starts = random.randint(0, 1)
     if human_starts:  # random choice for the side
@@ -98,7 +98,7 @@ def submit_board(req: dict):
     time = float(req["time"])
     increment = float(req["increment"])
 
-    player2 = Player(BOT_NAMES[level], True, basic_bots[level])
+    player2 = Player(BOT_NAMES[level], True, bots[level])
 
     timer = Timer(time, increment)
 

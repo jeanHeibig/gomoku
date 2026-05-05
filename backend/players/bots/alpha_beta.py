@@ -1,4 +1,3 @@
-import time
 import random
 
 import numba as nb
@@ -7,6 +6,8 @@ import numpy as np
 from ...board import WMA, MOVES
 from ...board.fast_eval import get_scores, fast_eval
 from ...board import b2b, bb2m, prettyprint
+
+from ...clock import ctime
 
 
 INF = np.int64(1) << 60
@@ -71,11 +72,11 @@ def negamax(bb_current, bb_opponent, depth, alpha, beta):
     if is_winning(bb_current):
         return INF
 
-    if depth == 0:
-        return fast_eval(bb_current, bb_opponent)
-
     if is_dead_draw(bb_current, bb_opponent):
         return 0
+
+    if depth == 0:
+        return fast_eval(bb_current, bb_opponent)
 
     move_scores = get_scores(bb_current, bb_opponent)
     ordered_moves, _ = sort_moves(move_scores, None)
@@ -102,10 +103,10 @@ def negamax(bb_current, bb_opponent, depth, alpha, beta):
 # Use iterative deepening to find the best move within a time limit
 def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
     best_move = None
-    start_time = time.time()
+    start_time = ctime()
 
     for depth in range(1, max_depth + 1):
-        print(f"Depth: {depth}")
+        # print(f"Depth: {depth}")
 
         best_score = -INF
         move_scores = get_scores(bb_current, bb_opponent)
@@ -138,12 +139,12 @@ def find_best_move(bb_current, bb_opponent, max_depth, time_limit):
                 # print("New best move:")
                 # prettyprint(best_move)
                 # print(f"New best score: {best_score}")
-            if time.time() - start_time >= time_limit:
+            if ctime() - start_time >= time_limit:
                 break  # Time limit reached, stop searching deeper
 
         # print(f"Best score: {best_score}")
         # prettyprint(best_move)
-        if time.time() - start_time >= time_limit:
+        if ctime() - start_time >= time_limit:
             break  # Time limit reached, stop searching deeper
 
     # print(best_move)
@@ -156,9 +157,9 @@ def ab_bot(position, current_player, timer, _):
     remaining_time = timer["times"][current_player]
     # move_time = 10 * remaining_time / (len(moves) + 1)
     move_time = remaining_time / 200
-    start_total = time.time()
+    start_total = ctime()
 
-    if remaining_time - (time.time() - start_total) <= move_time:
+    if remaining_time - (ctime() - start_total) <= move_time:
         return random.choice(moves), None
 
     bitboards = b2b(position)

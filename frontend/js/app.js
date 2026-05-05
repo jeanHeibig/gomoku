@@ -44,6 +44,7 @@ const levelLabels = {
     3: "Medium",
     4: "Hard",
     5: "Very Hard",
+    6: "Magic",
 };
 
 // 2. state
@@ -109,7 +110,7 @@ function initSliders() {
     dom.controls.timeSlider.addEventListener("input", updateTimeLabels);
     dom.controls.incrementSlider.addEventListener("input", updateTimeLabels);
 
-    dom.controls.levelSlider.value = localStorage.getItem("level") || 4;
+    dom.controls.levelSlider.value = localStorage.getItem("level") || 3;
     dom.controls.levelLabel.textContent = levelLabels[dom.controls.levelSlider.value];
 
     dom.controls.levelSlider.addEventListener("input", () => {
