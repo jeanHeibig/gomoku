@@ -4,6 +4,7 @@ import numpy as np
 from ...board import WMA, MOVES
 from ...board.fast_eval import get_scores, fast_eval
 from ...board import b2b
+from ...board.symmetries import canonicalize, apply_inverse_symmetry
 
 from ...clock import ctime
 
@@ -208,7 +209,7 @@ def pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
 
         if score > best:
             best = score
-            bet_move = move
+            best_move = move
 
         if score > alpha:
             alpha = score
@@ -250,7 +251,7 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
         move_to_front(ordered_moves, mv_nb, pv_move)
 
         if mv_nb == 1:
-            return bb2m(ordered_moves[0])
+            return ordered_moves[0]
 
         alpha = -INF
         beta = INF
@@ -296,24 +297,24 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
         # Optional debug
         print(f"Depth {depth}, score {best_score}")
 
-    return bb2m(best_move)
+    return best_move
 
 
+# @nb.njit
 def ab_tt_bot(position, current_player, timer, _):
-    moves = [(i, j) for i in range(8) for j in range(8) if position[i][j] == 0]
-
-    remaining_time = timer["times"][current_player]
-    # move_time = 10 * remaining_time / (len(moves) + 1)
-    move_time = remaining_time / 200
-
-    if remaining_time <= move_time:
-        return moves[0], None
+    move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
 
     bitboards = b2b(position)
     bb_current = np.uint64(bitboards[current_player])
     bb_opponent = np.uint64(bitboards[1 - current_player])
 
-    move = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                          bb_current, bb_opponent, max_depth=64, time_limit=move_time)
+    bb_current_cr, bb_opponent_cr, s_idx = canonicalize(bb_current, bb_opponent)
+    bb_current_cr = np.uint64(bb_current_cr)
+    bb_opponent_cr = np.uint64(bb_opponent_cr)
 
-    return move, None
+    move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
+                             bb_current_cr, bb_opponent_cr, max_depth=64, time_limit=move_time)
+
+    move = apply_inverse_symmetry(move_cr, s_idx)
+
+    return bb2m(move), None

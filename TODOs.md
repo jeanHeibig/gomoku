@@ -5,9 +5,10 @@ Gomoku Server and AI training
 
 - Review code and inline TODOs, add docstrings and type annotations
 - isolate bot code, so that it is inside a single file (mandatory for students), manage extensions
-- improve score management (score should be nonnegative and should fit in uint8)
+- improve score management (score should be nonnegative and fit in uint8)
+- improve fast_eval management (mc eval ? eval should fit in int8?16?)
 - Remove unnecessary bitboard recomputation inside negamax ?
-- Use board symmetries during get_scores -> if board is symmetric, put -2 for all symmetries but one (could gain be setting dead cells to 0 for the symmetries...)
+- Improve board symmetries
 - add an opening book (here symmetries are very important !)
 - Use History Killer Moves
 - improve bot time management

@@ -150,7 +150,7 @@ class Board:
 
     @staticmethod
     def prettyprint(bb, reverse=True, end='\n') -> None:
-        """Return pretty string for bitboard."""
+        """Print pretty string for bitboard."""
         if bb < 0:
             bb += 2**64
         s = bin(bb)[2:]

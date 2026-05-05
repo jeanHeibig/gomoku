@@ -10,8 +10,9 @@ import numba as nb
 import numpy as np
 
 
-from . import WMA, WMI, RG, BT, MOVES
+from . import WMA, WMI, RG, BT, MOVES, RM
 from .bitboard import cm_bb, dt_bb, st_bb
+from .symmetries import compute_stabilizers
 
 
 @nb.njit
@@ -27,6 +28,16 @@ def fill_forced_squared(scores, bb_occupied, mask):
             scores[idx] = 1
         else:
             scores[idx] = -2
+
+    # print(scores.reshape((8,8)))
+
+
+@nb.njit
+def get_symmetry_mask(bb_current, bb_opponent):
+    stab = compute_stabilizers(bb_current, bb_opponent)
+    rep_mask = RM[stab]
+    # print(rep_mask)
+    return rep_mask
 
 
 @nb.njit
@@ -53,6 +64,7 @@ def get_scores(bb_current, bb_opponent):
 
     bb_occupied = (bb_current | bb_opponent)
     bb_open = ~bb_occupied
+    symmetry_mask = get_symmetry_mask(bb_current, bb_opponent)  # TODO: use symmetries efficiently !
     scores = np.zeros(64, dtype=np.int64)
 
     # Winning moves:
@@ -80,17 +92,17 @@ def get_scores(bb_current, bb_opponent):
             res_opponent |= (wto & move)
 
     if res_current != 0:  # Win in one found
-        fill_forced_squared(scores, bb_occupied, res_current)
+        fill_forced_squared(scores, bb_occupied, res_current & symmetry_mask)
         return scores
 
     if res_opponent != 0:  # Threat in one found
-        fill_forced_squared(scores, bb_occupied, res_opponent)
+        fill_forced_squared(scores, bb_occupied, res_opponent & symmetry_mask)
         return scores
 
     # Create double threat
     double_threat_moves = dt_bb(bb_current, bb_open)
     if double_threat_moves:
-        fill_forced_squared(scores, bb_occupied, double_threat_moves)
+        fill_forced_squared(scores, bb_occupied, double_threat_moves & symmetry_mask)
         return scores
 
     # Block opponent double threats
@@ -98,7 +110,7 @@ def get_scores(bb_current, bb_opponent):
     if opponent_double_threats:
         counter_moves = cm_bb(bb_current, bb_open)
         if counter_moves:
-            fill_forced_squared(scores, bb_occupied, counter_moves)
+            fill_forced_squared(scores, bb_occupied, counter_moves & symmetry_mask)
             return scores
 
     # Monte-Carlo evaluation
@@ -123,9 +135,13 @@ def get_scores(bb_current, bb_opponent):
         bb_idx = MOVES_LOCAL[idx]
         if bb_occupied & bb_idx:
             scores[idx] = -1
-        elif threats & bb_idx:
-            scores[idx] += np.int64(1) << 32
+        elif symmetry_mask & bb_idx:
+            if threats & bb_idx:
+                scores[idx] += np.int64(1) << 32
+        else:
+            scores[idx] = -2
 
+    # print(scores.reshape((8,8)))
     return scores
 
 
