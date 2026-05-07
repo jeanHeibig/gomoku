@@ -8,7 +8,7 @@ Gomoku Server and AI training
 - improve score management (score should be nonnegative and fit in uint8)
 - improve fast_eval management (mc eval ? eval should fit in int8?16?)
 - Remove unnecessary bitboard recomputation inside negamax ?
-- Improve board symmetries
+- Improve board symmetries (eg, only look for center pieces first, add dead cells -> we already compute them actually) add LUT rather than loops. Still not convinced by symmetries during search... For opening, symmetries are great, but maybe we should keep them only at root
 - add an opening book (here symmetries are very important !)
 - Use History Killer Moves
 - improve bot time management

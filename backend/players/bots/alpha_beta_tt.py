@@ -13,12 +13,6 @@ from .prandom import compute_hash
 TT_SIZE = np.uint64(1) << 20
 TT_MASK = TT_SIZE - 1
 
-TT_keys = np.zeros(TT_SIZE, dtype=np.uint64)  # TODO: implement a 2-bucket TT
-TT_moves = np.zeros(TT_SIZE, dtype=np.uint64)
-TT_depths = np.zeros(TT_SIZE, dtype=np.uint8)
-TT_scores = np.zeros(TT_SIZE, dtype=np.int64)  # TODO: reduce space taken by scores !
-TT_flags = np.zeros(TT_SIZE, dtype=np.uint8)
-
 EXACT = np.uint8(0)
 LOWER = np.uint8(1)
 UPPER = np.uint8(2)
@@ -46,7 +40,8 @@ def bb2m(bb):
             b <<= 1
 
 @nb.njit
-def tt_probe(key, depth, alpha, beta):
+def tt_probe(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
+             key, depth, alpha, beta):
     idx = key & TT_MASK
 
     if TT_keys[idx] != key:
@@ -160,7 +155,8 @@ def pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
     key = compute_hash(bb_current, bb_opponent)
 
     # --- TT PROBE ---
-    hit, tt_score, tt_move, alpha, beta = tt_probe(key, depth, alpha, beta)
+    hit, tt_score, tt_move, alpha, beta = tt_probe(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
+                                                   key, depth, alpha, beta)
     if hit:
         return tt_score
 
@@ -295,14 +291,25 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
             pv_move = best_move_depth
 
         # Optional debug
-        print(f"Depth {depth}, score {best_score}")
+        print(f"Depth {depth}, score {best_score}, move {best_move}")
 
     return best_move
 
 
 # @nb.njit
-def ab_tt_bot(position, current_player, timer, _):
-    move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
+def ab_tt_bot(position, current_player, timer, memory):
+    if memory is None:
+        TT_keys = np.zeros(TT_SIZE, dtype=np.uint64)  # TODO: implement a 2-bucket TT
+        TT_moves = np.zeros(TT_SIZE, dtype=np.uint64)
+        TT_depths = np.zeros(TT_SIZE, dtype=np.uint8)
+        TT_scores = np.zeros(TT_SIZE, dtype=np.int64)  # TODO: reduce space taken by scores !
+        TT_flags = np.zeros(TT_SIZE, dtype=np.uint8)
+        memory = TT_keys, TT_moves, TT_depths, TT_scores, TT_flags
+    else:
+        TT_keys, TT_moves, TT_depths, TT_scores, TT_flags = memory
+
+    # move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
+    move_time = 0.8 * timer["times"][current_player]
 
     bitboards = b2b(position)
     bb_current = np.uint64(bitboards[current_player])
@@ -311,10 +318,11 @@ def ab_tt_bot(position, current_player, timer, _):
     bb_current_cr, bb_opponent_cr, s_idx = canonicalize(bb_current, bb_opponent)
     bb_current_cr = np.uint64(bb_current_cr)
     bb_opponent_cr = np.uint64(bb_opponent_cr)
+    print(bb_current_cr, bb_opponent_cr)
 
     move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                             bb_current_cr, bb_opponent_cr, max_depth=64, time_limit=move_time)
+                             bb_current_cr, bb_opponent_cr, max_depth=9, time_limit=move_time)
 
     move = apply_inverse_symmetry(move_cr, s_idx)
 
-    return bb2m(move), None
+    return bb2m(move), memory

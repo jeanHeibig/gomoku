@@ -172,6 +172,11 @@ function initKeyboard() {
                 if (state.editorMode) {
                     clearEditorBoard();
                 }
+
+            case "s":
+                if (state.editorMode) {
+                    swapEditorColors();
+                }
         }
 
         if (e.key === " ") {
@@ -704,6 +709,21 @@ async function submitEditorBoard() {
 
 function clearEditorBoard() {
     state.editorBoard = Array(8).fill(0).map(() => Array(8).fill(0));
+    renderBoard();
+}
+
+function swapEditorColors() {
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            if (state.editorBoard[i][j] === 1) {
+                state.editorBoard[i][j] = 2;
+            } else if (state.editorBoard[i][j] === 2) {
+                state.editorBoard[i][j] = 1;
+            }
+        }
+    }
+
+    toggleEditorPlayer();
     renderBoard();
 }
 
