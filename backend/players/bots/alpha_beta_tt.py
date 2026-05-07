@@ -6,6 +6,8 @@ from ...board.fast_eval import get_scores, fast_eval
 from ...board import b2b
 from ...board.symmetries import canonicalize, apply_inverse_symmetry
 
+from .book.lookup import lookup_opening_moves
+
 from ...clock import ctime
 
 from .prandom import compute_hash
@@ -308,8 +310,8 @@ def ab_tt_bot(position, current_player, timer, memory):
     else:
         TT_keys, TT_moves, TT_depths, TT_scores, TT_flags = memory
 
-    # move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
-    move_time = 0.8 * timer["times"][current_player]
+    move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
+    # move_time = 0.8 * timer["times"][current_player]
 
     bitboards = b2b(position)
     bb_current = np.uint64(bitboards[current_player])
@@ -320,9 +322,14 @@ def ab_tt_bot(position, current_player, timer, memory):
     bb_opponent_cr = np.uint64(bb_opponent_cr)
     print(bb_current_cr, bb_opponent_cr)
 
-    move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                             bb_current_cr, bb_opponent_cr, max_depth=9, time_limit=move_time)
+    move_cr = lookup_opening_moves(bb_current_cr, bb_opponent_cr)
+    if move_cr is None:
+        move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
+                                bb_current_cr, bb_opponent_cr, max_depth=64, time_limit=move_time)
 
     move = apply_inverse_symmetry(move_cr, s_idx)
+    move_ij = bb2m(move)
 
-    return bb2m(move), memory
+    print(f"Move: {move_ij}")
+
+    return move_ij, memory
