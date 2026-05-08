@@ -82,6 +82,7 @@ function initBoardEvents() {
             return;
         }
 
+        state.hoveredCell = cell;
         showPreview(cell);
     });
 
@@ -91,6 +92,7 @@ function initBoardEvents() {
             return;
         }
 
+        state.hoveredCell = null;
         hidePreview(cell);
     });
 

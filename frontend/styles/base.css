@@ -37,7 +37,7 @@ body {
     cursor: default;
 }
 
-.cell.occupied {
+.cell[data-occupied="true"] {
     cursor: default;
 }
 
@@ -61,15 +61,15 @@ body {
 }
 
 /* Game states */
-.cell.light.last-move {
+.cell.light[data-last-move] {
     background-color: var(--last-move-light);
 }
 
-.cell.dark.last-move {
+.cell.dark[data-last-move] {
     background-color: var(--last-move-dark);
 }
 
-.cell.win .stone {
+.cell[data-win] .stone {
     box-shadow:
         0 0 12px var(--win-glow),
         inset -4px -6px 8px var(--stone-shadow-dark),
@@ -96,28 +96,31 @@ body {
     display: none;
 }
 
-.stone.black, .stone.white {
+.cell[data-state="black"] .stone,
+.cell[data-state="white"] .stone,
+.cell[data-preview] .stone,
+.stone.stone-label {
     display: block;
 }
 
-.stone.black {
+.cell[data-state="black"] .stone,
+.cell[data-preview="black"] .stone,
+.stone.stone-black {
     background: radial-gradient(circle at 30% 30%, var(--stone-black-light), var(--stone-black-dark));
 }
 
-.stone.white {
+.cell[data-state="white"] .stone,
+.cell[data-preview="white"] .stone,
+.stone.stone-white {
     background: radial-gradient(circle at 30% 30%, var(--stone-white-light), var(--stone-white-dark));
     border: 1px solid var(--stone-white-border);
 }
 
-/* Preview */
-.stone.preview {
+.cell[data-preview] .stone {
     opacity: 0.35;
     filter: brightness(1.2);
-    cursor: pointer;
-}
-
-.cell:hover .stone.preview {
     transform: translate(-50%, -50%) scale(0.95) rotate(-10deg);
+    cursor: pointer;
 }
 
 #app:not(.morpion-mode) .move-number {
@@ -135,7 +138,7 @@ body {
     pointer-events: none;
 }
 
-#app:not(.morpion-mode) .cell .stone.white + .move-number {
+#app:not(.morpion-mode) .cell[data-state="white"] .stone + .move-number {
     color: var(--move-number-on-white);
     text-shadow: 0 0 4px var(--move-number-shadow-light);
 }
@@ -158,14 +161,18 @@ body {
     color: var(--morpion-piece);
 }
 
-#app.morpion-mode .stone.black::before {
+#app.morpion-mode .cell[data-state="black"] .stone::before,
+#app.morpion-mode .cell[data-preview="black"] .stone::before,
+#app.morpion-mode .stone-black::before {
     content: "X";
 }
 
-#app.morpion-mode .stone.white::before {
+#app.morpion-mode .cell[data-state="white"] .stone::before,
+#app.morpion-mode .cell[data-preview="white"] .stone::before,
+#app.morpion-mode .stone-white::before {
     content: "O";
 }
 
-#app.morpion-mode .cell.win .stone {
+#app.morpion-mode .cell[data-win] .stone {
     color: var(--morpion-win);
 }

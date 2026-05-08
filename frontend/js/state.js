@@ -4,6 +4,7 @@ export const state = {
 
     board: null,
     lastMove: null,
+    hoveredCell: null,
     moveList: [],
     winningTiles: [],
 

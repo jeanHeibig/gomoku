@@ -2,6 +2,8 @@ import { BOARD_SIZE } from "./constants.js";
 import { dom } from "./dom.js";
 import { state, currentBoard } from "./state.js";
 
+const cells = [];
+
 export function createBoard() {
     dom.board.innerHTML = "";
 
@@ -21,8 +23,14 @@ export function createBoard() {
 
             cell.appendChild(stone);
             dom.board.appendChild(cell);
+
+            cells.push(cell);
         }
     }
+}
+
+export function getCell(row, col) {
+    return cells[row * BOARD_SIZE + col];
 }
 
 export function render() {
@@ -42,41 +50,47 @@ function renderAppState() {
 }
 
 export function renderBoard() {
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            renderCell(row, col);
+        }
+    }
+}
+
+export function renderCell(row, col) {
+    const cell = getCell(row, col);
+
     const boardData = currentBoard();
+    const value = boardData[row][col];
 
     const effectiveLastMove = state.editorMode ? null : state.lastMove;
     const effectiveWinningTiles = state.editorMode ? [] : state.winningTiles;
-    const cells = document.getElementsByClassName('cell');
 
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            const cell = cells[row * BOARD_SIZE + col];
-            const stone = cell.querySelector('.stone');
-            const value = boardData[row][col];
+    cell.dataset.state =
+        value === 1 ? "black" :
+        value === 2 ? "white" :
+        "empty";
 
-            cell.classList.toggle(
-                "last-move",
-                Boolean(
-                    effectiveLastMove &&
-                    effectiveLastMove[0] === row &&
-                    effectiveLastMove[1] === col
-                )
-            );
+    cell.dataset.occupied = value !== 0;
 
-            cell.classList.toggle(
-                "win",
-                effectiveWinningTiles.some(([i, j]) => i === row && j === col)
-            );
+    if (
+        effectiveLastMove &&
+        effectiveLastMove[0] === row &&
+        effectiveLastMove[1] === col
+    ) {
+        cell.dataset.lastMove = "true";
+    } else {
+        delete cell.dataset.lastMove;
+    }
 
-            cell.classList.toggle("occupied", value !== 0);
-
-            stone.classList.toggle("black", value === 1);
-            stone.classList.toggle("white", value === 2);
-
-            if (value !== 0) {
-                stone.classList.remove("preview");
-            }
-        }
+    if (
+        effectiveWinningTiles.some(
+            ([i, j]) => i === row && j === col
+        )
+    ) {
+        cell.dataset.win = "true";
+    } else {
+        delete cell.dataset.win;
     }
 }
 

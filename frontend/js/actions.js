@@ -3,7 +3,7 @@ import { dom } from "./dom.js";
 import { state, applyServerState } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
-import { render, renderBoard, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
+import { render, renderBoard, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
 import { startClock, stopClock, syncClockState } from "./clock.js";
 import { handleGameEnd } from "./effects.js";
 
@@ -37,6 +37,7 @@ export async function updateFromServer() {
     applyServerState(data);
     syncClockState();
     render();
+    refreshHoverPreview();
 
     if (!wasFinished && state.finished) {
         handleGameEnd();
@@ -77,10 +78,18 @@ export async function playCell(cell) {
         return;
     }
 
+    const previousLastMove = state.lastMove ? [...state.lastMove] : null;
     applyOptimisticMove(i, j);
 
     startClock();
-    render();
+
+    if (previousLastMove) {
+        renderCell(previousLastMove[0], previousLastMove[1]);
+    }
+    renderCell(i, j);
+    renderCursor();
+    renderPlayers();
+    renderClocks();
 
     await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, {
         method: 'POST',
@@ -121,41 +130,32 @@ export function showPreview(cell) {
         return;
     }
 
-    const stone = cell.querySelector('.stone');
-    stone.classList.add(state.currentPlayer === 0 ? "black" : "white", "preview");
+    cell.dataset.preview = state.currentPlayer === 0 ? "black" : "white";
 }
 
 export function hidePreview(cell) {
-    const stone = cell.querySelector('.stone');
-    stone.classList.remove("preview");
-
-    const i = Number(cell.dataset.row);
-    const j = Number(cell.dataset.col);
-
-    if (state.board?.[i][j] === 0) {
-        stone.classList.remove("black", "white");
-    }
+    delete cell.dataset.preview;
 }
 
 export function clearAllPreviews() {
     const cells = document.getElementsByClassName('cell');
 
     for (const cell of cells) {
-        const stone = cell.querySelector('.stone');
-
-        if (!stone.classList.contains("preview")) {
+        if (!cell.dataset.preview) {
             continue;
         }
 
-        stone.classList.remove("preview");
-
-        const i = Number(cell.dataset.row);
-        const j = Number(cell.dataset.col);
-
-        if (state.board?.[i][j] === 0) {
-            stone.classList.remove("black", "white");
-        }
+        delete cell.dataset.preview;
     }
+}
+
+export function refreshHoverPreview() {
+    if (!state.hoveredCell) {
+        return;
+    }
+
+    hidePreview(state.hoveredCell);
+    showPreview(state.hoveredCell);
 }
 
 export function toggleCellHighlight(cell) {

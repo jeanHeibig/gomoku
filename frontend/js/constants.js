@@ -13,9 +13,9 @@ export const THEMES = ["light", "dark", "blue"];
 export const LEVEL_LABELS = [
     "Random",
     "Beginner",
-    "Very easy",
     "Easy",
     "Medium",
+    "Advanced",
     "Hard",
     "Very Hard",
 ];
