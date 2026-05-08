@@ -1,53 +1,115 @@
 # gomoku
-Gomoku Server and AI training
+
+Gomoku server, GUI and AI engine
 
 # TODO
 
--D5E4E5D4C5+move 12 -> X cant win anymore, can they ? If X can't win anymore, then the strat is a win for O (draw counted as a win here !)
+## Frontend / GUI
 
-- Review code and inline TODOs, add docstrings and type annotations
-- isolate bot code, so that it is inside a single file (mandatory for students), manage extensions
-- create a Memory class for our bot
-- Make K ply dependent and player dependant : attacking player should have very minimal K, while defending player could use wider K
-- Not only first hash move... sort all moves
-- N-pvs with all the line !
-- create an opening book with self play !
-- could improve a lot the double threat search with LUT. THe number of threat/double threat cases is actually quite limited
-- just realized some cells are not dead as it would be possible to win there, however they are "effectively dead", as it would be impossible to force a winning threat there !! example game to be found... :
-..o..x..
-..x.o...
-..oox...
-.xoooox.
-..oxxxoo
-xoxxxox.
-...ox...
-...ox...
--> o could potentially win bottom right, however, due to dead adjacent cells, it is actually impossible for o to have a double threat there !
--> a line is depth-0-alive if geometrically possible; depth-(k+1) alive if there exists a move creating a depth-k unavoidable threat. -> many heuristic evaluators fail because they count shapes, but ignore whetherr the shapes can interact  -> you can solve independently disconnected regions !
-- the pvs search could be done the following way: when you "check" (direct threat), the depth is not decremented, idem when you defend the threat -> forced moves shoud be treated in this kind of way. You could also decrement depth by the log of number of legal moves as stated (not the number of "LEGAL" Moves, but weigth the number of moves according to their "seriousness" -> entropy)
-- improve score management (score should be nonnegative and fit in uint8)
-- improve fast_eval management (mc eval ? eval should fit in int8?16?) -> maybe we could use this fast eval for positions at the beginning (seems good enough) but then at deeper depths, when the game has, say>16 or whatsoever stones played, then use a +1/0/-1 eval from mc_bot ?
-- find a way to table base draws (position with lots of dead cells...)
-- Improve board symmetries (eg, only look for center pieces first, add dead cells -> we already compute them actually) add LUT rather than loops. Still not convinced by symmetries during search... For opening, symmetries are great, but maybe we should keep them only at root. Symetries lost at root could be propagated so that there is no check for positions without available symmetries for their children
-- Use History Killer Moves
-- improve bot time management
-- improve bot speed/performance
-- current bot is dumb at tactics -> implement TSS (threat-space search)
-- Add elo system based on tournament with imposed onenings (with or without handicap)
-- Add SQLite to saves games (with moves) and players (with ELO)
-- Editor mode : at the end, only accept valid board configurations
-- JS -> only toggle classes / CSS -> everything visual
-- Switch to websockets for GUI
-- Switch to websockets for BOT tournaments and allow players to submit bots online after verification
-- watch bot vs bot on gui
-- add (keyboard) arrows that allow to move back and forth at the end
-- add favicon
-- add flip board functionnality
-- improve right click square management and left click to remove them and alt shift or ctrl to use color them
-- add an eval bar
-- Prevent player from moving out-of-turn -> login system...
-- Handle timeouts by the server
-- Login page
-- Manage matchmaking
-- Deploy server online so players can connect via link to play against the bot
-- solve the 8x8x5 and then go for 16x16x5 with 4 bitboards, then go for oo-te structure
+Refactor frontend logic:
+JS handles only state/events
+CSS handles all visuals through class toggles
+Improve board interaction:
+Better right-click markers
+Left click removes markers
+Support modifier keys (Alt, Shift, Ctrl) for colored annotations
+Add:
+Eval bar
+Board flip functionality
+Favicon
+Keyboard navigation to replay finished games
+Improve editor mode:
+Validate final board legality before starting
+Reject impossible positions
+Watch bot vs bot games directly in GUI
+Prevent duplicate /flag requests with a flag_sent boolean
+
+## Backend / Bot Engine
+
+### Architecture
+
+Review codebase:
+remove obsolete code/TODOs
+add docstrings
+add type annotations
+Isolate bot logic into a single-file student-friendly version
+keep optional extensions/modular advanced engine
+Create a Memory / transposition helper class
+Improve score representation:
+nonnegative compact scores (uint8)
+compact fast evals (int8 / int16)
+
+### Search Improvements
+
+Improve move ordering:
+sort all moves, not only hash move
+add History Heuristic / Killer Moves
+Improve PVS:
+multi-PV support
+better principal variation propagation
+Improve time management
+Improve raw search speed/performance
+Fix tactical weaknesses:
+implement proper Threat-Space Search (TSS)
+faster double-threat detection with LUTs
+Mate faster:
+prefer shortest winning lines
+
+### Dynamic Depth / Entropy Search
+
+Make search depth adaptive:
+attacking side searches narrower
+defending side searches wider
+Explore entropy-based depth reduction:
+forced moves do not decrease depth
+depth reduction depends on effective branching factor
+weight moves by seriousness instead of raw move count
+
+### Evaluation Function
+
+Improve evaluation quality
+Investigate hybrid evaluation:
+lightweight heuristic eval in opening
+stronger tactical/Monte-Carlo eval in complex positions
+Implement dead/effectively-dead cell analysis:
+detect geometrically dead regions
+detect strategically dead regions
+identify disconnected independent regions
+Detect drawish/tablebase-like positions with many dead cells
+
+### Symmetry / Opening Work
+
+Improve symmetry handling:
+LUT-based transforms
+aggressive root symmetry reduction
+symmetry propagation from root only
+Create self-play opening book
+
+## Server / Online / Matchmaking
+
+Add SQLite persistence:
+saved games
+move history
+players
+ELO ratings
+Add ELO system:
+tournaments
+imposed openings
+optional handicaps
+Handle timeouts server-side
+Prevent out-of-turn play
+Add authentication/login system
+Add matchmaking
+Switch online play to websockets
+Allow online bot tournaments:
+secure bot submission
+server-side verification/sandboxing
+Deploy public server for online play against bots and humans
+
+## Long-Term Goals
+
+Solve 8x8x5 Gomoku
+Explore larger variants:
+16x16x5
+multi-bitboard representations
+infinite/abstract board structures
