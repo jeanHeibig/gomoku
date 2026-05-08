@@ -36,7 +36,7 @@ class Game:
         self.winningTiles = []
 
     def __repr__(self):
-        s = f"Game {self.gid}\n"
+        s = f"Game {self.gid} - ply {self.board.ply}\n"
         s += str(self.timer)
         s += '\n-----------------------\n'
         s += str(self.board)

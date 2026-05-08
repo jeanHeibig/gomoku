@@ -325,7 +325,7 @@ def ab_tt_bot(position, current_player, timer, memory):
     move_cr = lookup_opening_moves(bb_current_cr, bb_opponent_cr)
     if move_cr is None:
         move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                bb_current_cr, bb_opponent_cr, max_depth=64, time_limit=move_time)
+                                bb_current_cr, bb_opponent_cr, max_depth=12, time_limit=move_time)
 
     move = apply_inverse_symmetry(move_cr, s_idx)
     move_ij = bb2m(move)

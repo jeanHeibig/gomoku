@@ -12,7 +12,7 @@ from ...clock import ctime
 
 INF = np.int64(1) << 60
 BB_64_ONES = sum([np.uint64(1) << k for k in range(64)], start=np.uint(0))
-K = 5
+K = 3
 
 
 @nb.njit
@@ -166,6 +166,6 @@ def ab_bot(position, current_player, timer, _):
     bb_current = np.uint64(bitboards[current_player])
     bb_opponent = np.uint64(bitboards[1 - current_player])
 
-    move = find_best_move(bb_current, bb_opponent, max_depth=64, time_limit=move_time)
+    move = find_best_move(bb_current, bb_opponent, max_depth=3, time_limit=move_time)
 
     return move, None

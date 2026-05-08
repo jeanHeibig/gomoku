@@ -13,17 +13,17 @@ player8 = Player("Harry-bot", True, ...)
 
 all_players = [player1, player2, player3, player4, player5, player6, player7, player8]
 
-start_position = None
-# start_position = [
-#     [0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 1, 2, 0, 0, 0],
-#     [0, 0, 0, 1, 2, 0, 0, 0],
-#     [0, 0, 0, 1, 2, 0, 0, 0],
-#     [0, 0, 0, 1, 2, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0],
-# ]
+# start_position = None
+start_position = [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 2, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 2, 1, 2, 0, 0, 0],
+    [0, 0, 0, 1, 1, 2, 0, 0],
+    [0, 0, 0, 1, 0, 1, 0, 0],
+    [0, 0, 0, 2, 0, 0, 2, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+]
 
 scores = {}
 for i in range(6, 7):
@@ -33,10 +33,10 @@ for i in range(6, 7):
         players = [playerA, playerB]
         print(f"Match {playerA.nickname} vs. {playerB.nickname}")
         score = 0
-        for gid in range(4):
+        for gid in range(100):
             timer = Timer(60.0, 2.0)
-            g = Game(f"test-gid-{i}-{j}-{gid}", players, timer, start_position)
-            score += g.run(verbose=True)
+            g = Game(f"test-gid-{i}-{j}-{gid}", players, timer, [[start_position[k][l] for l in range(8)] for k in range(8)])
+            score += g.run(verbose=False)
             print(f"Match {gid}: {score}")
         print(score)
         scores[(i, j)] = score

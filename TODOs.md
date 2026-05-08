@@ -8,7 +8,10 @@ Gomoku Server and AI training
 - Review code and inline TODOs, add docstrings and type annotations
 - isolate bot code, so that it is inside a single file (mandatory for students), manage extensions
 - create a Memory class for our bot
-- Make K ply dependent
+- Make K ply dependent and player dependant : attacking player should have very minimal K, while defending player could use wider K
+- Not only first hash move... sort all moves
+- N-pvs with all the line !
+- create an opening book with self play !
 - could improve a lot the double threat search with LUT. THe number of threat/double threat cases is actually quite limited
 - just realized some cells are not dead as it would be possible to win there, however they are "effectively dead", as it would be impossible to force a winning threat there !! example game to be found... :
 ..o..x..
@@ -38,6 +41,9 @@ xoxxxox.
 - Switch to websockets for BOT tournaments and allow players to submit bots online after verification
 - watch bot vs bot on gui
 - add (keyboard) arrows that allow to move back and forth at the end
+- add favicon
+- add flip board functionnality
+- improve right click square management and left click to remove them and alt shift or ctrl to use color them
 - add an eval bar
 - Prevent player from moving out-of-turn -> login system...
 - Handle timeouts by the server
