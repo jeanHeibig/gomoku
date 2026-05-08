@@ -4,7 +4,10 @@ import {
     playCell,
     showPreview,
     hidePreview,
-    toggleCellHighlight,
+    cycleMarker,
+    clearAllMarkers,
+    toggleMirrorHorizontal,
+    cycleRotation,
     toggleEditorMode,
     toggleEditorPlayer,
     clearEditorBoard,
@@ -36,6 +39,14 @@ function initKeyboard() {
 
             case "e":
                 toggleEditorMode();
+                break;
+
+            case "f":
+                toggleMirrorHorizontal();
+                break;
+
+            case "r":
+                cycleRotation();
                 break;
 
             case "d":
@@ -76,6 +87,16 @@ function initBoardEvents() {
         await playCell(cell);
     });
 
+    dom.board.addEventListener("mousedown", (e) => {
+        if (e.button !== 1) {
+            return;
+        }
+
+        e.preventDefault();
+
+        clearAllMarkers();
+    })
+
     dom.board.addEventListener("mouseover", (e) => {
         const cell = e.target.closest(".cell");
         if (!cell || state.editorMode) {
@@ -104,6 +125,6 @@ function initBoardEvents() {
             return;
         }
 
-        toggleCellHighlight(cell);
+        cycleMarker(cell, e.shiftKey);
     });
 }

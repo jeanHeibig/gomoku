@@ -1,4 +1,4 @@
-import { BOARD_SIZE } from "./constants.js";
+import { BOARD_SIZE, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
 import { state, currentBoard } from "./state.js";
 
@@ -35,6 +35,7 @@ export function getCell(row, col) {
 
 export function render() {
     renderAppState();
+    renderOrientation();
     renderBoard();
     renderCursor();
     renderMoveNumbers();
@@ -57,8 +58,13 @@ export function renderBoard() {
     }
 }
 
+export function renderOrientation() {
+    dom.app.dataset.transform = BOARD_TRANSFORMS[state.transformIndex];
+}
+
 export function renderCell(row, col) {
     const cell = getCell(row, col);
+    const marker = state.markers[`${row},${col}`];
 
     const boardData = currentBoard();
     const value = boardData[row][col];
@@ -72,6 +78,12 @@ export function renderCell(row, col) {
         "empty";
 
     cell.dataset.occupied = value !== 0;
+
+    if (marker) {
+        cell.dataset.marker = marker;
+    } else {
+        delete cell.dataset.marker;
+    }
 
     if (
         effectiveLastMove &&

@@ -23,6 +23,9 @@ export const state = {
     editorBoard: null,
     editorPlayer: null,
 
+    markers: {},
+    transformIndex: 0,
+
     botMoveInProgress: false,
 };
 

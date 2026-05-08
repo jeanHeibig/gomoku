@@ -6,24 +6,15 @@ Gomoku server, GUI and AI engine
 
 ## Frontend / GUI
 
-Refactor frontend logic:
-JS handles only state/events
-CSS handles all visuals through class toggles
-Improve board interaction:
-Better right-click markers
-Left click removes markers
-Support modifier keys (Alt, Shift, Ctrl) for colored annotations
 Add:
 Threat visuals (check / checkmate)
 Eval bar
-Board flip functionality
 Favicon
 Keyboard navigation to replay finished games
 Improve editor mode:
 Validate final board legality before starting
 Reject impossible positions
 Watch bot vs bot games directly in GUI
-Prevent duplicate /flag requests with a flag_sent boolean
 
 ## Backend / Bot Engine
 

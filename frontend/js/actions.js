@@ -1,9 +1,9 @@
-import { BOARD_SIZE } from "./constants.js";
+import { BOARD_SIZE, MARKERS, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
 import { state, applyServerState } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
-import { render, renderBoard, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
+import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
 import { startClock, stopClock, syncClockState } from "./clock.js";
 import { handleGameEnd } from "./effects.js";
 
@@ -158,8 +158,53 @@ export function refreshHoverPreview() {
     showPreview(state.hoveredCell);
 }
 
-export function toggleCellHighlight(cell) {
-    cell.classList.toggle("marked");
+export function cycleMarker(cell, backward) {
+    const i = Number(cell.dataset.row);
+    const j = Number(cell.dataset.col);
+
+    const key = `${i},${j}`;
+
+    const current = state.markers[key] ?? null;
+
+    const idx = MARKERS.indexOf(current);
+
+    const next =
+        MARKERS[
+            (idx + (backward ? MARKERS.length - 1 : 1))
+            % MARKERS.length
+        ];
+
+    if (next === null) {
+        delete state.markers[key];
+    } else {
+        state.markers[key] = next;
+    }
+
+    renderCell(i, j);
+}
+
+export function clearAllMarkers() {
+    state.markers = {};
+
+    renderBoard();
+}
+
+export function toggleMirrorHorizontal() {
+    state.transformIndex = (state.transformIndex + 4) % 8;
+
+    renderOrientation();
+}
+
+export function cycleRotation() {
+    if (state.transformIndex < 4) {
+        state.transformIndex = (state.transformIndex + 1) % 4;
+    } else if (state.transformIndex === 4) {
+        state.transformIndex = 7;
+    } else {
+        state.transformIndex--;
+    }
+
+    renderOrientation();
 }
 
 export function toggleEditorMode() {

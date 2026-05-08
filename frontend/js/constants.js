@@ -8,7 +8,12 @@ export const INCREMENT_PRESETS = [
     0, 1, 2, 3, 5, 10, 15, 30, 60
 ];
 
-export const THEMES = ["light", "dark", "blue"];
+export const THEMES = [
+    "light",
+    "dark",
+    "blue",
+    "green",
+];
 
 export const LEVEL_LABELS = [
     "Random",
@@ -18,4 +23,22 @@ export const LEVEL_LABELS = [
     "Advanced",
     "Hard",
     "Very Hard",
+];
+
+export const MARKERS = [
+    null,
+    "green",
+    "red",
+    "blue",
+];
+
+export const BOARD_TRANSFORMS = [
+    "identity",
+    "rot90",
+    "rot180",
+    "rot270",
+    "mirror-h",
+    "diag-anti",
+    "mirror-v",
+    "diag-main",
 ];

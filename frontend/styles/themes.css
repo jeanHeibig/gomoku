@@ -12,7 +12,9 @@ body[data-theme="light"] {
     --last-move-light: #c6d26b;
     --last-move-dark: #a9a23b;
 
-    --marked-cell: rgba(36, 81, 17, 0.8);
+    --green-marked-cell: rgba(36, 81, 17, 0.8);
+    --red-marked-cell: rgb(173, 41, 41, 0.8);
+    --blue-marked-cell: rgba(17, 36, 81, 0.8);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -54,6 +56,7 @@ body[data-theme="light"] {
     --editor-cell-outline: rgba(0, 0, 0, 0.3);
 }
 
+/* Dark mode */
 body[data-theme="dark"] {
     --page-bg: #222;
     --default-color: #ddd;
@@ -67,7 +70,9 @@ body[data-theme="dark"] {
     --last-move-light: #5c6f2f;
     --last-move-dark: #4a5a26;
 
-    --marked-cell: rgba(72, 162, 34, 0.8);
+    --green-marked-cell: rgba(36, 128, 34, 0.8);
+    --red-marked-cell: rgba(162, 36, 34, 0.8);
+    --blue-marked-cell: rgba(17, 36, 81, 0.8);
 
     --win-glow: #ad2929;
 
@@ -123,7 +128,9 @@ body[data-theme="blue"] {
     --last-move-light: #c9f0bd;
     --last-move-dark: #80b861;
 
-    --marked-cell: rgba(36, 81, 17, 0.8);
+    --green-marked-cell: rgba(39, 114, 28, 0.8);
+    --red-marked-cell: rgb(173, 41, 41, 0.8);
+    --blue-marked-cell: rgba(17, 36, 81, 0.8);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -163,4 +170,62 @@ body[data-theme="blue"] {
     --slider-accent: #f6cb9a;
     --editor-board-border: rgba(255, 0, 0, 0.9);
     --editor-cell-outline: rgba(25, 50, 85, 0.5);
+}
+
+/* Green mode */
+body[data-theme="green"] {
+    --page-bg: rgb(143, 152, 143);
+    --default-color: black;
+
+    --board-shadow: rgba(0, 0, 0, 0.2);
+    --board-border: rgb(18, 62, 36);
+
+    --cell-light: #fff3fe;
+    --cell-dark: #3f7a62;
+
+    --last-move-light: #c9f0bd;
+    --last-move-dark: #80b861;  /* TODO */
+
+    --green-marked-cell: rgba(61, 209, 38, 0.8);
+    --red-marked-cell: rgb(173, 41, 41, 0.8);
+    --blue-marked-cell: rgba(17, 36, 81, 0.8);
+
+    --win-glow: rgba(255, 0, 0, 0.8);
+
+    --stone-black-light: #333;
+    --stone-black-dark: #000;
+
+    --stone-white-light: #efe;
+    --stone-white-dark: #bbb;
+    --stone-white-border: #999;
+
+    --stone-shadow-dark: rgba(0, 0, 0, 0.4);
+    --stone-shadow-light: rgba(255, 255, 255, 0.2);
+
+    --move-number-on-black: #fff;
+    --move-number-on-white: #000;
+    --move-number-shadow-dark: rgba(0, 0, 0, 0.8);
+    --move-number-shadow-light: rgba(128, 128, 128, 0.8);
+
+    --morpion-piece: #111;
+    --morpion-win: #d32f2f;
+
+    --panel-bg: #7cbea2;
+    --panel-shadow: rgba(0, 0, 0, 0.2);
+
+    --bot-label-text: #000;
+    --bot-label-bg: #dcced5;
+    --bot-label-border: #000;
+
+    --low-time: #d32f2f;
+    --player-active-outline: #0d2e12;
+
+    --button-bg: #dcced5;
+    --button-bg-hover: #fff6fb;
+    --button-border: grey;
+    --button-shadow: rgba(0, 0, 0, 0.2);
+
+    --slider-accent: #dcced5;
+    --editor-board-border: rgba(255, 0, 0, 0.9);
+    --editor-cell-outline: rgba(25, 85, 50, 0.5);
 }

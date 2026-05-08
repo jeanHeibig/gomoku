@@ -26,6 +26,62 @@ body {
     box-shadow: 0 2px 5px var(--board-shadow);
 }
 
+#app[data-transform="rot90"] .board {
+    transform: rotate(90deg);
+}
+
+#app[data-transform="rot90"] .cell {
+    transform: rotate(-90deg);
+}
+
+#app[data-transform="rot180"] .board {
+    transform: rotate(180deg);
+}
+
+#app[data-transform="rot180"] .cell {
+    transform: rotate(-180deg);
+}
+
+#app[data-transform="rot270"] .board {
+    transform: rotate(270deg);
+}
+
+#app[data-transform="rot270"] .cell {
+    transform: rotate(-270deg);
+}
+
+#app[data-transform="mirror-h"] .board {
+    transform: scaleY(-1);
+}
+
+#app[data-transform="mirror-h"] .cell {
+    transform: scaleY(-1);
+}
+
+#app[data-transform="mirror-v"] .board {
+    transform: scaleX(-1);
+}
+
+#app[data-transform="mirror-v"] .cell {
+    transform: scaleX(-1);
+}
+
+#app[data-transform="diag-main"] .board {
+    transform: rotate(90deg) scaleY(-1);
+}
+
+#app[data-transform="diag-main"] .cell {
+    transform: scaleY(-1) rotate(-90deg);
+}
+
+#app[data-transform="diag-anti"] .board {
+    transform: rotate(90deg) scaleX(-1);
+}
+
+#app[data-transform="diag-anti"] .cell {
+    transform: scaleX(-1) rotate(-90deg);
+}
+
 .cell {
     width: 70px;
     height: 70px;
@@ -41,11 +97,19 @@ body {
     cursor: default;
 }
 
-.cell.marked {
-    /* box-shadow: inset 0 0 0 4px rgba(36, 81, 17, 0.8); */
-    outline: 3px solid var(--marked-cell);
+.cell[data-marker="green"] {
+    outline: 3px solid var(--green-marked-cell);
     outline-offset: -6px;
-    /* border-radius: 3px; */
+}
+
+.cell[data-marker="red"] {
+    outline: 3px solid var(--red-marked-cell);
+    outline-offset: -6px;
+}
+
+.cell[data-marker="blue"] {
+    outline: 3px solid var(--blue-marked-cell);
+    outline-offset: -6px;
 }
 
 #app.finished .cell {
