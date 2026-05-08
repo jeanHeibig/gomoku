@@ -14,6 +14,7 @@ Better right-click markers
 Left click removes markers
 Support modifier keys (Alt, Shift, Ctrl) for colored annotations
 Add:
+Threat visuals (check / checkmate)
 Eval bar
 Board flip functionality
 Favicon
@@ -32,6 +33,7 @@ Review codebase:
 remove obsolete code/TODOs
 add docstrings
 add type annotations
+add numba input/output types
 Isolate bot logic into a single-file student-friendly version
 keep optional extensions/modular advanced engine
 Create a Memory / transposition helper class

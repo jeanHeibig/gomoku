@@ -149,13 +149,19 @@ class Board:
         return moves
 
     @staticmethod
-    def prettyprint(bb, reverse=True, end='\n') -> None:
+    def prettyprint(bb, reverse=True, h=False, end='\n') -> None:
         """Print pretty string for bitboard."""
         if bb < 0:
             bb += 2**64
         s = bin(bb)[2:]
         s = (64 - len(s)) * '0' + s
         p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
+
+        if h:
+            h = hex(bb)[2:]
+            h = '0x' + (16 - len(h)) * '0' + h
+            print(h)
+
         if reverse:
             print(p[::-1], end=end)
         else:
