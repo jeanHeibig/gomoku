@@ -10,7 +10,6 @@ Add:
 Threat visuals (check / checkmate)
 Eval bar
 Favicon
-Keyboard navigation to replay finished games
 Improve editor mode:
 Validate final board legality before starting
 Reject impossible positions

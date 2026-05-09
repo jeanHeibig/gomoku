@@ -13,6 +13,7 @@ export async function newGame() {
         return;
     }
 
+    exitReplayMode();
     stopClock();
 
     const { time, increment, level } = selectedSliders();
@@ -22,6 +23,8 @@ export async function newGame() {
     });
 
     state.gameId = data.gid;
+    state.initialBoard = JSON.stringify(data.board);
+    state.initialPlayer = data.currentPlayer;
     state.players = data.players;
     state.localPlayerIndex = state.players[0].isBot ? 1 : 0;
 
@@ -78,6 +81,11 @@ export async function playCell(cell) {
         return;
     }
 
+    if (state.replayMode) {
+        exitReplayMode();
+        render();
+    }
+
     const previousLastMove = state.lastMove ? [...state.lastMove] : null;
     applyOptimisticMove(i, j);
 
@@ -94,6 +102,11 @@ export async function playCell(cell) {
     await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, {
         method: 'POST',
     });
+
+    if (state.replayMode) {
+        exitReplayMode();
+        render();
+    }
 
     await updateFromServer();
     await maybeTriggerBotMove();
@@ -207,13 +220,116 @@ export function cycleRotation() {
     renderOrientation();
 }
 
+export function enterReplayMode() {
+    // if (!state.finished) {
+    //     return;
+    // }
+
+    state.replayMode = true;
+    state.replayPly = state.moveList.length;
+
+    state.replayBoard = buildReplayBoard(state.replayPly);
+
+    render();
+}
+
+export function exitReplayMode() {
+    state.replayMode = false;
+    state.replayPly = null;
+    state.replayBoard = null;
+}
+
+function buildReplayBoard(ply) {
+    const board = JSON.parse(state.initialBoard);
+
+    let player = state.initialPlayer;
+
+    for (let k = 0; k < ply; k++) {
+        const [i, j] = state.moveList[k];
+
+        board[i][j] = player + 1;
+
+        player = 1 - player;
+    }
+
+    return board;
+}
+
+export function replayPrevious() {
+    // if (!state.finished) {
+    //     return;
+    // }
+
+    if (!state.replayMode) {
+        enterReplayMode();
+    }
+
+    if (state.replayPly <= 0) {
+        return;
+    }
+
+    state.replayPly--;
+
+    state.replayBoard = buildReplayBoard(state.replayPly);
+
+    renderBoard();
+    renderMoveNumbers();
+}
+
+export function replayNext() {
+    // if (!state.finished) {
+    //     return;
+    // }
+
+    if (!state.replayMode) {
+        enterReplayMode();
+    }
+
+    if (state.replayPly >= state.moveList.length) {
+        return;
+    }
+
+    state.replayPly++;
+
+    state.replayBoard = buildReplayBoard(state.replayPly);
+
+    renderBoard();
+    renderMoveNumbers();
+}
+
+export function replayStart() {
+    // if (!state.finished) {
+    //     return;
+    // }
+
+    state.replayMode = true;
+    state.replayPly = 0;
+    state.replayBoard = buildReplayBoard(0);
+
+    renderBoard();
+    renderMoveNumbers();
+}
+
+export function replayEnd() {
+    // if (!state.finished) {
+    //     return;
+    // }
+
+    state.replayMode = true;
+    state.replayPly = state.moveList.length;
+    state.replayBoard = buildReplayBoard(state.replayPly);
+
+    renderBoard();
+    renderMoveNumbers();
+}
+
 export function toggleEditorMode() {
     state.editorMode = !state.editorMode;
 
     clearAllPreviews();
 
     if (state.editorMode) {
-        state.editorBoard = structuredClone(state.board);
+        state.editorBoard = state.replayMode ? structuredClone(state.replayBoard) : structuredClone(state.board);
         state.editorPlayer = state.currentPlayer;
     } else {
         state.editorBoard = null;
@@ -274,6 +390,7 @@ export async function submitEditorBoard() {
         return;
     }
 
+    exitReplayMode();
     stopClock();
 
     const { time, increment, level } = selectedSliders();
@@ -298,6 +415,8 @@ export async function submitEditorBoard() {
     state.editorPlayer = null;
 
     state.gameId = data.gid;
+    state.initialBoard = JSON.stringify(data.board);
+    state.initialPlayer = data.currentPlayer;
     state.players = data.players;
     state.localPlayerIndex = state.players[0].isBot ? 1 : 0,
 

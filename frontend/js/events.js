@@ -8,6 +8,10 @@ import {
     clearAllMarkers,
     toggleMirrorHorizontal,
     cycleRotation,
+    replayPrevious,
+    replayNext,
+    replayStart,
+    replayEnd,
     toggleEditorMode,
     toggleEditorPlayer,
     clearEditorBoard,
@@ -72,6 +76,22 @@ function initKeyboard() {
                 } else if (state.finished) {
                     await newGame();
                 }
+                break;
+
+            case "arrowleft":
+                replayPrevious();
+                break;
+
+            case "arrowright":
+                replayNext();
+                break;
+
+            case "home":
+                replayStart();
+                break;
+
+            case "end":
+                replayEnd();
                 break;
         }
     });

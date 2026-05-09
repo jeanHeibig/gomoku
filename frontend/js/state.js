@@ -23,6 +23,12 @@ export const state = {
     editorBoard: null,
     editorPlayer: null,
 
+    replayMode: false,
+    replayPly: null,
+    replayBoard: null,
+    initialBoard: null,
+    initialPlayer: 0,
+
     markers: {},
     transformIndex: 0,
 
@@ -47,5 +53,13 @@ export function applyServerState(data) {
 }
 
 export function currentBoard() {
-    return state.editorMode ? state.editorBoard : state.board;
+    if (state.editorMode) {
+        return state.editorBoard;
+    }
+
+    if (state.replayMode) {
+        return state.replayBoard;
+    }
+
+    return state.board;
 }

@@ -69,8 +69,22 @@ export function renderCell(row, col) {
     const boardData = currentBoard();
     const value = boardData[row][col];
 
-    const effectiveLastMove = state.editorMode ? null : state.lastMove;
-    const effectiveWinningTiles = state.editorMode ? [] : state.winningTiles;
+    let effectiveLastMove = null;
+    let effectiveWinningTiles = [];
+
+    if (!state.editorMode) {
+        if (state.replayMode) {
+            if (state.replayPly > 0) {
+                effectiveLastMove = state.moveList[state.replayPly - 1];
+            }
+            if (state.replayPly === state.moveList.length) {
+                effectiveWinningTiles = state.winningTiles;
+            }
+        } else {
+            effectiveLastMove = state.lastMove;
+            effectiveWinningTiles = state.winningTiles;
+        }
+    }
 
     cell.dataset.state =
         value === 1 ? "black" :
@@ -123,7 +137,9 @@ export function renderMoveNumbers() {
         return;
     }
 
-    state.moveList.forEach(([i, j], idx) => {
+    const visibleMoves = state.replayMode ? state.moveList.slice(0, state.replayPly) : state.moveList;
+
+    visibleMoves.forEach(([i, j], idx) => {
         const label = document.createElement("div");
         label.className = "move-number";
         label.textContent = idx + 1;
