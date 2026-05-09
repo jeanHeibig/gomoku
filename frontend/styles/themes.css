@@ -12,9 +12,9 @@ body[data-theme="light"] {
     --last-move-light: #c6d26b;
     --last-move-dark: #a9a23b;
 
-    --green-marked-cell: rgba(36, 81, 17, 0.8);
-    --red-marked-cell: rgb(173, 41, 41, 0.8);
-    --blue-marked-cell: rgba(17, 36, 81, 0.8);
+    --green-marked-cell: rgba(119, 255, 61, 0.5);
+    --red-marked-cell: rgba(255, 61, 61, 0.5);
+    --blue-marked-cell: rgba(0, 27, 90, 0.5);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -61,7 +61,7 @@ body[data-theme="dark"] {
     --page-bg: #222;
     --default-color: #ddd;
 
-    --board-shadow: rgba(255, 255, 255, 0.5);
+    --board-shadow: rgba(128, 128, 128, 0.5);
     --board-border: rgb(0, 0, 0, 0);
 
     --cell-light: #4a4a4a;
@@ -70,9 +70,9 @@ body[data-theme="dark"] {
     --last-move-light: #5c6f2f;
     --last-move-dark: #4a5a26;
 
-    --green-marked-cell: rgba(36, 128, 34, 0.8);
-    --red-marked-cell: rgba(162, 36, 34, 0.8);
-    --blue-marked-cell: rgba(17, 36, 81, 0.8);
+    --green-marked-cell: rgba(36, 128, 34, 0.5);
+    --red-marked-cell: rgba(162, 36, 34, 0.5);
+    --blue-marked-cell: rgba(17, 36, 81, 0.5);
 
     --win-glow: #ad2929;
 
@@ -95,7 +95,7 @@ body[data-theme="dark"] {
     --morpion-win: #ad2929;
 
     --panel-bg: #333;
-    --panel-shadow: rgba(255, 255, 255, 0.5);
+    --panel-shadow: rgba(128, 128, 128, 0.5);
 
     --bot-label-text: #aaa;
     --bot-label-bg: #555;
@@ -128,9 +128,9 @@ body[data-theme="blue"] {
     --last-move-light: #c9f0bd;
     --last-move-dark: #80b861;
 
-    --green-marked-cell: rgba(39, 114, 28, 0.8);
-    --red-marked-cell: rgb(173, 41, 41, 0.8);
-    --blue-marked-cell: rgba(17, 36, 81, 0.8);
+    --green-marked-cell: rgba(75, 255, 48, 0.5);
+    --red-marked-cell: rgba(255, 79, 50, 0.7);
+    --blue-marked-cell: rgba(35, 46, 255, 0.7);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -184,11 +184,11 @@ body[data-theme="green"] {
     --cell-dark: #3f7a62;
 
     --last-move-light: #c9f0bd;
-    --last-move-dark: #80b861;  /* TODO */
+    --last-move-dark: #80b861;
 
-    --green-marked-cell: rgba(61, 209, 38, 0.8);
-    --red-marked-cell: rgb(173, 41, 41, 0.8);
-    --blue-marked-cell: rgba(17, 36, 81, 0.8);
+    --green-marked-cell: rgba(89, 233, 0, 0.822);
+    --red-marked-cell: rgba(208, 22, 22, 0.5);
+    --blue-marked-cell: rgba(9, 15, 121, 0.5);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 

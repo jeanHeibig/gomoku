@@ -86,6 +86,7 @@ body {
     width: 70px;
     height: 70px;
     position: relative;
+    isolation: isolate;
     cursor: pointer;
 }
 
@@ -95,21 +96,6 @@ body {
 
 .cell[data-occupied="true"] {
     cursor: default;
-}
-
-.cell[data-marker="green"] {
-    outline: 3px solid var(--green-marked-cell);
-    outline-offset: -6px;
-}
-
-.cell[data-marker="red"] {
-    outline: 3px solid var(--red-marked-cell);
-    outline-offset: -6px;
-}
-
-.cell[data-marker="blue"] {
-    outline: 3px solid var(--blue-marked-cell);
-    outline-offset: -6px;
 }
 
 #app.finished .cell {
@@ -122,6 +108,28 @@ body {
 
 .cell.dark {
     background-color: var(--cell-dark);
+}
+
+.cell[data-marker]::after {
+    content: "";
+
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+
+    pointer-events: none;
+}
+
+.cell[data-marker="green"]::after {
+    background-color: var(--green-marked-cell);
+}
+
+.cell[data-marker="red"]::after {
+    background-color: var(--red-marked-cell);
+}
+
+.cell[data-marker="blue"]::after {
+    background-color: var(--blue-marked-cell);
 }
 
 /* Game states */
@@ -147,6 +155,7 @@ body {
     border-radius: 50%;
 
     position: absolute;
+    z-index: 2;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
@@ -187,14 +196,17 @@ body {
     cursor: pointer;
 }
 
-#app:not(.morpion-mode) .move-number {
+.move-number {
     position: absolute;
+    z-index: 3;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+#app:not(.morpion-mode) .move-number {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-
-    font-size: 0.9em;
-    font-weight: bold;
 
     color: var(--move-number-on-black);
     text-shadow: 0 0 4px var(--move-number-shadow-dark);

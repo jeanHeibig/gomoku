@@ -1,6 +1,6 @@
-import { BOARD_SIZE, MARKERS, BOARD_TRANSFORMS } from "./constants.js";
+import { BOARD_SIZE, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
-import { state, applyServerState } from "./state.js";
+import { state, applyServerState, replayCurrentPlayer, replayMoveList } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
 import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
@@ -22,6 +22,10 @@ export async function newGame() {
         method: 'POST',
     });
 
+    await launchNewGame(data);
+}
+
+async function launchNewGame(data) {
     state.gameId = data.gid;
     state.initialBoard = JSON.stringify(data.board);
     state.initialPlayer = data.currentPlayer;
@@ -115,6 +119,7 @@ export async function playCell(cell) {
 function applyOptimisticMove(i, j) {
     state.board[i][j] = state.currentPlayer + 1;
     state.lastMove = [i, j];
+    state.moveList.push([i, j]);
 
     state.remainingTimes[state.currentPlayer] += state.increments[state.currentPlayer];
 
@@ -171,26 +176,16 @@ export function refreshHoverPreview() {
     showPreview(state.hoveredCell);
 }
 
-export function cycleMarker(cell, backward) {
+export function toggleMarker(cell, color) {
     const i = Number(cell.dataset.row);
     const j = Number(cell.dataset.col);
 
     const key = `${i},${j}`;
 
-    const current = state.markers[key] ?? null;
-
-    const idx = MARKERS.indexOf(current);
-
-    const next =
-        MARKERS[
-            (idx + (backward ? MARKERS.length - 1 : 1))
-            % MARKERS.length
-        ];
-
-    if (next === null) {
+    if (state.markers[key] === color) {
         delete state.markers[key];
     } else {
-        state.markers[key] = next;
+        state.markers[key] = color;
     }
 
     renderCell(i, j);
@@ -202,19 +197,24 @@ export function clearAllMarkers() {
     renderBoard();
 }
 
-export function toggleMirrorHorizontal() {
+export function toggleMirrorHorizontal(vertical) {
+    if (vertical) {
+        if (state.transformIndex < 4) {
+            state.transformIndex = (state.transformIndex + 2) % 4;
+        } else {
+            state.transformIndex = 4 + (state.transformIndex - 2) % 4;
+        }
+    }
     state.transformIndex = (state.transformIndex + 4) % 8;
 
     renderOrientation();
 }
 
-export function cycleRotation() {
+export function cycleRotation(backwards) {
     if (state.transformIndex < 4) {
-        state.transformIndex = (state.transformIndex + 1) % 4;
-    } else if (state.transformIndex === 4) {
-        state.transformIndex = 7;
+        state.transformIndex = (state.transformIndex + (backwards ? 3 : 1)) % 4;
     } else {
-        state.transformIndex--;
+        state.transformIndex = 4 + (state.transformIndex - (backwards ? 3 : 1)) % 4;
     }
 
     renderOrientation();
@@ -323,6 +323,35 @@ export function replayEnd() {
     renderMoveNumbers();
 }
 
+export async function restartFromReplay() {
+    if (!state.replayMode) {
+        return;
+    }
+
+    stopClock();
+
+    const { time, increment, level } = selectedSliders();
+
+    const data = await api(`/submit_board`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            board: state.replayBoard,
+            editorPlayer: replayCurrentPlayer(),
+            moveList: replayMoveList(),
+            localPlayer: state.localPlayerIndex,
+            time: time,
+            increment: increment,
+            level: level,
+        }),
+    });
+
+    exitReplayMode();
+    await launchNewGame(data);
+}
+
 export function toggleEditorMode() {
     state.editorMode = !state.editorMode;
 
@@ -403,6 +432,7 @@ export async function submitEditorBoard() {
         body: JSON.stringify({
             board: state.editorBoard,
             editorPlayer: state.editorPlayer,
+            moveList: null,
             localPlayer: state.localPlayerIndex,
             time: time,
             increment: increment,
@@ -414,14 +444,7 @@ export async function submitEditorBoard() {
     state.editorBoard = null;
     state.editorPlayer = null;
 
-    state.gameId = data.gid;
-    state.initialBoard = JSON.stringify(data.board);
-    state.initialPlayer = data.currentPlayer;
-    state.players = data.players;
-    state.localPlayerIndex = state.players[0].isBot ? 1 : 0,
-
-    await updateFromServer();
-    await maybeTriggerBotMove();
+    await launchNewGame(data);
 }
 
 function emptyBoard() {

@@ -63,3 +63,15 @@ export function currentBoard() {
 
     return state.board;
 }
+
+export function replayMoveList() {
+    if (!state.replayMode) {
+        return state.moveList;
+    }
+
+    return state.moveList.slice(0, state.replayPly);
+}
+
+export function replayCurrentPlayer() {
+    return (state.initialPlayer + state.replayPly) % 2;
+}

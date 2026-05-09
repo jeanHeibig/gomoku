@@ -4,7 +4,7 @@ import {
     playCell,
     showPreview,
     hidePreview,
-    cycleMarker,
+    toggleMarker,
     clearAllMarkers,
     toggleMirrorHorizontal,
     cycleRotation,
@@ -17,6 +17,7 @@ import {
     clearEditorBoard,
     swapEditorColors,
     submitEditorBoard,
+    restartFromReplay,
 } from "./actions.js";
 import { cycleTheme, toggleMorpionMode } from "./preferences.js";
 import { state } from "./state.js";
@@ -46,11 +47,11 @@ function initKeyboard() {
                 break;
 
             case "f":
-                toggleMirrorHorizontal();
+                toggleMirrorHorizontal(e.shiftKey);
                 break;
 
             case "r":
-                cycleRotation();
+                cycleRotation(e.shiftKey);
                 break;
 
             case "d":
@@ -73,6 +74,8 @@ function initKeyboard() {
             case "enter":
                 if (state.editorMode) {
                     await submitEditorBoard();
+                } else if (state.replayMode) {
+                    await restartFromReplay();
                 } else if (state.finished) {
                     await newGame();
                 }
@@ -145,6 +148,12 @@ function initBoardEvents() {
             return;
         }
 
-        cycleMarker(cell, e.shiftKey);
+        if (e.ctrlKey) {
+            toggleMarker(cell, "blue");
+        } else if (e.shiftKey) {
+            toggleMarker(cell, "red");
+        } else {
+            toggleMarker(cell, "green");
+        }
     });
 }

@@ -25,13 +25,6 @@ export const LEVEL_LABELS = [
     "Very Hard",
 ];
 
-export const MARKERS = [
-    null,
-    "green",
-    "red",
-    "blue",
-];
-
 export const BOARD_TRANSFORMS = [
     "identity",
     "rot90",
