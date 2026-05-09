@@ -10,6 +10,8 @@ Add:
 Threat visuals (check / checkmate)
 Eval bar
 Favicon
+Escape key go back to default view
+GUI book builder
 Improve editor mode:
 Validate final board legality before starting
 Reject impossible positions
@@ -55,6 +57,7 @@ defending side searches wider
 Explore entropy-based depth reduction:
 forced moves do not decrease depth
 depth reduction depends on effective branching factor
+if move is forcing threat, reduce depth (not only child)
 weight moves by seriousness instead of raw move count
 
 ### Evaluation Function

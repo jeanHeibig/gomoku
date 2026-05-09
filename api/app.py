@@ -92,6 +92,7 @@ def submit_board(req: dict):
     gid = str(uuid.uuid4())
 
     position = req["board"]
+    move_list = req["moveList"]
     current_player = int(req["editorPlayer"])
     localPlayer = int(req["localPlayer"])
     level = int(req["level"])
@@ -105,7 +106,7 @@ def submit_board(req: dict):
     players = [player2, player2]
     players[localPlayer] = player1
 
-    game = Game(gid, players, timer, position, current_player)
+    game = Game(gid, players, timer, position, move_list, current_player)
 
     games[gid] = game
     return serialize(game)

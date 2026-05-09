@@ -16,7 +16,7 @@ from .clock.timer import Timer
 class Game:
     """A class representing a Gomoku game."""
 
-    def __init__(self, gid: str, players: list[Player], timer: Timer, starting_position=None, current_player=0):
+    def __init__(self, gid: str, players: list[Player], timer: Timer, starting_position=None, move_list=None, current_player=0):
         """Initialize the game with a list of players and a timer.
 
         Args:
@@ -29,7 +29,10 @@ class Game:
         self.board = Board(starting_position, current_player)
         self.memory = [None, None]
 
-        self.moves = []
+        if move_list is None:
+            self.moves = []
+        else:
+            self.moves = move_list
         self.finished = False
         self.draw = False
         self.winner = None  # 0: P1, 1: P2
