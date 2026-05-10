@@ -161,16 +161,7 @@ def move_to_front(moves, mv_nb, target_move):
 
 @nb.njit
 def pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-        bb_current, bb_opponent, depth, alpha, beta):
-
-    key = compute_hash(bb_current, bb_opponent)
-
-    # --- TT PROBE ---
-    hit, tt_score, tt_move, alpha, beta = tt_probe(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                                   key, depth, alpha, beta)
-    if hit:
-        return tt_score
-
+        bb_current, bb_opponent, depth, father, alpha, beta):
     # if is_winning(bb_opponent):  # Opponent cannot be winning with this search
     #     return -INF + depth
 
@@ -180,11 +171,23 @@ def pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
     if is_dead_draw(bb_current, bb_opponent):
         return 0
 
-    if depth <= 0:
-        return fast_eval(bb_current, bb_opponent)
-
     move_scores = get_scores(bb_current, bb_opponent)
     ordered_moves, mv_nb = sort_moves(move_scores)
+
+    # --- FRACTIONNAL PLY: search deeper for threats ---
+    if mv_nb < 5:  # Threats yield usually 2 or 3 moves, and sometime there is one or two counter-attacks
+        depth += father - 2
+
+    if depth <= 0:
+            return fast_eval(bb_current, bb_opponent)
+
+    key = compute_hash(bb_current, bb_opponent)
+
+    # --- TT PROBE ---
+    hit, tt_score, tt_move, alpha, beta = tt_probe(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
+                                                   key, depth, alpha, beta)
+    if hit:
+        return tt_score
 
     # --- HASH MOVE FIRST ---
     move_to_front(ordered_moves, mv_nb, tt_move)
@@ -202,15 +205,15 @@ def pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
 
         if first:
             score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                         bb_opponent, bb_current, depth - LOG2[mv_nb], -beta, -alpha)
+                         bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -beta, -alpha)
             first = False
         else:
             score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                         bb_opponent, bb_current, depth - LOG2[mv_nb], -alpha - 1, -alpha)
+                         bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -alpha - 1, -alpha)
 
             if alpha < score and score < beta:
                 score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                             bb_opponent, bb_current, depth - LOG2[mv_nb], -beta, -score)
+                             bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -beta, -score)
 
         bb_current ^= move
 
@@ -246,7 +249,7 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
     best_move = np.uint64(0)  # TODO: if no loop is run (time_limit), best_move is not valid by default
     pv_move = np.uint64(0)
 
-    for depth in range(12, 12 * max_depth + 1, 12):
+    for depth in range(1, max_depth + 1):
 
         if ctime() - start_time >= time_limit:
             break
@@ -278,14 +281,14 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
             # --- PVS root ---
             if i == 0:
                 score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                             bb_opponent, bb_current, depth - LOG2[mv_nb], -beta, -alpha)
+                             bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -beta, -alpha)
             else:
                 score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                             bb_opponent, bb_current, depth - LOG2[mv_nb], -alpha - 1, -alpha)
+                             bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -alpha - 1, -alpha)
 
                 if alpha < score and score < beta:
                     score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                 bb_opponent, bb_current, depth - LOG2[mv_nb], -beta, -score)
+                                 bb_opponent, bb_current, depth - LOG2[mv_nb], LOG2[mv_nb], -beta, -score)
 
             bb_current ^= move
 
@@ -302,7 +305,7 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
             pv_move = best_move_depth
 
         # Optional debug
-        print(f"Depth {depth // 12}, score {best_score}, move {best_move}")
+        print(f"Depth {depth} ({depth // 12}), score {best_score}, move {best_move}")
 
     return best_move
 
@@ -319,8 +322,8 @@ def ab_tt_bot(position, current_player, timer, memory):
     else:
         TT_keys, TT_moves, TT_depths, TT_scores, TT_flags = memory
 
-    move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
-    # move_time = 0.5 * timer["times"][current_player]
+    # move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
+    move_time = 100 * timer["times"][current_player]
 
     bitboards = b2b(position)
     bb_current = np.uint64(bitboards[current_player])
@@ -334,7 +337,7 @@ def ab_tt_bot(position, current_player, timer, memory):
     move_cr = lookup_opening_moves(bb_current_cr, bb_opponent_cr)
     if move_cr is None:
         move_cr = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                bb_current_cr, bb_opponent_cr, max_depth=12, time_limit=move_time)
+                                bb_current_cr, bb_opponent_cr, max_depth=64, time_limit=move_time)
         move_cr = np.uint64(move_cr)
 
     move = np.uint64(apply_inverse_symmetry(move_cr, s_idx))
