@@ -11,6 +11,8 @@ Threat visuals (check / checkmate)
 Eval bar
 Favicon
 Escape key go back to default view
+Mouse scroll to go through preview
+Build a complete logger of all the info possible during search and follow it "by hand" (with eventually fast forward button)
 GUI book builder
 Improve editor mode:
 Validate final board legality before starting
@@ -66,6 +68,8 @@ Improve evaluation quality
 Investigate hybrid evaluation:
 lightweight heuristic eval in opening
 stronger tactical/Monte-Carlo eval in complex positions
+Build the TSS tree during eval
+x/o asymmetry -> always finish on o
 Implement dead/effectively-dead cell analysis:
 detect geometrically dead regions
 detect strategically dead regions
@@ -76,8 +80,7 @@ Detect drawish/tablebase-like positions with many dead cells
 
 Improve symmetry handling:
 LUT-based transforms
-aggressive root symmetry reduction
-symmetry propagation from root only
+dead symmetry propagation from root
 Create self-play opening book
 
 ## Server / Online / Matchmaking
