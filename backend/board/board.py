@@ -154,7 +154,7 @@ class Board:
         if bb < 0:
             bb += 2**64
         s = bin(bb)[2:]
-        s = (64 - len(s)) * '0' + s
+        s = ((64 - len(s)) * '0' + s).replace('0', '.')
         p = '\n'.join([s[i:i+8] for i in range(0, 64, 8)])
 
         if h:

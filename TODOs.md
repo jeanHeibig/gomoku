@@ -64,6 +64,8 @@ weight moves by seriousness instead of raw move count
 
 ### Evaluation Function
 
+Add dead cells to improve alignment detection
+Order MASKS_BY_CELL by hit probability (lazy evaluation)
 Improve evaluation quality
 Investigate hybrid evaluation:
 lightweight heuristic eval in opening
