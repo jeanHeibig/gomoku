@@ -26,9 +26,12 @@ import random
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+import numpy as np
 
 from backend import Timer, Game, Player
+from backend.board import b2b, bb2m
 from backend.players import human, bots
+from backend.players.bots.tss_bot.tactics import get_forced_moves
 
 app = FastAPI()
 
@@ -233,3 +236,31 @@ def serialize(game: Game):
         "finished": game.finished,
         "winner": game.winner,
     }
+
+
+
+@app.post("/tactics")
+def api_tactics(req: dict):
+    black, white = b2b(req["board"])
+
+    if req["currentPlayer"] == 0:
+        bb_current = np.uint64(black)
+        bb_opponent = np.uint64(white)
+    else:
+        bb_current = np.uint64(white)
+        bb_opponent = np.uint64(black)
+
+    forced = get_forced_moves(bb_current, bb_opponent)
+    moves = bb2m(forced)
+    tactical_data = []
+    for i in range(8):
+        row = []
+        for _ in range(8):
+            row.append(False)
+        tactical_data.append(row)
+
+    for move in moves:
+        i, j = move
+        tactical_data[i][j] = True
+
+    return tactical_data

@@ -12,6 +12,7 @@ import {
     replayNext,
     replayStart,
     replayEnd,
+    analyzeTactics,
     toggleEditorMode,
     toggleEditorPlayer,
     clearEditorBoard,
@@ -64,6 +65,10 @@ function initKeyboard() {
 
             case "s":
                 swapEditorColors();
+                break;
+
+            case "t":
+                await analyzeTactics();
                 break;
 
             case " ":

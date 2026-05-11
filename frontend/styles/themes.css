@@ -15,6 +15,7 @@ body[data-theme="light"] {
     --green-marked-cell: rgba(119, 255, 61, 0.5);
     --red-marked-cell: rgba(255, 61, 61, 0.5);
     --blue-marked-cell: rgba(0, 27, 90, 0.5);
+    --threat-marked-cell: rgba(255, 0, 0, 0.8);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -73,6 +74,7 @@ body[data-theme="dark"] {
     --green-marked-cell: rgba(36, 128, 34, 0.5);
     --red-marked-cell: rgba(162, 36, 34, 0.5);
     --blue-marked-cell: rgba(17, 36, 81, 0.5);
+    --threat-marked-cell: rgba(192, 0, 0, 0.8);
 
     --win-glow: #ad2929;
 
@@ -131,6 +133,7 @@ body[data-theme="blue"] {
     --green-marked-cell: rgba(75, 255, 48, 0.5);
     --red-marked-cell: rgba(255, 79, 50, 0.7);
     --blue-marked-cell: rgba(35, 46, 255, 0.7);
+    --threat-marked-cell: rgba(255, 0, 0, 0.8);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 
@@ -189,6 +192,7 @@ body[data-theme="green"] {
     --green-marked-cell: rgba(89, 233, 0, 0.822);
     --red-marked-cell: rgba(208, 22, 22, 0.5);
     --blue-marked-cell: rgba(9, 15, 121, 0.5);
+    --threat-marked-cell: rgba(255, 0, 0, 0.8);
 
     --win-glow: rgba(255, 0, 0, 0.8);
 

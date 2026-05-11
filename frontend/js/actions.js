@@ -1,6 +1,6 @@
 import { BOARD_SIZE, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
-import { state, applyServerState, replayCurrentPlayer, replayMoveList } from "./state.js";
+import { state, applyServerState, replayCurrentPlayer, replayMoveList, currentBoard } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
 import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
@@ -42,6 +42,7 @@ export async function updateFromServer() {
     const data = await api(`/state?gid=${state.gameId}`);
 
     applyServerState(data);
+    resetTacticalData();
     syncClockState();
     render();
     refreshHoverPreview();
@@ -75,6 +76,8 @@ export async function maybeTriggerBotMove() {
 export async function playCell(cell) {
     const i = Number(cell.dataset.row);
     const j = Number(cell.dataset.col);
+
+    resetTacticalData();
 
     if (state.editorMode) {
         playEditorCell(i, j);
@@ -114,6 +117,13 @@ export async function playCell(cell) {
 
     await updateFromServer();
     await maybeTriggerBotMove();
+}
+
+function resetTacticalData() {
+    if (state.tacticalData) {
+        state.tacticalData = null;
+        renderBoard();
+    }
 }
 
 function applyOptimisticMove(i, j) {
@@ -272,6 +282,7 @@ export function replayPrevious() {
 
     state.replayBoard = buildReplayBoard(state.replayPly);
 
+    resetTacticalData();
     renderBoard();
     renderMoveNumbers();
 }
@@ -293,6 +304,7 @@ export function replayNext() {
 
     state.replayBoard = buildReplayBoard(state.replayPly);
 
+    resetTacticalData();
     renderBoard();
     renderMoveNumbers();
 }
@@ -306,6 +318,7 @@ export function replayStart() {
     state.replayPly = 0;
     state.replayBoard = buildReplayBoard(0);
 
+    resetTacticalData();
     renderBoard();
     renderMoveNumbers();
 }
@@ -319,6 +332,7 @@ export function replayEnd() {
     state.replayPly = state.moveList.length;
     state.replayBoard = buildReplayBoard(state.replayPly);
 
+    resetTacticalData();
     renderBoard();
     renderMoveNumbers();
 }
@@ -345,16 +359,39 @@ export async function restartFromReplay() {
             time: time,
             increment: increment,
             level: level,
-        }),
+        })
     });
 
     exitReplayMode();
     await launchNewGame(data);
 }
 
+export async function analyzeTactics() {
+
+    if (state.tacticalData) {
+        resetTacticalData();
+        return
+    }
+
+    const data = await api(`/tactics`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            board: currentBoard(),
+            currentPlayer: state.currentPlayer,
+        })
+    })
+
+    state.tacticalData = data;
+    renderBoard();
+}
+
 export function toggleEditorMode() {
     state.editorMode = !state.editorMode;
 
+    resetTacticalData();
     clearAllPreviews();
 
     if (state.editorMode) {

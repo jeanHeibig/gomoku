@@ -132,6 +132,10 @@ body {
     background-color: var(--blue-marked-cell);
 }
 
+.cell[data-marker="threat"]::after {
+    background-color: var(--threat-marked-cell);
+}
+
 /* Game states */
 .cell.light[data-last-move] {
     background-color: var(--last-move-light);

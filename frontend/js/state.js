@@ -28,6 +28,7 @@ export const state = {
     replayBoard: null,
     initialBoard: null,
     initialPlayer: 0,
+    tacticalData: null,
 
     markers: {},
     transformIndex: 0,

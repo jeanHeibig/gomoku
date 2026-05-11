@@ -99,6 +99,10 @@ export function renderCell(row, col) {
         delete cell.dataset.marker;
     }
 
+    if (state.tacticalData?.[row][col]) {
+        cell.dataset.marker = "threat";
+    }
+
     if (
         effectiveLastMove &&
         effectiveLastMove[0] === row &&
