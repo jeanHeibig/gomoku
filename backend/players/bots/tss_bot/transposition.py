@@ -4,6 +4,7 @@ import numpy as np
 from .hyperparameters import TT_MASK
 
 
+I8 = np.int8
 U8 = np.uint8
 U64 = np.uint64
 
@@ -14,8 +15,8 @@ UPPER = U8(2)
 
 
 @nb.njit(
-    "Tuple((b1, i8, u8, i8, i8))"
-    "(u8[:], u8[:], u1[:], i8[:], u1[:], u8, u1, i8, i8)",
+    "Tuple((b1, i1, u8, i1, i1))"
+    "(u8[:], u8[:], i1[:], i1[:], u1[:], u8, i1, i1, i1)",
     inline="always",
 )
 def tt_probe(
@@ -25,9 +26,9 @@ def tt_probe(
     TT_scores,
     TT_flags,
     key: U64,
-    depth: U8,
-    alpha: np.int64,
-    beta: np.int64,
+    depth: I8,
+    alpha: I8,
+    beta: I8,
 ):
     """Probe transposition table."""
 
@@ -63,7 +64,7 @@ def tt_probe(
     return False, 0, stored_move, alpha, beta
 
 @nb.njit(
-    "void(u8[:], u8[:], u1[:], i8[:], u1[:], u8, u1, i8, u1, u8)",
+    "void(u8[:], u8[:], i1[:], i1[:], u1[:], u8, i1, i1, u1, u8)",
     inline="always",
 )
 def tt_store(
@@ -73,8 +74,8 @@ def tt_store(
     TT_scores,
     TT_flags,
     key: U64,
-    depth: U8,
-    score: np.int64,
+    depth: I8,
+    score: I8,
     flag: U8,
     best_move: U64,
 ):
@@ -92,8 +93,7 @@ def tt_store(
 
 
 @nb.njit(
-    "void(u8[:], u8[:], u1[:], i8[:], u1[:], "
-    "u8, u1, i8, i8, i8, u8)",
+    "void(u8[:], u8[:], i1[:], i1[:], u1[:], u8, i1, i1, i1, i1, u8)",
     inline="always",
 )
 def tt_store_search_result(

@@ -208,4 +208,4 @@ def get_forced_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
         return ot  # or atleast block one square
 
     # --- NOTHING FOUND ---
-    return U64(0)
+    return U64(0xffffffffffff)

@@ -37,7 +37,8 @@ Improve score representation:
 nonnegative compact scores (uint8)
 compact fast evals (int8 / int16)
 Benchmark different Heuristic functions
-Use 64-bit LUT / Optimise TT
+Use 64-bit LUT / Optimise TT -> store move idx, not move bb
+Add quiescence / tactical extension
 
 ### Search Improvements
 
@@ -53,6 +54,7 @@ Improve raw search speed/performance
 Fix tactical weaknesses:
 implement proper Threat-Space Search (TSS)
 faster double-threat detection with LUTs
+check LUT with depth == 0 not key == 0
 Mate faster:
 prefer shortest winning lines
 

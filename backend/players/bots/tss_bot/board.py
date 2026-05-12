@@ -11,6 +11,7 @@ U64 = np.uint64
 
 WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
 ZB = np.array(ZOBRIST, dtype=U64)
+ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
@@ -84,8 +85,8 @@ def bitboard_to_ij(bb: U64) -> tuple[U8, U8]:
     return k // U8(8), k % U8(8)
 
 
-@nb.njit("u8(u8, u8)", inline="always")
-def compute_hash(bb_current: U64, bb_opponent: U64) -> U64:
+@nb.njit("u8(u8, u8, u1)", inline="always")
+def compute_hash(bb_current: U64, bb_opponent: U64, side_to_move: U8) -> U64:
     """Compute Zobrist hash from two bitboards."""
 
     h = U64(0)
@@ -103,5 +104,8 @@ def compute_hash(bb_current: U64, bb_opponent: U64) -> U64:
         bb_opponent >>= U64(1)
 
         idx += U8(1)
+
+    if side_to_move:
+        h ^= ZOBRIST_SIDE
 
     return h
