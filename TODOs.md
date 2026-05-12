@@ -28,19 +28,23 @@ remove obsolete code/TODOs
 add docstrings
 add type annotations
 add numba input/output types
+Add numba cache=True
 Isolate bot logic into a single-file student-friendly version
 keep optional extensions/modular advanced engine
 Create a Memory / transposition helper class
+Move generation should return bb and index (useful for hashing, killer moves, ordering, opening book, GUI)
 Improve score representation:
 nonnegative compact scores (uint8)
 compact fast evals (int8 / int16)
 Benchmark different Heuristic functions
+Use 64-bit LUT / Optimise TT
 
 ### Search Improvements
 
 Improve move ordering:
 sort all moves, not only hash move
 add History Heuristic / Killer Moves
+Benchmark current vs heuristic with the count of cells with double threats potention + those of opponents (derived from eval)
 Improve PVS:
 multi-PV support
 better principal variation propagation

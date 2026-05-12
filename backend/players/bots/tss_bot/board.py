@@ -1,0 +1,107 @@
+import numba as nb
+import numpy as np
+import numpy.typing as npt
+
+from .data import WIN_MASKS_ALL_BOARD, ZOBRIST
+
+
+U8 = np.uint8
+U64 = np.uint64
+
+
+WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
+ZB = np.array(ZOBRIST, dtype=U64)
+MOVES = U64(1) << np.arange(64, dtype=U64)
+
+
+@nb.njit("b1(u8)", inline="always")
+def is_winning(bb_current: U64) -> bool:
+    """Return whether the bitboard contains a 5-alignment."""
+
+    for k in range(96):
+
+        mask = WMA[k]
+
+        if (bb_current & mask) == mask:
+            return True
+
+    return False
+
+
+@nb.njit("b1(u8, u8)", inline="always")
+def is_dead_draw(bb_current: U64, bb_opponent: U64) -> bool:
+    """Return whether no player can still form a 5-alignment."""
+
+    return (
+        not is_winning(~bb_opponent)
+        and
+        not is_winning(~bb_current)
+    )
+
+
+@nb.njit("UniTuple(u8, 2)(u1[:, :])")
+def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
+    """Convert a 2D board matrix into two bitboards."""
+
+    bb_current = U64(0)
+    bb_opponent = U64(0)
+
+    for i in range(8):
+        for j in range(8):
+
+            if position[i, j] == 1:
+                bb_current |= MOVES[i * 8 + j]
+
+            elif position[i, j] == 2:
+                bb_opponent |= MOVES[i * 8 + j]
+
+    return bb_current, bb_opponent
+
+
+@nb.njit("u1(u8)", inline="always")
+def bitboard_to_index(bb: U64) -> U8:
+    """Return index of least significant set bit."""
+
+    idx = U8(0)
+
+    while not (bb & U64(1)):
+        bb >>= U64(1)
+        idx += U8(1)
+
+    return idx
+
+
+@nb.njit("UniTuple(u1, 2)(u8)", inline="always")
+def bitboard_to_ij(bb: U64) -> tuple[U8, U8]:
+    """Convert a single-bit bitboard into (i, j) coordinates."""
+
+    k = U8(0)
+
+    while not (bb & U64(1)):
+        bb >>= U64(1)
+        k += U8(1)
+
+    return k // U8(8), k % U8(8)
+
+
+@nb.njit("u8(u8, u8)", inline="always")
+def compute_hash(bb_current: U64, bb_opponent: U64) -> U64:
+    """Compute Zobrist hash from two bitboards."""
+
+    h = U64(0)
+    idx = U8(0)
+
+    while bb_current or bb_opponent:
+
+        if bb_current & U64(1):
+            h ^= ZB[0, idx]
+
+        elif bb_opponent & U64(1):
+            h ^= ZB[1, idx]
+
+        bb_current >>= U64(1)
+        bb_opponent >>= U64(1)
+
+        idx += U8(1)
+
+    return h

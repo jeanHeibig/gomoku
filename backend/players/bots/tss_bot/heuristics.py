@@ -5,6 +5,7 @@ import numpy.typing as npt
 from .data import WIN_MASKS_ALL_BOARD, WIN_MASKS_INDEXES, RANDOM_GAMES
 
 
+I8 = np.int8
 U8 = np.uint8
 U64 = np.uint64
 
@@ -12,11 +13,15 @@ U64 = np.uint64
 WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
 WMI = np.array(WIN_MASKS_INDEXES, dtype=U64)
 RG = np.array(RANDOM_GAMES, dtype=U64)
+HZM = np.array(WIN_MASKS_ALL_BOARD[:32], dtype=U64)
+VTM = np.array(WIN_MASKS_ALL_BOARD[32:64], dtype=U64)
+DGM = np.array(WIN_MASKS_ALL_BOARD[64:80], dtype=U64)
+ADM = np.array(WIN_MASKS_ALL_BOARD[80:], dtype=U64)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 @nb.njit("u1[:](u8, u8, u8)")
-def fast_statistics(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
+def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
     """Compute a heuristic score grid for each empty tile on the board.
 
     The function evaluates every random fill scenario from the precomputed
@@ -43,6 +48,91 @@ def fast_statistics(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDAr
         bb_idx = MOVES[idx]
         if ~bb_open & bb_idx:
             scores[idx] = 0
+
+    # print(scores.reshape((8,8)))
+    return scores
+
+
+@nb.njit("u1[:](u8, u8, u8)")
+def tactical_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
+    """Compute a heuristic score based on free directions."""
+    scores = np.zeros(64, dtype=U8)
+
+    bb_current_filled = ~bb_opponent
+    bb_opponent_filled = ~bb_current
+
+    bb_current_horizontal = U64(0)
+    for mask in HZM:
+        if (bb_current_filled & mask) == mask:
+            bb_current_horizontal |= mask
+    bb_current_vertical = U64(0)
+    for mask in VTM:
+        if (bb_current_filled & mask) == mask:
+            bb_current_vertical |= mask
+    bb_current_diagonal = U64(0)
+    for mask in DGM:
+        if (bb_current_filled & mask) == mask:
+            bb_current_diagonal |= mask
+    bb_current_antidiag = U64(0)
+    for mask in ADM:
+        if (bb_current_filled & mask) == mask:
+            bb_current_antidiag |= mask
+
+    bb_opponent_horizontal = U64(0)
+    for mask in HZM:
+        if (bb_opponent_filled & mask) == mask:
+            bb_opponent_horizontal |= mask
+    bb_opponent_vertical = U64(0)
+    for mask in VTM:
+        if (bb_opponent_filled & mask) == mask:
+            bb_opponent_vertical |= mask
+    bb_opponent_diagonal = U64(0)
+    for mask in DGM:
+        if (bb_opponent_filled & mask) == mask:
+            bb_opponent_diagonal |= mask
+    bb_opponent_antidiag = U64(0)
+    for mask in ADM:
+        if (bb_opponent_filled & mask) == mask:
+            bb_opponent_antidiag |= mask
+
+    for cell in range(64):
+        if ~bb_open & MOVES[cell]:  # Do not count occupied cells
+            continue
+
+        threat_current_number = U8(0)
+        threat_opponent_number = U8(0)
+
+        if bb_current_horizontal & MOVES[cell]:
+            threat_current_number += 1
+        if bb_current_vertical & MOVES[cell]:
+            threat_current_number += 1
+        if bb_current_diagonal & MOVES[cell]:
+            threat_current_number += 1
+        if bb_current_antidiag & MOVES[cell]:
+            threat_current_number += 1
+
+        if bb_opponent_horizontal & MOVES[cell]:
+            threat_opponent_number += 1
+        if bb_opponent_vertical & MOVES[cell]:
+            threat_opponent_number += 1
+        if bb_opponent_diagonal & MOVES[cell]:
+            threat_opponent_number += 1
+        if bb_opponent_antidiag & MOVES[cell]:
+            threat_opponent_number += 1
+
+        if threat_current_number == U8(2):
+            scores[cell] += U8(21)
+        elif threat_current_number == U8(3):
+            scores[cell] += U8(62)
+        elif threat_current_number == U8(4):
+            scores[cell] += U8(122)
+
+        if threat_opponent_number == U8(2):
+            scores[cell] += U8(13)
+        elif threat_opponent_number == U8(3):
+            scores[cell] += U8(39)
+        elif threat_opponent_number == U8(4):
+            scores[cell] += U8(78)
 
     # print(scores.reshape((8,8)))
     return scores
