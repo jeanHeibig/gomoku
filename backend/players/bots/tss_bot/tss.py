@@ -22,7 +22,7 @@ U64 = np.uint64
 ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
-LOG2 = np.array(LOG2, dtype=U8)
+LOG2 = np.array(LOG2, dtype=I8)
 
 
 # @nb.njit
@@ -115,8 +115,8 @@ def find_best_move(
 
 
 # @nb.njit
-def tss_bot(position, current_player, timer, memory):
-    position = np.array(position)  # TODO: Ask for position argument to be an array
+def tss_bot(board, current_player, timer, memory):
+    position = np.array(board.position, dtype=U8)  # TODO: Ask for position argument to be an array
     current_player = U8(current_player)
     if memory is None:
         TT_keys   = np.zeros(TT_SIZE, dtype=U64)  # TODO: implement a 2-bucket TT
@@ -146,7 +146,7 @@ def tss_bot(position, current_player, timer, memory):
     else:
         hash_ = compute_hash(bb_current, bb_opponent, current_player)
         move = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                bb_current, bb_opponent, current_player, hash_, max_depth=INF, time_limit=move_time)
+                                bb_current, bb_opponent, current_player, hash_, max_depth=INF - I8(1), time_limit=move_time)
 
     move_ij = bitboard_to_ij(move)
 

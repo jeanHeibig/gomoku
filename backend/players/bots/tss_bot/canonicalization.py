@@ -125,7 +125,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     return best_bb_c, best_bb_o, best_t
 
 
-@nb.njit("u8(u8)", inline="always")
+@nb.njit("u8(u8, u1)", inline="always")
 def apply_inverse_symmetry(representant: U64, symmetry: U8) -> U64:
     """Revert a move to its original position on the board."""
     if symmetry == U8(1):  # I

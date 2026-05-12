@@ -20,10 +20,10 @@ U64 = np.uint64
 ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
-LOG2 = np.array(LOG2, dtype=U8)
+LOG2 = np.array(LOG2, dtype=I8)
 
 
-@nb.njit("i1(u8[:], u8[:], u1[:], i8[:], u1[:], u8, u8, u1, u8, i1, i1, i1)")
+@nb.njit("i1(u8[:], u8[:], u1[:], i1[:], u1[:], u8, u8, u1, u8, i1, i1, i1)")
 def pvs(
     TT_keys,
     TT_moves,

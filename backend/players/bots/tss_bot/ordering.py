@@ -11,7 +11,7 @@ MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 @nb.njit(
-    "Tuple((u8[:], u1[:], u1))(i1[:])",
+    "Tuple((u8[:], u1[:], u1))(u1[:], u8)",
     inline="always",
 )
 def sort_moves(move_scores, allowed_moves: U64):
