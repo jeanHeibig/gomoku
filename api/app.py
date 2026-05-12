@@ -250,7 +250,9 @@ def api_tactics(req: dict):
         bb_current = np.uint64(white)
         bb_opponent = np.uint64(black)
 
-    forced = get_forced_moves(bb_current, bb_opponent)
+    bb_open = ~(bb_current | bb_opponent)
+
+    forced = get_forced_moves(bb_current, bb_opponent, bb_open)
     moves = bb2m(forced)
     tactical_data = []
     for i in range(8):

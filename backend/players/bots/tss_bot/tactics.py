@@ -2,25 +2,40 @@ import numba as nb
 import numpy as np
 
 
-from .data import BOARD_TILES, WIN_MASKS_ALL_BOARD, MASKS_BY_CELL, MASK_BY_CELL_COUNT, NEIGHBORS, NEIGHBOR_COUNT, WIN_MASKS_INDEXES
+from .data import MASKS_BY_CELL, MASK_BY_CELL_COUNT, NEIGHBORS, NEIGHBOR_COUNT
+
+
+"""
+Tactics module for TSS bot in Gomoku game.
+
+This module provides optimized functions using Numba and bitboards to identify
+tactical moves such as immediate wins, double threats, and counter moves.
+Functions are designed for high-performance game tree search.
+"""
 
 
 U8 = np.uint8
 U64 = np.uint64
 
 
-BT = np.array(BOARD_TILES, dtype=U64)
-WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
 MBC = np.array(MASKS_BY_CELL, dtype=U64)
 MBC_COUNT = np.array(MASK_BY_CELL_COUNT, dtype=U8)
 NBS = np.array(NEIGHBORS, dtype=U8)
 NBS_COUNT = np.array(NEIGHBOR_COUNT, dtype=U8)
-WMI = np.array(WIN_MASKS_INDEXES, dtype=U64)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 @nb.njit("b1(u8, u1)", inline="always")
 def _has_align5_with_cell(bb: U64, cell: U8) -> bool:
+    """Check if placing a piece at the given cell creates a 5-in-a-row alignment.
+
+    Args:
+        bb: Bitboard representing current pieces.
+        cell: Cell index (0-63).
+
+    Returns:
+        True if placing at cell creates 5-in-a-row, False otherwise.
+    """
 
     for move_nb in range(MBC_COUNT[cell]):
         mask = MBC[cell, move_nb]
@@ -33,7 +48,15 @@ def _has_align5_with_cell(bb: U64, cell: U8) -> bool:
 
 @nb.njit("u8(u8, u8)", inline="always")
 def _get_align5(bb_current: U64, bb_open: U64) -> U64:
-    """Find moves that would create an immediate win for the current player."""
+    """Find moves that would create an immediate 5-in-a-row win for the current player.
+
+    Args:
+        bb_current: Bitboard of current player's pieces.
+        bb_open: Bitboard of open positions.
+
+    Returns:
+        Bitboard of winning moves.
+    """
     winning_moves = U64(0)
 
     for cell in range(64):
@@ -47,6 +70,15 @@ def _get_align5(bb_current: U64, bb_open: U64) -> U64:
 
 @nb.njit("b1(u8, u8)", inline="always")
 def _has_double_threat(bb_current: U64, bb_open: U64) -> bool:
+    """Check if there exists a move that creates multiple winning threats.
+
+    Args:
+        bb_current: Bitboard of current player's pieces.
+        bb_open: Bitboard of open positions.
+
+    Returns:
+        True if a double threat exists, False otherwise.
+    """
 
     open_ = bb_open
 
@@ -65,7 +97,15 @@ def _has_double_threat(bb_current: U64, bb_open: U64) -> bool:
 
 @nb.njit("u8(u8, u8)", inline="always")
 def _get_double_threats(bb_current: U64, bb_open: U64) -> U64:
-    """Find moves that create multiple winning opportunities (double threats)."""
+    """Find moves that create multiple winning opportunities (double threats).
+
+    Args:
+        bb_current: Bitboard of current player's pieces.
+        bb_open: Bitboard of open positions.
+
+    Returns:
+        Bitboard of moves that create double threats.
+    """
     double_threats = U64(0)
 
     for cell in range(64):
@@ -96,7 +136,16 @@ def _get_double_threats(bb_current: U64, bb_open: U64) -> U64:
 # @nb.njit
 @nb.njit("u8(u8, u8, u8)", inline="always")
 def _get_counter_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
-    """Find moves that counter the opponent's threats."""
+    """Find moves that counter the opponent's threats.
+
+    Args:
+        bb_current: Bitboard of current player's pieces.
+        bb_opponent: Bitboard of opponent's pieces.
+        bb_open: Bitboard of open positions.
+
+    Returns:
+        Bitboard of counter moves.
+    """
     res = U64(0)
 
     open_ = bb_open
@@ -120,10 +169,18 @@ def _get_counter_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
     return res
 
 
-@nb.njit("u8(u8, u8)", inline="never")
-def get_forced_moves(bb_current: U64, bb_opponent: U64) -> U64:
-    """Return moves either forced (defense) or forcing (attacking)."""
-    bb_open = ~(bb_current | bb_opponent)
+@nb.njit("u8(u8, u8, u8)", inline="never")
+def get_forced_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
+    """Return moves that are either forced (defense) or forcing (attacking).
+
+    Args:
+        bb_current: Bitboard of current player's pieces.
+        bb_opponent: Bitboard of opponent's pieces.
+        bb_open: Bitboard of open positions.
+
+    Returns:
+        Bitboard of forced moves.
+    """
 
     # --- IMMEDIATE WIN ---
     a5 = _get_align5(bb_current, bb_open)
@@ -150,4 +207,5 @@ def get_forced_moves(bb_current: U64, bb_opponent: U64) -> U64:
 
         return ot  # or atleast block one square
 
+    # --- NOTHING FOUND ---
     return U64(0)

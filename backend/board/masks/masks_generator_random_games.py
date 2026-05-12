@@ -1,6 +1,8 @@
 import numpy as np
 
 
+N = 255
+
 def make_random_u64(n, rng=None):
     if rng is None:
         rng = np.random.default_rng()
@@ -21,11 +23,11 @@ def count_bits(r):
 
 if __name__ == "__main__":
 
-    r = make_random_u64(100000)
+    r = make_random_u64(N)
     c = count_bits(r.copy())
     m = c.mean()
-    while not 32 < m <32.0001:
-        r = make_random_u64(100000)
+    while not m == 32:
+        r = make_random_u64(N)
         c = count_bits(r.copy())
         m = c.mean()
 

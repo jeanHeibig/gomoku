@@ -34,6 +34,7 @@ Create a Memory / transposition helper class
 Improve score representation:
 nonnegative compact scores (uint8)
 compact fast evals (int8 / int16)
+Benchmark different Heuristic functions
 
 ### Search Improvements
 
@@ -77,6 +78,7 @@ detect geometrically dead regions
 detect strategically dead regions
 identify disconnected independent regions
 Detect drawish/tablebase-like positions with many dead cells
+MCTS evaluation function for selective deep evaluation
 
 ### Symmetry / Opening Work
 
