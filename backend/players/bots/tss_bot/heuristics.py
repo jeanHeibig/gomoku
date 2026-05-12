@@ -30,7 +30,7 @@ def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> np
     scores = np.zeros(64, dtype=U8)
 
     # Monte-Carlo evaluation
-    for t in range(255):
+    for t in range(128):
         bb_current_completed = bb_current | (RG[t] & bb_open)
         bb_opponent_completed = bb_opponent | (~RG[t] & bb_open)
 
@@ -40,9 +40,6 @@ def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> np
             if ((bb_current_completed & m) == m) or ((bb_opponent_completed & m) == m):
                 for wt_idx in WMI[k]:
                     scores[wt_idx] += 1
-
-                    # if scores[wt_idx] == 255:  # Debug
-                    #     raise ValueError("score overflow")
 
     for idx in range(64):
         bb_idx = MOVES[idx]

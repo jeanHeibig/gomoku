@@ -19,7 +19,7 @@ def sort_moves(move_scores, allowed_moves: U64):
 
     moves = np.empty(64, dtype=U64)
     move_indices = np.empty(64, dtype=U8)
-    scores = np.empty(64, dtype=I8)
+    scores = np.empty(64, dtype=U8)
 
     mv_nb = U8(0)
 

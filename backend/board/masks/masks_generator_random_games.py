@@ -1,7 +1,7 @@
 import numpy as np
 
 
-N = 255
+N = 128
 
 def make_random_u64(n, rng=None):
     if rng is None:

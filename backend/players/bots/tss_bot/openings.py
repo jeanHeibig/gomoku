@@ -83,16 +83,12 @@ LOSS = U8(3)
 
 BOOK_BB_CURRENT = np.array([
     U64(0),
-    U64(134217728),
-    U64(134217728),
     U64(34628173824),
     U64(34762391552),
     U64(35299262464),
 ], dtype=U64)
 
 BOOK_BB_OPPONENT = np.array([
-    U64(0),
-    U64(34628173824),
     U64(0),
     U64(134217728),
     U64(69256347648),
@@ -101,8 +97,6 @@ BOOK_BB_OPPONENT = np.array([
 
 BOOK_MOVES = np.array([
     D5,
-    F6,
-    E4,
     E4,
     D3,
     F6,
@@ -110,8 +104,6 @@ BOOK_MOVES = np.array([
 
 BOOK_RESULTS = np.array([
     DRAW,
-    UNKNOWN,
-    UNKNOWN,
     WIN,
     WIN,
     WIN,

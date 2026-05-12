@@ -7,8 +7,7 @@ Gomoku server, GUI and AI engine
 ## Frontend / GUI
 
 Add:
-Threat visuals (check / checkmate)
-Eval bar
+Eval bar -> the displayed score needs to be normalized
 Favicon
 Escape key go back to default view
 Mouse scroll to go through preview
@@ -18,6 +17,7 @@ Improve editor mode:
 Validate final board legality before starting
 Reject impossible positions
 Watch bot vs bot games directly in GUI
+Tactics could be fetched anyway at each move, and not depend on a sudden backend request
 
 ## Backend / Bot Engine
 
@@ -26,18 +26,10 @@ Watch bot vs bot games directly in GUI
 Review codebase:
 remove obsolete code/TODOs
 add docstrings
-add type annotations
-add numba input/output types
 Add numba cache=True
-Isolate bot logic into a single-file student-friendly version
-keep optional extensions/modular advanced engine
-Create a Memory / transposition helper class
-Move generation should return bb and index (useful for hashing, killer moves, ordering, opening book, GUI)
-Improve score representation:
-nonnegative compact scores (uint8)
-compact fast evals (int8 / int16)
 Benchmark different Heuristic functions
-Use 64-bit LUT / Optimise TT -> store move idx, not move bb
+Create a Memory / transposition helper class
+Use 64-bit TT (store move idx!)
 Add quiescence / tactical extension
 
 ### Search Improvements
@@ -45,18 +37,16 @@ Add quiescence / tactical extension
 Improve move ordering:
 sort all moves, not only hash move
 add History Heuristic / Killer Moves
-Benchmark current vs heuristic with the count of cells with double threats potention + those of opponents (derived from eval)
 Improve PVS:
 multi-PV support
 better principal variation propagation
 Improve time management
-Improve raw search speed/performance
 Fix tactical weaknesses:
 implement proper Threat-Space Search (TSS)
-faster double-threat detection with LUTs
 check LUT with depth == 0 not key == 0
 Mate faster:
 prefer shortest winning lines
+Create self-play opening book
 
 ### Dynamic Depth / Entropy Search
 
@@ -73,10 +63,6 @@ weight moves by seriousness instead of raw move count
 
 Add dead cells to improve alignment detection
 Order MASKS_BY_CELL by hit probability (lazy evaluation)
-Improve evaluation quality
-Investigate hybrid evaluation:
-lightweight heuristic eval in opening
-stronger tactical/Monte-Carlo eval in complex positions
 Build the TSS tree during eval
 x/o asymmetry -> always finish on o
 Implement dead/effectively-dead cell analysis:
@@ -85,13 +71,6 @@ detect strategically dead regions
 identify disconnected independent regions
 Detect drawish/tablebase-like positions with many dead cells
 MCTS evaluation function for selective deep evaluation
-
-### Symmetry / Opening Work
-
-Improve symmetry handling:
-LUT-based transforms
-dead symmetry propagation from root
-Create self-play opening book
 
 ## Server / Online / Matchmaking
 

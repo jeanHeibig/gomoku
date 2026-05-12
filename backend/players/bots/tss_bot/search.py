@@ -4,7 +4,7 @@ import numpy as np
 from .hyperparameters import K
 from .data import ZOBRIST, LOG2
 
-from .board import is_winning, is_dead_draw
+from .board import is_winning, is_dead_draw, popcount
 from .tactics import get_forced_moves
 from .heuristics import monte_carlo_heuristic, tactical_heuristic
 from .evaluation import fast_evaluation
@@ -39,7 +39,7 @@ def pvs(
     beta
 ):
     if is_winning(bb_opponent):
-        return -INF + depth
+        return -INF + popcount(bb_opponent) - 5
 
     if is_dead_draw(bb_current, bb_opponent):
         return 0
