@@ -8,7 +8,7 @@ from .board import board_to_bitboards, bitboard_to_ij, compute_hash, prettyprint
 from .clock import ctime
 from .canonicalization import canonicalize, apply_inverse_symmetry
 from .tactics import get_forced_moves
-from .heuristics import monte_carlo_heuristic, tactical_heuristic
+from .heuristics import mixed_heuristic
 from .search import pvs
 from .ordering import sort_moves, move_to_front
 from .openings import lookup_opening_move
@@ -44,7 +44,7 @@ def find_best_move(
     bb_open = ~(bb_current | bb_opponent)
     # print("Looking for tactics...")
     tactics = get_forced_moves(bb_current, bb_opponent, bb_open)
-    # if tactics + U64(1):
+    # if tactics != U64(0xffffffffffffffff):
         # print("Tactics found:")
         # prettyprint(tactics)
     # else:
@@ -54,7 +54,7 @@ def find_best_move(
 
 
     # move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
-    move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open)
+    move_scores = mixed_heuristic(bb_current, bb_opponent, bb_open)
 
 
     # print(move_scores.reshape((8, 8)))
@@ -110,16 +110,58 @@ def find_best_move(
             # --- PVS root ---
             if i == 0:
                 # print("Starting first PVS")
-                score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags, bb_opponent, bb_current, side_to_move, hash_, child_depth, -beta, -alpha)
+                score = -pvs(
+                    TT_keys,
+                    TT_moves,
+                    TT_depths,
+                    TT_scores,
+                    TT_flags,
+                    bb_opponent,
+                    bb_current,
+                    side_to_move,
+                    hash_,
+                    child_depth,
+                    LOG2[mv_nb],
+                    -beta,
+                    -alpha
+                )
                 # print(f"Found score={score} with alpha={alpha} and beta={beta}")
             else:
                 # print("Starting PVS with null window")
-                score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags, bb_opponent, bb_current, side_to_move, hash_, child_depth, -alpha - 1, -alpha)
+                score = -pvs(
+                    TT_keys,
+                    TT_moves,
+                    TT_depths,
+                    TT_scores,
+                    TT_flags,
+                    bb_opponent,
+                    bb_current,
+                    side_to_move,
+                    hash_,
+                    child_depth,
+                    LOG2[mv_nb],
+                    -alpha - 1,
+                    -alpha
+                )
                 # print(f"Found score={score} with alpha={alpha} and beta={beta}")
 
                 if alpha < score and score < beta:
                     # print("Restarting PVS with full window")
-                    score = -pvs(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags, bb_opponent, bb_current, side_to_move, hash_, child_depth, -beta, -alpha)
+                    score = -pvs(
+                        TT_keys,
+                        TT_moves,
+                        TT_depths,
+                        TT_scores,
+                        TT_flags,
+                        bb_opponent,
+                        bb_current,
+                        side_to_move,
+                        hash_,
+                        child_depth,
+                        LOG2[mv_nb],
+                        -beta,
+                        -alpha
+                    )
                     # print(f"Found score={score} with alpha={alpha} and beta={beta}")
 
             # print("Unmaking move...")
@@ -153,6 +195,8 @@ def find_best_move(
         # printer_answer = input("Waiting for enter: [y]/n")
         # if printer_answer == 'n':
         #     raise KeyboardInterrupt
+        if best_score >= I8(100):
+            return best_move
 
     return best_move
 
@@ -174,8 +218,8 @@ def tss_bot(board, current_player, timer, memory):
         # print("TT loaded")
 
     move_time = timer["times"][current_player] / 20 + timer["increments"][current_player] / 2
+    move_time = 5 * timer["times"][current_player]
     # print(f"Move time: {move_time:.2f}s")
-    # move_time = 0.5 * timer["times"][current_player]
 
     bitboards = board_to_bitboards(position)
     # print("--- BITBOARDS ---")
@@ -208,8 +252,19 @@ def tss_bot(board, current_player, timer, memory):
         hash_ = compute_hash(bb_current, bb_opponent, current_player)
         # print(f"Hash key: {hash_}")
         # print("Starting `find_best_move` routine...")
-        move = find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
-                                bb_current, bb_opponent, current_player, hash_, max_depth=INF - I8(1), time_limit=move_time)
+        move = find_best_move(
+            TT_keys,
+            TT_moves,
+            TT_depths,
+            TT_scores,
+            TT_flags,
+            bb_current,
+            bb_opponent,
+            current_player,
+            hash_,
+            max_depth=INF - I8(1),
+            time_limit=move_time
+        )
         # print("Ending `find_best_move` routine. Move found:")
         # prettyprint(move)
 

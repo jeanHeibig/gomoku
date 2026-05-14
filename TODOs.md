@@ -6,6 +6,7 @@ Gomoku server, GUI and AI engine
 
 ## Frontend / GUI
 
+Need to play bot vs bot and benchmark with elo
 Add:
 Eval bar -> the displayed score needs to be normalized
 Favicon
@@ -18,6 +19,9 @@ Validate final board legality before starting
 Reject impossible positions
 Watch bot vs bot games directly in GUI
 Tactics could be fetched anyway at each move, and not depend on a sudden backend request
+Add preset boards in the GUI
+Need more control for timer
+'s' key switches side and continues a new game from current moveList (way to play bot vs bot)
 
 ## Backend / Bot Engine
 
@@ -31,6 +35,7 @@ Benchmark different Heuristic functions
 Create a Memory / transposition helper class
 Use 64-bit TT (store move idx!)
 Add quiescence / tactical extension
+Need to check that all alignments are atleast present in one RG, and better that they are correctly distributed
 
 ### Search Improvements
 
@@ -58,6 +63,8 @@ forced moves do not decrease depth
 depth reduction depends on effective branching factor
 if move is forcing threat, reduce depth (not only child)
 weight moves by seriousness instead of raw move count
+Move reduction with symmetry should be made once at root only for the current stage
+Root `find_best_move` should look for all moves in the opening book (for transpositions)
 
 ### Evaluation Function
 
@@ -71,6 +78,7 @@ detect strategically dead regions
 identify disconnected independent regions
 Detect drawish/tablebase-like positions with many dead cells
 MCTS evaluation function for selective deep evaluation
+Heuristic could be product MC * Tactical
 
 ## Server / Online / Matchmaking
 

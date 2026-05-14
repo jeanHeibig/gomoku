@@ -6,7 +6,7 @@ from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
 from .tactics import get_forced_moves
-from .heuristics import monte_carlo_heuristic, tactical_heuristic
+from .heuristics import mixed_heuristic
 from .evaluation import fast_evaluation
 from .ordering import sort_moves, move_to_front
 from .transposition import tt_probe, tt_store_search_result
@@ -23,7 +23,7 @@ INF = I8(0x7f)
 LOG2 = np.array(LOG2, dtype=I8)
 
 
-@nb.njit("i1(u8[:], u8[:], u1[:], i1[:], u1[:], u8, u8, u1, u8, i1, i1, i1)")
+@nb.njit("i1(u8[:], u8[:], u1[:], i1[:], u1[:], u8, u8, u1, u8, i1, i1, i1, i1)")
 def pvs(
     TT_keys,
     TT_moves,
@@ -35,6 +35,7 @@ def pvs(
     side_to_move,
     hash_,
     depth,
+    father,
     alpha,
     beta
 ):
@@ -67,18 +68,21 @@ def pvs(
     # --- MOVE GENERATION ---
     bb_open = ~(bb_current | bb_opponent)
     tactics = get_forced_moves(bb_current, bb_opponent, bb_open)
-    move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
+    move_scores = mixed_heuristic(bb_current, bb_opponent, bb_open)
     ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics)
     if tt_move:  # hash move first
         move_to_front(ordered_moves, move_indices, mv_nb, tt_move)
 
-    # assert mv_nb > 0  # debug
+    if mv_nb == 0:
+        return 0
 
     # --- ALPHA-BETA ---
     best_score = -INF
     best_move = U64(0)
     first = True
     child_depth = depth - LOG2[mv_nb]
+    if mv_nb < 4:  # Reimbursement of threat moves
+        child_depth += father
 
     limit = mv_nb if tactics else min(K, mv_nb)
 
@@ -105,6 +109,7 @@ def pvs(
                 side_to_move,
                 hash_,
                 child_depth,
+                LOG2[mv_nb],
                 -beta,
                 -alpha
             )
@@ -121,6 +126,7 @@ def pvs(
                 side_to_move,
                 hash_,
                 child_depth,
+                LOG2[mv_nb],
                 -alpha - 1,
                 -alpha
             )
@@ -136,6 +142,7 @@ def pvs(
                     side_to_move,
                     hash_,
                     child_depth,
+                    LOG2[mv_nb],
                     -beta,
                     -alpha
                 )

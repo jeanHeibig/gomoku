@@ -5,7 +5,7 @@ U64 = np.uint64
 
 
 # --- HYPERPARAMETERS ---
-K = 12
+K = 64
 TT_BITS = 20
 
 
