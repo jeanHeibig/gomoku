@@ -118,24 +118,18 @@ def tactical_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.N
             threat_opponent_number += 1
 
         if threat_current_number == U8(2):
-            scores[cell] += U8(13)
+            scores[cell] += U8(21)
         elif threat_current_number == U8(3):
-            scores[cell] += U8(39)
+            scores[cell] += U8(63)
         elif threat_current_number == U8(4):
-            scores[cell] += U8(78)
+            scores[cell] += U8(126)
 
         if threat_opponent_number == U8(2):
-            scores[cell] += U8(8)
+            scores[cell] += U8(13)
         elif threat_opponent_number == U8(3):
-            scores[cell] += U8(24)
+            scores[cell] += U8(39)
         elif threat_opponent_number == U8(4):
-            scores[cell] += U8(48)
+            scores[cell] += U8(78)
 
     # print(scores.reshape((8,8)))
     return scores
-
-
-@nb.njit("u1[:](u8, u8, u8)")
-def mixed_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
-    """Compute a heuristic score based on Monte-Carlo and tactical heuristic."""
-    return monte_carlo_heuristic(bb_current, bb_opponent, bb_open) + tactical_heuristic(bb_current, bb_opponent, bb_open)

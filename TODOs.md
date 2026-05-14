@@ -22,6 +22,7 @@ Tactics could be fetched anyway at each move, and not depend on a sudden backend
 Add preset boards in the GUI
 Need more control for timer
 's' key switches side and continues a new game from current moveList (way to play bot vs bot)
+hover preview stayed on newgame
 
 ## Backend / Bot Engine
 
@@ -36,6 +37,8 @@ Create a Memory / transposition helper class
 Use 64-bit TT (store move idx!)
 Add quiescence / tactical extension
 Need to check that all alignments are atleast present in one RG, and better that they are correctly distributed
+Put bb open in sort moves via tactics & bb_open, rather than in the heuristics
+When the position is drawn, find the "best" draw
 
 ### Search Improvements
 
@@ -51,7 +54,10 @@ implement proper Threat-Space Search (TSS)
 check LUT with depth == 0 not key == 0
 Mate faster:
 prefer shortest winning lines
+Mate solver
 Create self-play opening book
+for all starting positions with three then two stones of same color (handicap), solve the game
+limit = mv_nb if tactics else min(K, mv_nb) broken since tactics != 0
 
 ### Dynamic Depth / Entropy Search
 
@@ -68,17 +74,10 @@ Root `find_best_move` should look for all moves in the opening book (for transpo
 
 ### Evaluation Function
 
-Add dead cells to improve alignment detection
 Order MASKS_BY_CELL by hit probability (lazy evaluation)
 Build the TSS tree during eval
-x/o asymmetry -> always finish on o
-Implement dead/effectively-dead cell analysis:
-detect geometrically dead regions
-detect strategically dead regions
-identify disconnected independent regions
 Detect drawish/tablebase-like positions with many dead cells
 MCTS evaluation function for selective deep evaluation
-Heuristic could be product MC * Tactical
 
 ## Server / Online / Matchmaking
 

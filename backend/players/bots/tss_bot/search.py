@@ -6,7 +6,7 @@ from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
 from .tactics import get_forced_moves
-from .heuristics import mixed_heuristic
+from .heuristics import monte_carlo_heuristic, tactical_heuristic
 from .evaluation import fast_evaluation
 from .ordering import sort_moves, move_to_front
 from .transposition import tt_probe, tt_store_search_result
@@ -45,7 +45,7 @@ def pvs(
     if is_dead_draw(bb_current, bb_opponent):
         return 0
 
-    if depth <= 0:
+    if depth <= 0 and not side_to_move:
         return fast_evaluation(bb_current, bb_opponent)
 
     alpha_orig = alpha
@@ -67,9 +67,14 @@ def pvs(
 
     # --- MOVE GENERATION ---
     bb_open = ~(bb_current | bb_opponent)
+
     tactics = get_forced_moves(bb_current, bb_opponent, bb_open)
-    move_scores = mixed_heuristic(bb_current, bb_opponent, bb_open)
-    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics)
+    if tactics == U64(0xffffffffffffffff):  # No tactics found
+        move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open)
+    else:
+        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
+
+    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
     if tt_move:  # hash move first
         move_to_front(ordered_moves, move_indices, mv_nb, tt_move)
 
@@ -84,7 +89,10 @@ def pvs(
     if mv_nb < 4:  # Reimbursement of threat moves
         child_depth += father
 
-    limit = mv_nb if tactics else min(K, mv_nb)
+    if tactics == U64(0xffffffffffffffff):  # No tactics found
+        limit = min(K, mv_nb)
+    else:
+        limit = mv_nb
 
     for i in range(limit):
         move = ordered_moves[i]
