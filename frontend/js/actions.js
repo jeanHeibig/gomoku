@@ -343,6 +343,8 @@ export async function restartFromReplay() {
     }
 
     stopClock();
+    const originalInitialBoard = JSON.stringify(state.initialBoard);
+    const originalInitialPlayer = state.initialPlayer;
 
     const { time, increment, level } = selectedSliders();
 
@@ -364,6 +366,9 @@ export async function restartFromReplay() {
 
     exitReplayMode();
     await launchNewGame(data);
+
+    state.initialBoard = JSON.parse(originalInitialBoard);
+    state.initialPlayer = originalInitialPlayer;
 }
 
 export async function analyzeTactics() {

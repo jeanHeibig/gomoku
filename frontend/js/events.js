@@ -145,6 +145,16 @@ function initBoardEvents() {
         hidePreview(cell);
     });
 
+    dom.board.addEventListener("wheel", (e) => {
+        e.preventDefault();
+
+        if (e.deltaY > 0) {
+            replayNext();
+        } else if (e.deltaY < 0) {
+            replayPrevious();
+        }
+    }, { passive: false });
+
     dom.board.addEventListener("contextmenu", (e) => {
         e.preventDefault();
 
