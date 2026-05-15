@@ -1,3 +1,10 @@
+"""Search routines for the TSS Gomoku bot.
+
+This module implements the principal windowed principal variation search (PVS)
+used by the TSS bot, including transposition table lookups and move ordering
+logic for opponent and current board bitboards.
+"""
+
 import numba as nb
 import numpy as np
 import numpy.typing as npt
@@ -35,6 +42,22 @@ def pvs(
     alpha: I8,
     beta: I8
 ) -> I8:
+    """Perform principal variation search for the TSS bot.
+
+    Args:
+        TT: Transposition table array storing past search entries.
+        bb_current: Bitboard of the current player.
+        bb_opponent: Bitboard of the opponent.
+        side_to_move: Side to move encoded as 0 or 1.
+        hash_key: Zobrist hash of the current position.
+        depth: Remaining search depth in fractional plies.
+        father: Reduction amount from the parent node.
+        alpha: Alpha bound for alpha-beta pruning.
+        beta: Beta bound for alpha-beta pruning.
+
+    Returns:
+        Best evaluation score from the recursive search.
+    """
     if is_winning(bb_opponent):
         return -INF + popcount(bb_opponent) - I8(5)
 

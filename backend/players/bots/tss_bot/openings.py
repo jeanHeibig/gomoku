@@ -116,6 +116,7 @@ BOOK_RESULTS = np.array([
 
 @nb.njit("u8(u8, u8)")
 def lookup_opening_move(bb_current: U64, bb_opponent: U64) -> U64:
+    """Return the book move if found."""
 
     for i in range(len(BOOK_MOVES)):
 

@@ -142,5 +142,5 @@ def apply_inverse_symmetry(representant: U64, symmetry: U8) -> U64:
         return _flip_diagonal(representant)
     if symmetry == U8(64):  # C
         return _mirror_vertical(_flip_diagonal(representant))
-    # A
-    return _flip_anti_diagonal(representant)
+
+    return _flip_anti_diagonal(representant)  # A

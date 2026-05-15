@@ -4,7 +4,8 @@ import numba as nb
 
 
 @nb.njit("f8()", cache=True)
-def ctime():
+def ctime():  # TODO: Get low-level time without objmode
+    """Return computer time."""
 
     with nb.objmode(t="f8"):
         t = time()

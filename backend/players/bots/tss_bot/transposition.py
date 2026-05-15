@@ -17,6 +17,7 @@ UPPER = U8(2)
 
 @nb.njit("u8(u8, u1, u1, i1, i1)", inline="always", cache=True)
 def tt_pack(signature: U64, move: U8, flag: U8, score: I8, depth: I8) -> U64:
+    """Return the packed data."""
     return (
           (    signature  << U64(24))
         | (U64(move)      << U64(18))

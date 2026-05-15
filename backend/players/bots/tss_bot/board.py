@@ -72,17 +72,17 @@ def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
     return bb_current, bb_opponent
 
 
-@nb.njit("u1(u8)", inline="always", cache=True)
-def bitboard_to_index(bb: U64) -> U8:
-    """Return index of least significant set bit."""
+# @nb.njit("u1(u8)", inline="always", cache=True)
+# def bitboard_to_index(bb: U64) -> U8:
+#     """Return index of least significant set bit."""
 
-    idx = U8(0)
+#     idx = U8(0)
 
-    while not (bb & U64(1)):
-        bb >>= U64(1)
-        idx += U8(1)
+#     while not (bb & U64(1)):
+#         bb >>= U64(1)
+#         idx += U8(1)
 
-    return idx
+#     return idx
 
 
 @nb.njit("UniTuple(u1, 2)(u1)", inline="always", cache=True)
