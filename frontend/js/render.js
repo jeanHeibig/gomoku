@@ -1,6 +1,6 @@
 import { BOARD_SIZE, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
-import { state, currentBoard } from "./state.js";
+import { state, currentBoard, currentActivePlayer } from "./state.js";
 
 const cells = [];
 
@@ -152,7 +152,7 @@ export function renderMoveNumbers() {
 }
 
 export function renderPlayers() {
-    const activePlayer = state.editorMode ? state.editorPlayer : state.currentPlayer;
+    const activePlayer = currentActivePlayer();
 
     dom.players.black.app.classList.toggle("player-active", activePlayer === 0);
     dom.players.white.app.classList.toggle("player-active", activePlayer === 1);
@@ -194,6 +194,12 @@ export function renderClocks() {
 
     dom.players.black.clock.classList.toggle("active-clock", state.currentPlayer === 0);
     dom.players.white.clock.classList.toggle("active-clock", state.currentPlayer === 1);
+}
+
+export function renderReplay() {
+    renderBoard();
+    renderPlayers();
+    renderMoveNumbers();
 }
 
 function updateClockDisplay(clockEl, time) {

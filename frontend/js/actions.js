@@ -3,7 +3,7 @@ import { dom } from "./dom.js";
 import { state, applyServerState, replayCurrentPlayer, replayMoveList, currentBoard } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
-import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks } from "./render.js";
+import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks, renderReplay } from "./render.js";
 import { startClock, stopClock, syncClockState } from "./clock.js";
 import { handleGameEnd } from "./effects.js";
 
@@ -283,8 +283,7 @@ export function replayPrevious() {
     state.replayBoard = buildReplayBoard(state.replayPly);
 
     resetTacticalData();
-    renderBoard();
-    renderMoveNumbers();
+    renderReplay();
 }
 
 export function replayNext() {
@@ -305,8 +304,7 @@ export function replayNext() {
     state.replayBoard = buildReplayBoard(state.replayPly);
 
     resetTacticalData();
-    renderBoard();
-    renderMoveNumbers();
+    renderReplay();
 }
 
 export function replayStart() {
@@ -319,8 +317,7 @@ export function replayStart() {
     state.replayBoard = buildReplayBoard(0);
 
     resetTacticalData();
-    renderBoard();
-    renderMoveNumbers();
+    renderReplay();
 }
 
 export function replayEnd() {
@@ -333,8 +330,7 @@ export function replayEnd() {
     state.replayBoard = buildReplayBoard(state.replayPly);
 
     resetTacticalData();
-    renderBoard();
-    renderMoveNumbers();
+    renderReplay();
 }
 
 export async function restartFromReplay() {

@@ -6,7 +6,6 @@
 
 --- HIGH PRIORITY ---
 
-Replayer should toggle active player if game has ended
 GUI book builder
 Show all the moves from the PV
 

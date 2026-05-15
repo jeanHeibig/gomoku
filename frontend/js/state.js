@@ -65,6 +65,18 @@ export function currentBoard() {
     return state.board;
 }
 
+export function currentActivePlayer() {
+    if (state.editorMode) {
+        return state.editorPlayer;
+    }
+
+    if (state.replayMode && state.finished) {
+        return replayCurrentPlayer();
+    }
+
+    return state.currentPlayer;
+}
+
 export function replayMoveList() {
     if (!state.replayMode) {
         return state.moveList;
@@ -74,5 +86,9 @@ export function replayMoveList() {
 }
 
 export function replayCurrentPlayer() {
+    if (state.finished && state.replayPly === state.moveList.length) {
+        return state.currentPlayer;
+    }
+
     return (state.initialPlayer + state.replayPly) % 2;
 }
