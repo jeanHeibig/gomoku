@@ -5,8 +5,8 @@ U64 = np.uint64
 
 
 # --- HYPERPARAMETERS ---
-K = 64
-TT_BITS = 20
+# K = 64  # Auto-prune after K moves
+TT_BITS = 24  # >= 24
 
 
 # --- HYPERVARIABLES --- (do not edit)

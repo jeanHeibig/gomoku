@@ -20,7 +20,7 @@ ADM = np.array(WIN_MASKS_ALL_BOARD[80:], dtype=U64)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
-@nb.njit("u1[:](u8, u8, u8)")
+@nb.njit("u1[:](u8, u8, u8)", cache=True)
 def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
     """Compute a heuristic score grid for each empty tile on the board.
 
@@ -50,7 +50,7 @@ def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> np
     return scores
 
 
-@nb.njit("u1[:](u8, u8, u8)")
+@nb.njit("u1[:](u8, u8, u8)", cache=True)
 def tactical_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> npt.NDArray[U8]:
     """Compute a heuristic score based on free directions."""
     scores = np.zeros(64, dtype=U8)

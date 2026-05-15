@@ -15,7 +15,7 @@ ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
-@nb.njit("b1(u8)", inline="always")
+@nb.njit("b1(u8)", inline="always", cache=True)
 def is_winning(bb_current: U64) -> bool:
     """Return whether the bitboard contains a 5-alignment."""
 
@@ -29,7 +29,7 @@ def is_winning(bb_current: U64) -> bool:
     return False
 
 
-@nb.njit("b1(u8, u8)", inline="always")
+@nb.njit("b1(u8, u8)", inline="always", cache=True)
 def is_dead_draw(bb_current: U64, bb_opponent: U64) -> bool:
     """Return whether no player can still form a 5-alignment."""
 
@@ -40,7 +40,7 @@ def is_dead_draw(bb_current: U64, bb_opponent: U64) -> bool:
     )
 
 
-@nb.njit("u1(u8)", inline="always")
+@nb.njit("u1(u8)", inline="always", cache=True)
 def popcount(bb: U64) -> U8:
     """Return number of set bits in bitboard."""
 
@@ -53,7 +53,7 @@ def popcount(bb: U64) -> U8:
     return c
 
 
-@nb.njit("UniTuple(u8, 2)(u1[:, :])")
+@nb.njit("UniTuple(u8, 2)(u1[:, :])", cache=True)
 def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
     """Convert a 2D board matrix into two bitboards."""
 
@@ -72,7 +72,7 @@ def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
     return bb_current, bb_opponent
 
 
-@nb.njit("u1(u8)", inline="always")
+@nb.njit("u1(u8)", inline="always", cache=True)
 def bitboard_to_index(bb: U64) -> U8:
     """Return index of least significant set bit."""
 
@@ -85,20 +85,26 @@ def bitboard_to_index(bb: U64) -> U8:
     return idx
 
 
-@nb.njit("UniTuple(u1, 2)(u8)", inline="always")
+@nb.njit("UniTuple(u1, 2)(u1)", inline="always", cache=True)
+def idx_to_ij(idx: U8) -> tuple[U8, U8]:
+    """Convert idx from [0, 63] to (i, j) coordinates."""
+    return idx // U8(8), idx % U8(8)
+
+
+@nb.njit("UniTuple(u1, 2)(u8)", inline="always", cache=True)
 def bitboard_to_ij(bb: U64) -> tuple[U8, U8]:
     """Convert a single-bit bitboard into (i, j) coordinates."""
 
-    k = U8(0)
+    idx = U8(0)
 
     while not (bb & U64(1)):
         bb >>= U64(1)
-        k += U8(1)
+        idx += U8(1)
 
-    return k // U8(8), k % U8(8)
+    return idx_to_ij(idx)
 
 
-@nb.njit("u8(u8, u8, u1)", inline="always")
+@nb.njit("u8(u8, u8, u1)", inline="always", cache=True)
 def compute_hash(bb_current: U64, bb_opponent: U64, side_to_move: U8) -> U64:
     """Compute Zobrist hash from two bitboards."""
 
@@ -143,9 +149,9 @@ def prettyprint(bb: U64, reverse=True, h=False, end='\n') -> None:
         print(p, end=end)
 
 
-def move_to_square(bb: U64) -> str:
+def move_to_square(idx: U8) -> str:
     """Return square name from move bitboard."""
-    i, j = bitboard_to_ij(bb)
+    i, j = idx // 8, idx % 8
     return {
         U8(0): "A",
         U8(1): "B",

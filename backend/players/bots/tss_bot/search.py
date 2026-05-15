@@ -1,7 +1,7 @@
 import numba as nb
 import numpy as np
+import numpy.typing as npt
 
-from .hyperparameters import K
 from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
@@ -20,50 +20,43 @@ U64 = np.uint64
 ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
-LOG2 = np.array(LOG2, dtype=I8)
+FRACTIONNAL_PLY = np.array(LOG2, dtype=I8)
 
 
-@nb.njit("i1(u8[:], u8[:], u1[:], i1[:], u1[:], u8, u8, u1, u8, i1, i1, i1, i1)")
+@nb.njit("i1(u8[:], u8, u8, u1, u8, i1, i1, i1, i1)", cache=True)
 def pvs(
-    TT_keys,
-    TT_moves,
-    TT_depths,
-    TT_scores,
-    TT_flags,
-    bb_current,
-    bb_opponent,
-    side_to_move,
-    hash_,
-    depth,
-    father,
-    alpha,
-    beta
-):
+    TT: npt.NDArray[U64],
+    bb_current: U64,
+    bb_opponent: U64,
+    side_to_move: U8,
+    hash_key: U64,
+    depth: I8,
+    father: I8,
+    alpha: I8,
+    beta: I8
+) -> I8:
     if is_winning(bb_opponent):
-        return -INF + popcount(bb_opponent) - 5
+        return -INF + popcount(bb_opponent) - I8(5)
 
     if is_dead_draw(bb_current, bb_opponent):
-        return 0
+        return I8(0)
 
     if depth <= 0 and not side_to_move:
+    # if depth <= 0:
         return fast_evaluation(bb_current, bb_opponent)
 
-    alpha_orig = alpha
-
     # --- TT PROBE ---
-    hit, tt_score, tt_move, alpha, beta = tt_probe(
-        TT_keys,
-        TT_moves,
-        TT_depths,
-        TT_scores,
-        TT_flags,
-        hash_,
+    hit, move_hit, tt_score, tt_move_idx, alpha, beta = tt_probe(
+        TT,
+        hash_key,
         depth,
         alpha,
         beta
     )
     if hit:
         return tt_score
+
+    alpha_orig = alpha
 
     # --- MOVE GENERATION ---
     bb_open = ~(bb_current | bb_opponent)
@@ -75,95 +68,83 @@ def pvs(
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
 
     ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
-    if tt_move:  # hash move first
-        move_to_front(ordered_moves, move_indices, mv_nb, tt_move)
+    if move_hit:  # hash move first
+        move_to_front(ordered_moves, move_indices, mv_nb, tt_move_idx)
 
     if mv_nb == 0:
-        return 0
+        return I8(0)
 
     # --- ALPHA-BETA ---
     best_score = -INF
-    best_move = U64(0)
+    best_move_idx = U8(0)
     first = True
-    child_depth = depth - LOG2[mv_nb]
+    child_depth = depth - FRACTIONNAL_PLY[mv_nb]
     if mv_nb < 4:  # Reimbursement of threat moves
-        child_depth += father
+        child_depth += father - I8(1)
 
-    if tactics == U64(0xffffffffffffffff):  # No tactics found
-        limit = min(K, mv_nb)
-    else:
-        limit = mv_nb
+    # if tactics == U64(0xffffffffffffffff):  # No tactics found
+    #     limit = min(K, mv_nb)
+    # else:
+    #     limit = mv_nb
 
-    for i in range(limit):
+    for i in range(mv_nb):
         move = ordered_moves[i]
         cell = move_indices[i]
 
         # --- MAKE MOVE ---
         bb_current ^= move
-        hash_ ^= ZB[side_to_move, cell]
-        hash_ ^= ZOBRIST_SIDE
+        hash_key ^= ZB[side_to_move, cell]
+        hash_key ^= ZOBRIST_SIDE
         side_to_move = U8(1) - side_to_move
 
         # --- RECURSIVE SEARCH ---
         if first:
             score = -pvs(
-                TT_keys,
-                TT_moves,
-                TT_depths,
-                TT_scores,
-                TT_flags,
+                TT,
                 bb_opponent,
                 bb_current,
                 side_to_move,
-                hash_,
+                hash_key,
                 child_depth,
-                LOG2[mv_nb],
+                FRACTIONNAL_PLY[mv_nb],
                 -beta,
                 -alpha
             )
             first = False
         else:
             score = -pvs(
-                TT_keys,
-                TT_moves,
-                TT_depths,
-                TT_scores,
-                TT_flags,
+                TT,
                 bb_opponent,
                 bb_current,
                 side_to_move,
-                hash_,
+                hash_key,
                 child_depth,
-                LOG2[mv_nb],
+                FRACTIONNAL_PLY[mv_nb],
                 -alpha - 1,
                 -alpha
             )
             if alpha < score and score < beta:
                 score = -pvs(
-                    TT_keys,
-                    TT_moves,
-                    TT_depths,
-                    TT_scores,
-                    TT_flags,
+                    TT,
                     bb_opponent,
                     bb_current,
                     side_to_move,
-                    hash_,
+                    hash_key,
                     child_depth,
-                    LOG2[mv_nb],
+                    FRACTIONNAL_PLY[mv_nb],
                     -beta,
                     -alpha
                 )
 
         # --- UNMAKE MOVE ---
         side_to_move = U8(1) - side_to_move
-        hash_ ^= ZOBRIST_SIDE
-        hash_ ^= ZB[side_to_move, cell]
+        hash_key ^= ZOBRIST_SIDE
+        hash_key ^= ZB[side_to_move, cell]
         bb_current ^= move
 
         if score > best_score:
             best_score = score
-            best_move = move
+            best_move_idx = cell
 
         if score > alpha:
             alpha = score
@@ -172,17 +153,13 @@ def pvs(
             break
 
     tt_store_search_result(
-        TT_keys,
-        TT_moves,
-        TT_depths,
-        TT_scores,
-        TT_flags,
-        hash_,
+        TT,
+        hash_key,
         depth,
         best_score,
         alpha_orig,
         beta,
-        best_move,
+        best_move_idx,
     )
 
     return best_score

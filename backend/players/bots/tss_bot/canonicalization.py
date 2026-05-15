@@ -6,7 +6,7 @@ U8 = np.uint8
 U64 = np.uint64
 
 
-@nb.njit("u8(u8)", inline="always")
+@nb.njit("u8(u8)", inline="always", cache=True)
 def _mirror_vertical(x: U64) -> U64:
     k1 = U64(0x00FF00FF00FF00FF)
     k2 = U64(0x0000FFFF0000FFFF)
@@ -16,7 +16,7 @@ def _mirror_vertical(x: U64) -> U64:
     return x
 
 
-@nb.njit("u8(u8)", inline="always")
+@nb.njit("u8(u8)", inline="always", cache=True)
 def _mirror_horizontal(x: U64) -> U64:
     k1 = U64(0x5555555555555555)
     k2 = U64(0x3333333333333333)
@@ -27,7 +27,7 @@ def _mirror_horizontal(x: U64) -> U64:
     return x
 
 
-@nb.njit("u8(u8)", inline="always")
+@nb.njit("u8(u8)", inline="always", cache=True)
 def _flip_diagonal(x: U64) -> U64:
     k1 = U64(0x5500550055005500)
     k2 = U64(0x3333000033330000)
@@ -41,7 +41,7 @@ def _flip_diagonal(x: U64) -> U64:
     return x
 
 
-@nb.njit("u8(u8)", inline="always")
+@nb.njit("u8(u8)", inline="always", cache=True)
 def _flip_anti_diagonal(x: U64) -> U64:
     k1 = U64(0xaa00aa00aa00aa00)
     k2 = U64(0xcccc0000cccc0000)
@@ -55,7 +55,7 @@ def _flip_anti_diagonal(x: U64) -> U64:
     return x
 
 
-@nb.njit("Tuple((u8, u8, u1))(u8, u8)")
+@nb.njit("Tuple((u8, u8, u1))(u8, u8)", cache=True)
 def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     """Compute the representant of a position."""
     # --- IDENTITY ---
@@ -125,7 +125,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     return best_bb_c, best_bb_o, best_t
 
 
-@nb.njit("u8(u8, u1)", inline="always")
+@nb.njit("u8(u8, u1)", inline="always", cache=True)
 def apply_inverse_symmetry(representant: U64, symmetry: U8) -> U64:
     """Revert a move to its original position on the board."""
     if symmetry == U8(1):  # I

@@ -12,7 +12,7 @@ MOVES = U64(1) << np.arange(64, dtype=U64)
 
 @nb.njit(
     "Tuple((u8[:], u1[:], u1))(u1[:], u8)",
-    inline="always",
+    inline="always", cache=True,
 )
 def sort_moves(move_scores, allowed_moves: U64):
     """Return moves sorted by descending heuristic score."""
@@ -60,17 +60,19 @@ def sort_moves(move_scores, allowed_moves: U64):
     return moves, move_indices, mv_nb
 
 
-@nb.njit("void(u8[:], u1[:], u1, u8)", inline="always")
+@nb.njit("void(u8[:], u1[:], u1, u1)", inline="always", cache=True)
 def move_to_front(
     moves,
     move_indices,
     mv_nb: U8,
-    tt_move: U64,
+    tt_move_idx: U8,
 ):
     """Move target move to front of move list."""
+    tt_move_bb = U64(1) << tt_move_idx
+
     for i in range(mv_nb):
 
-        if moves[i] == tt_move:
+        if moves[i] == tt_move_bb:
 
             # Swap move bitboards
             tmp_move = moves[0]
