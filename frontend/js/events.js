@@ -12,6 +12,7 @@ import {
     replayNext,
     replayStart,
     replayEnd,
+    togglePlayers,
     analyzeTactics,
     toggleEditorMode,
     toggleEditorPlayer,
@@ -73,7 +74,12 @@ function initKeyboard() {
 
             case " ":
                 e.preventDefault();
-                toggleEditorPlayer();
+
+                if (state.editorMode) {
+                    toggleEditorPlayer();
+                } else if (!state.botMoveInProgress) {
+                    togglePlayers();
+                }
                 break;
 
             case "enter":

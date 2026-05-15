@@ -1,6 +1,6 @@
 import { BOARD_SIZE, BOARD_TRANSFORMS } from "./constants.js";
 import { dom } from "./dom.js";
-import { state, applyServerState, replayCurrentPlayer, replayMoveList, currentBoard } from "./state.js";
+import { state, applyServerState, replayCurrentPlayer, replayMoveList, currentBoard, currentActivePlayer } from "./state.js";
 import { api } from "./api.js";
 import { selectedSliders } from "./preferences.js";
 import { render, renderBoard, renderOrientation, renderCell, renderCursor, renderMoveNumbers, renderPlayers, renderClocks, renderReplay } from "./render.js";
@@ -354,6 +354,36 @@ export async function restartFromReplay() {
             editorPlayer: replayCurrentPlayer(),
             moveList: replayMoveList(),
             localPlayer: state.localPlayerIndex,
+            time: time,
+            increment: increment,
+            level: level,
+        })
+    });
+
+    exitReplayMode();
+    await launchNewGame(data);
+
+    state.initialBoard = JSON.parse(originalInitialBoard);
+    state.initialPlayer = originalInitialPlayer;
+}
+
+export async function togglePlayers() {
+    stopClock();
+    const originalInitialBoard = JSON.stringify(state.initialBoard);
+    const originalInitialPlayer = state.initialPlayer;
+
+    const { time, increment, level } = selectedSliders();
+
+    const data = await api(`/submit_board`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            board: currentBoard(),
+            editorPlayer: currentActivePlayer(),
+            moveList: replayMoveList(),
+            localPlayer: 1 - state.localPlayerIndex,
             time: time,
             increment: increment,
             level: level,

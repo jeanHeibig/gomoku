@@ -2,6 +2,8 @@
 
 ## Bugs
 
+When playing handicap after a replay and a bot switch, the colors reverse at the end with replay
+
 ## Frontend / GUI
 
 --- HIGH PRIORITY ---
@@ -11,7 +13,6 @@ Show all the moves from the PV
 
 --- MEDIUM PRIORITY ---
 
-'s'? key switches side and continues a new game from current moveList (way to play bot vs bot)
 Need to play bot vs bot and benchmark with elo
 Find a way to stop the bot and have it play its current best move
 Reject impossible positions from editor board
