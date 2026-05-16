@@ -536,3 +536,16 @@ function emptyBoard() {
         Array.from({ length: BOARD_SIZE }, () => 0)
     );
 }
+
+export function resetToDefaultView() {
+    if (state.editorMode) {
+        toggleEditorMode();
+    }
+    exitReplayMode();
+    clearAllPreviews();
+    clearAllMarkers();
+
+    state.transformIndex = 0;
+
+    render();
+}

@@ -20,6 +20,7 @@ import {
     swapEditorColors,
     submitEditorBoard,
     restartFromReplay,
+    resetToDefaultView,
 } from "./actions.js";
 import { cycleTheme, toggleMorpionMode } from "./preferences.js";
 import { state } from "./state.js";
@@ -80,6 +81,10 @@ function initKeyboard() {
                 } else if (!state.botMoveInProgress) {
                     togglePlayers();
                 }
+                break;
+
+            case "escape":
+                resetToDefaultView();
                 break;
 
             case "enter":

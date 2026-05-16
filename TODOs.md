@@ -19,7 +19,6 @@ Logger
 --- LOW PRIORITY ---
 
 Eval bar
-Escape key go back to default view
 Watch bot vs bot games directly in GUI
 Add preset boards in the GUI
 Need more control for timer
@@ -32,7 +31,6 @@ Space bar should keep the clock and memory
 --- HIGH PRIORITY ---
 
 Review codebase: add docstrings, remove obsolete code, deal with inline TODOs
-Put `bb_open` in sort moves via `tactics & bb_open`, rather than in the heuristics
 Add quiescence / tactical extension
 
 --- MEDIUM PRIORITY ---

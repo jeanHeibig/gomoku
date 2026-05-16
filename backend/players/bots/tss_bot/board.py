@@ -151,7 +151,7 @@ def prettyprint(bb: U64, reverse=True, h=False, end='\n') -> None:
 
 
 def move_to_square(idx: U8) -> str:
-    """Return square name from move bitboard."""
+    """Return square name from move index."""
     i, j = idx // 8, idx % 8
     return {
         U8(0): "A",

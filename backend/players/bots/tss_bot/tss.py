@@ -48,25 +48,26 @@ def find_best_move(
 
     #print("Heuristic evaluation...")
 
-    if tactics == U64(0xffffffffffffffff):  # No tactics found
-        move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open)
-    else:
-        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
-
-    # TODO: add symmetry here at root
-
-    print(move_scores.reshape((8, 8)))
-
-    print("Figuring out symmetries...")
+    print("Figuring out symmetries...", end='')
     symmetries = get_symmetry_mask(bb_current, bb_opponent)
     if symmetries != U64(0xffffffffffffffff):
-        print("Symmetry found! Filtering with this mask:")
+        print(" symmetry found! Filtering with this mask:")
         prettyprint(symmetries)
     else:
-        print("No symmetry found.")
+        print(" no symmetry found.")
+
+    if tactics == U64(0xffffffffffffffff):  # No tactics found
+        move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open & symmetries)
+    else:
+        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, tactics & bb_open & symmetries)
+
+    # TODO: add symmetry here at root
+    print("Heuristic scores:")
+    print(move_scores.reshape((8, 8)))
+
     #print("Sorting moves...")
     ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
-    #print(f"Found {mv_nb} moves: {move_indices}")
+    print(f"Found {mv_nb} moves: {' '.join(move_to_square(idx) for idx in move_indices[:mv_nb])}")
 
     if mv_nb == 0:
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open & symmetries)
@@ -241,37 +242,38 @@ def tss_bot(board, current_player, timer, TT):
     bb_opponent = U64(bitboards[1 - current_player])
 
     #print("--- OPPENING ---")
-    print("Canonicalisation...")
+    print("Canonicalisation...", end='')
     bb_current_cr, bb_opponent_cr, symmetry = canonicalize(bb_current, bb_opponent)
     bb_current_cr = U64(bb_current_cr)
     bb_opponent_cr = U64(bb_opponent_cr)
-    print(f"Current: {bb_current_cr}")
-    prettyprint(bb_current_cr)
-    print(f"Opponent: {bb_opponent_cr}")
-    prettyprint(bb_opponent_cr)
     sym_names = [
-        'Identity',
-        'Vertical',
-        '180°',
-        'Horizontal',
-        'Counter-clockwise rotation',
-        'Diagonal flip',
-        'Clockwise rotation',
-        'Antidiagonal flip'
+        'identity',
+        'vertical flip',
+        '180° rotation',
+        'horizontal flip',
+        'counter-clockwise rotation',
+        'diagonal flip',
+        'clockwise rotation',
+        'antidiagonal flip'
     ]
-    print(f"Symmetry: {sym_names[int(np.log2(symmetry))]}")
+    print(f" with {sym_names[int(np.log2(symmetry))]}.")
+    print(f"Current bb ({bb_current_cr}):")
+    prettyprint(bb_current_cr)
+    print(f"Opponent bb ({bb_opponent_cr}):")
+    prettyprint(bb_opponent_cr)
+
 
     move_cr = lookup_opening_move(bb_current_cr, bb_opponent_cr)
     if move_cr:
-        #print("Opening move found!")
         move = apply_inverse_symmetry(move_cr, symmetry)  # TODO: opening book should contain indexes too
-        #prettyprint(move)
         move_ij = bitboard_to_ij(move)
+        i, j = move_ij
+        print(f"Opening move found: {move_to_square(8 * i + j)}.")
     else:
-        #print("No opening move found. Looking for best_move...")
+        print("No opening move found. Looking for best_move...")
         hash_ = compute_hash(bb_current, bb_opponent, current_player)
-        #print(f"Hash key: {hash_}")
-        #print("Starting `find_best_move` routine...")
+        print(f"Zobrist: {hash_}.")
+        print("Starting `find_best_move` routine...")
         move_idx = find_best_move(
             TT,
             bb_current,
