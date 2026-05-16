@@ -133,7 +133,7 @@ function initBoardEvents() {
 
     dom.board.addEventListener("mouseover", (e) => {
         const cell = e.target.closest(".cell");
-        if (!cell || state.editorMode) {
+        if (!cell) {
             return;
         }
 
@@ -143,7 +143,7 @@ function initBoardEvents() {
 
     dom.board.addEventListener("mouseout", (e) => {
         const cell = e.target.closest(".cell");
-        if (!cell || state.editorMode) {
+        if (!cell) {
             return;
         }
 

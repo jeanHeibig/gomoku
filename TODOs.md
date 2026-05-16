@@ -2,14 +2,11 @@
 
 ## Bugs
 
-When playing handicap after a replay and a bot switch, the colors reverse at the end with replay
-Play starting from space bar should keep the clock, also keep memory -> need a specialized `submit_board`
-Starting from editor board leaves previous hovered cell active
-
 ## Frontend / GUI
 
 --- HIGH PRIORITY ---
 
+Dead stones on board
 GUI book builder
 
 --- MEDIUM PRIORITY ---
@@ -26,6 +23,7 @@ Escape key go back to default view
 Watch bot vs bot games directly in GUI
 Add preset boards in the GUI
 Need more control for timer
+Space bar should keep the clock and memory
 
 ## Backend / Bot Engine
 

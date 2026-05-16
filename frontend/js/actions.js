@@ -84,13 +84,14 @@ export async function playCell(cell) {
         return;
     }
 
-    if (!canPlayCell(i, j)) {
+    if (state.replayMode && !state.finished) {
+        exitReplayMode();
+        render();
         return;
     }
 
-    if (state.replayMode) {
-        exitReplayMode();
-        render();
+    if (!canPlayCell(i, j)) {
+        return;
     }
 
     const previousLastMove = state.lastMove ? [...state.lastMove] : null;
@@ -146,7 +147,8 @@ export function canPlayCell(i, j) {
         state.localPlayerIndex === state.currentPlayer &&
         state.board[i][j] === 0 &&
         !state.finished &&
-        !state.editorMode
+        !state.editorMode &&
+        !state.replayMode
     );
 }
 
@@ -241,12 +243,15 @@ export function enterReplayMode() {
     state.replayBoard = buildReplayBoard(state.replayPly);
 
     render();
+    refreshHoverPreview();
 }
 
 export function exitReplayMode() {
     state.replayMode = false;
     state.replayPly = null;
     state.replayBoard = null;
+    refreshHoverPreview();
+    renderCursor();
 }
 
 function buildReplayBoard(ply) {
@@ -292,7 +297,7 @@ export function replayNext() {
     // }
 
     if (!state.replayMode) {
-        enterReplayMode();
+        return;
     }
 
     if (state.replayPly >= state.moveList.length) {
@@ -305,6 +310,10 @@ export function replayNext() {
 
     resetTacticalData();
     renderReplay();
+
+    if (state.replayPly >= state.moveList.length) {
+        exitReplayMode();
+    }
 }
 
 export function replayStart() {
@@ -318,6 +327,7 @@ export function replayStart() {
 
     resetTacticalData();
     renderReplay();
+    refreshHoverPreview();
 }
 
 export function replayEnd() {
@@ -331,6 +341,8 @@ export function replayEnd() {
 
     resetTacticalData();
     renderReplay();
+
+    exitReplayMode();
 }
 
 export async function restartFromReplay() {
@@ -368,6 +380,10 @@ export async function restartFromReplay() {
 }
 
 export async function togglePlayers() {
+    if (state.replayMode) {
+        return;
+    }
+
     stopClock();
     const originalInitialBoard = JSON.stringify(state.initialBoard);
     const originalInitialPlayer = state.initialPlayer;

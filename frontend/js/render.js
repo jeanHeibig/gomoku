@@ -127,6 +127,7 @@ export function renderCell(row, col) {
 export function renderCursor() {
     const canClick =
         !state.finished &&
+        !state.replayMode &&
         state.players &&
         !state.players[state.currentPlayer].isBot &&
         state.localPlayerIndex === state.currentPlayer;
@@ -200,6 +201,7 @@ export function renderReplay() {
     renderBoard();
     renderPlayers();
     renderMoveNumbers();
+    renderCursor();
 }
 
 function updateClockDisplay(clockEl, time) {
