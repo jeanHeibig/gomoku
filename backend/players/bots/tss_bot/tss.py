@@ -9,7 +9,7 @@ from .clock import ctime
 from .canonicalization import canonicalize, apply_inverse_symmetry
 from .tactics import get_forced_moves
 from .heuristics import monte_carlo_heuristic, tactical_heuristic
-from .search import pvs
+from .search import extract_pv, pvs
 from .ordering import sort_moves, move_to_front
 from .openings import lookup_opening_move
 
@@ -182,13 +182,29 @@ def find_best_move(
         best_move_idx = best_move_depth
         pv_move = best_move_depth
 
-        # Optional debug
-        print(f"Depth {depth} ({depth // 12}), score {-best_score if side_to_move else best_score}, move {move_to_square(best_move_idx)}")
+        pv = extract_pv(TT, U8(1) - side_to_move, hash_ ^ ZB[side_to_move, pv_move] ^ ZOBRIST_SIDE)
+
+        move_names = [move_to_square(pv_move)]
+        for move_idx in pv:
+            mv_name = move_to_square(move_idx)
+            move_names.append(mv_name)
+        mv_side = side_to_move
+        for i in range(len(move_names)):
+            if mv_side:
+                move_names[i] = move_names[i].lower()
+            mv_side = 1 - mv_side
+        pv_str = " ".join(move_names)
+
+        print(
+            f"Depth {depth} ({(depth - 1) // 12}), "
+            f"score {-best_score if side_to_move else best_score}, "
+            f"pv {pv_str}"
+        )
 
         #printer_answer = input("Waiting for enter: [y]/n")
         # if printer_answer == 'n':
         #     raise KeyboardInterrupt
-        if best_score >= I8(100):
+        if (best_score >= I8(65)) or (best_score <= I8(-65)):
             return best_move_idx
 
     return best_move_idx

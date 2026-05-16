@@ -10,7 +10,6 @@ Play starting from space bar should keep the clock, also keep memory -> need a s
 --- HIGH PRIORITY ---
 
 GUI book builder
-Show all the moves from the PV
 
 --- MEDIUM PRIORITY ---
 

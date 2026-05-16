@@ -9,7 +9,7 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
-from .hyperparameters import CACHE
+from .hyperparameters import CACHE, TT_MASK
 from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
@@ -17,7 +17,7 @@ from .tactics import get_forced_moves
 from .heuristics import monte_carlo_heuristic, tactical_heuristic
 from .evaluation import fast_evaluation
 from .ordering import sort_moves, move_to_front
-from .transposition import tt_probe, tt_store_search_result
+from .transposition import tt_unpack, tt_probe, tt_store_search_result
 
 
 I8 = np.int8
@@ -29,6 +29,33 @@ ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
 FRACTIONNAL_PLY = np.array(LOG2, dtype=I8)
+
+
+def extract_pv(
+    TT: npt.NDArray[U64],
+    side_to_move: U8,
+    key: U64,
+    max_len=32
+) -> list[U8]:
+    pv = []
+
+    for _ in range(max_len):
+
+        idx = key & TT_MASK
+        signature = key >> U64(24)
+
+        stored_signature, stored_move, _, _, _ = tt_unpack(TT[idx])
+
+        if (stored_signature != signature):  # No hit
+            break
+
+        pv.append(stored_move)
+
+        key ^= ZB[side_to_move, stored_move]
+        key ^= ZOBRIST_SIDE
+        side_to_move = U8(1) - side_to_move
+
+    return pv
 
 
 @nb.njit("i1(u8[:], u8, u8, u1, u8, i1, i1, i1, i1)", cache=CACHE)
