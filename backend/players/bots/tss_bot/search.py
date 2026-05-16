@@ -29,6 +29,7 @@ ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
 FRACTIONNAL_PLY = np.array(LOG2, dtype=I8)
+MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 def extract_pv(
@@ -118,9 +119,9 @@ def pvs(
     else:
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
 
-    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
+    move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
     if move_hit:  # hash move first
-        move_to_front(ordered_moves, move_indices, mv_nb, tt_move_idx)
+        move_to_front(move_indices, mv_nb, tt_move_idx)
 
     if mv_nb == 0:
         return I8(0)
@@ -139,8 +140,8 @@ def pvs(
     #     limit = mv_nb
 
     for i in range(mv_nb):
-        move = ordered_moves[i]
         cell = move_indices[i]
+        move = MOVES[cell]
 
         # --- MAKE MOVE ---
         bb_current ^= move

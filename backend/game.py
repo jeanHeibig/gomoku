@@ -111,7 +111,7 @@ class Game:
             tuple: A tuple (i, j) representing the row and column of the move.
         """
         memory = self.memory[self.board.current_player]
-        move, memory = self.players[self.board.current_player].move_fn(self.board, self.board.current_player, self.timer.get_times(), memory)
+        move, memory = self.players[self.board.current_player].move_fn(self.board.position, self.board.current_player, self.timer.get_times(), memory)
         self.memory[self.board.current_player] = memory
         return move
 

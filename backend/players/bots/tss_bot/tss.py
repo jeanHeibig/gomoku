@@ -23,6 +23,7 @@ ZB = np.array(ZOBRIST, dtype=U64)
 ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 INF = I8(0x7f)
 FATHER = np.array(LOG2, dtype=I8)
+MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 # @nb.njit
@@ -61,17 +62,16 @@ def find_best_move(
     else:
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, tactics & bb_open & symmetries)
 
-    # TODO: add symmetry here at root
     print("Heuristic scores:")
     print(move_scores.reshape((8, 8)))
 
     #print("Sorting moves...")
-    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
-    print(f"Found {mv_nb} moves: {' '.join(move_to_square(idx) for idx in move_indices[:mv_nb])}")
+    move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
+    print(f"Found {mv_nb} move{'s' if mv_nb > 1 else ''}: {' '.join(move_to_square(idx) for idx in move_indices[:mv_nb])}")
 
     if mv_nb == 0:
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open & symmetries)
-        ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
+        move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
 
     best_move_idx = move_indices[0]
     pv_move = move_indices[0]
@@ -84,7 +84,7 @@ def find_best_move(
             break
 
         #print("Moving PV move first")
-        move_to_front(ordered_moves, move_indices, mv_nb, pv_move)
+        move_to_front(move_indices, mv_nb, pv_move)
 
         if mv_nb == 1:
             #print("Only move found! Playing it immediately.")
@@ -110,8 +110,8 @@ def find_best_move(
             if ctime() - start_time >= time_limit:
                 break
 
-            move = ordered_moves[i]  # TODO: only keep move_indices in sort_moves, and use move = MOVES[cell]
             cell = move_indices[i]
+            move = MOVES[cell]
 
             #print("Making move...")
             bb_current ^= move
@@ -220,8 +220,8 @@ def find_best_move(
 
 
 # @nb.njit
-def tss_bot(board, current_player, timer, TT):
-    position = np.array(board.position, dtype=U8)  # TODO: Ask for position argument to be an array
+def tss_bot(position, current_player, timer, TT):
+    bitboards = board_to_bitboards(np.array(position, dtype=U8))
     current_player = U8(current_player)
     if TT is None:
         TT = np.zeros(TT_SIZE, dtype=U64)  # TODO: implement a 2-bucket TT
@@ -231,7 +231,6 @@ def tss_bot(board, current_player, timer, TT):
     # move_time = 0.9 * timer["times"][current_player]
     #print(f"Move time: {move_time:.2f}s")
 
-    bitboards = board_to_bitboards(position)
     #print("--- BITBOARDS ---")
     #print("Black:")
     #prettyprint(bitboards[0])

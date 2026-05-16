@@ -1,5 +1,6 @@
 import numba as nb
 import numpy as np
+import numpy.typing as npt
 
 from .hyperparameters import CACHE
 
@@ -13,13 +14,12 @@ MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
 @nb.njit(
-    "Tuple((u8[:], u1[:], u1))(u1[:], u8)",
+    "Tuple((u1[:], u1))(u1[:], u8)",
     inline="always", cache=CACHE,
 )
-def sort_moves(move_scores, allowed_moves: U64):
-    """Return moves sorted by descending heuristic score."""
+def sort_moves(move_scores: npt.NDArray[U8], allowed_moves: U64) -> tuple[npt.NDArray[U8], U8]:
+    """Return move indexes sorted by descending heuristic score."""
 
-    moves = np.empty(64, dtype=U64)
     move_indices = np.empty(64, dtype=U8)
     scores = np.empty(64, dtype=U8)
 
@@ -32,7 +32,6 @@ def sort_moves(move_scores, allowed_moves: U64):
 
         if s and (allowed_moves & MOVES[k]):
 
-            moves[mv_nb] = MOVES[k]
             move_indices[mv_nb] = U8(k)
             scores[mv_nb] = s
 
@@ -41,7 +40,6 @@ def sort_moves(move_scores, allowed_moves: U64):
     # Insertion sort (descending)
     for i in range(1, mv_nb):
 
-        m = moves[i]
         idx = move_indices[i]
         s = scores[i]
 
@@ -49,39 +47,29 @@ def sort_moves(move_scores, allowed_moves: U64):
 
         while j >= 0 and scores[j] < s:
 
-            moves[j + 1] = moves[j]
             move_indices[j + 1] = move_indices[j]
             scores[j + 1] = scores[j]
 
             j -= 1
 
-        moves[j + 1] = m
         move_indices[j + 1] = idx
         scores[j + 1] = s
 
-    return moves, move_indices, mv_nb
+    return move_indices, mv_nb
 
 
-@nb.njit("void(u8[:], u1[:], u1, u1)", inline="always", cache=CACHE)
+@nb.njit("void(u1[:], u1, u1)", inline="always", cache=CACHE)
 def move_to_front(
-    moves,
-    move_indices,
+    move_indices: npt.NDArray[U8],
     mv_nb: U8,
     tt_move_idx: U8,
-):
+) -> None:
     """Move target move to front of move list."""
-    tt_move_bb = U64(1) << tt_move_idx
-
     for i in range(mv_nb):
 
-        if moves[i] == tt_move_bb:
+        if move_indices[i] == tt_move_idx:
 
-            # Swap move bitboards
-            tmp_move = moves[0]
-            moves[0] = moves[i]
-            moves[i] = tmp_move
-
-            # Swap move indices
+            # Swap move indices  # TODO: insertion sort rather than swap
             tmp_idx = move_indices[0]
             move_indices[0] = move_indices[i]
             move_indices[i] = tmp_idx

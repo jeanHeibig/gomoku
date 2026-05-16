@@ -15,6 +15,7 @@ Need to play bot vs bot and benchmark with elo
 Find a way to stop the bot and have it play its current best move
 Reject impossible positions from editor board
 Logger
+Alignments on board
 
 --- LOW PRIORITY ---
 
@@ -60,17 +61,17 @@ Fix tactical weaknesses: implement proper Threat-Space Search (TSS)
 
 Create self-play opening book
 Solve the handicap game
+Add tablebases
 
 ### Dynamic Depth / Entropy Search
 
 --- HIGH PRIORITY ---
 
-...
+weight moves by seriousness instead of raw move count
 
 --- MEDIUM PRIORITY ---
 
 Root `find_best_move` should look for all moves in the opening book (for transpositions)
-weight moves by seriousness instead of raw move count
 
 --- LOW PRIORITY ---
 
