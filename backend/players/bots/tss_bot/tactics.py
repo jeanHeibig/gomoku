@@ -1,7 +1,7 @@
 import numba as nb
 import numpy as np
 
-
+from .hyperparameters import CACHE
 from .data import MASKS_BY_CELL, MASK_BY_CELL_COUNT, NEIGHBORS, NEIGHBOR_COUNT
 
 
@@ -25,7 +25,7 @@ NBS_COUNT = np.array(NEIGHBOR_COUNT, dtype=U8)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
-@nb.njit("b1(u8, u1)", inline="always", cache=True)
+@nb.njit("b1(u8, u1)", inline="always", cache=CACHE)
 def _has_align5_with_cell(bb: U64, cell: U8) -> bool:
     """Check if placing a piece at the given cell creates a 5-in-a-row alignment.
 
@@ -46,7 +46,7 @@ def _has_align5_with_cell(bb: U64, cell: U8) -> bool:
     return False
 
 
-@nb.njit("u8(u8, u8)", inline="always", cache=True)
+@nb.njit("u8(u8, u8)", inline="always", cache=CACHE)
 def _get_align5(bb_current: U64, bb_open: U64) -> U64:
     """Find moves that would create an immediate 5-in-a-row win for the current player.
 
@@ -68,7 +68,7 @@ def _get_align5(bb_current: U64, bb_open: U64) -> U64:
     return winning_moves
 
 
-@nb.njit("b1(u8, u8)", inline="always", cache=True)
+@nb.njit("b1(u8, u8)", inline="always", cache=CACHE)
 def _has_double_threat(bb_current: U64, bb_open: U64) -> bool:
     """Check if there exists a move that creates multiple winning threats.
 
@@ -95,7 +95,7 @@ def _has_double_threat(bb_current: U64, bb_open: U64) -> bool:
     return False
 
 
-@nb.njit("u8(u8, u8)", inline="always", cache=True)
+@nb.njit("u8(u8, u8)", inline="always", cache=CACHE)
 def _get_double_threats(bb_current: U64, bb_open: U64) -> U64:
     """Find moves that create multiple winning opportunities (double threats).
 
@@ -134,7 +134,7 @@ def _get_double_threats(bb_current: U64, bb_open: U64) -> U64:
 
 
 # @nb.njit
-@nb.njit("u8(u8, u8, u8)", inline="always", cache=True)
+@nb.njit("u8(u8, u8, u8)", inline="always", cache=CACHE)
 def _get_counter_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
     """Find moves that counter the opponent's threats.
 
@@ -169,7 +169,7 @@ def _get_counter_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
     return res
 
 
-@nb.njit("u8(u8, u8, u8)", inline="never", cache=True)
+@nb.njit("u8(u8, u8, u8)", inline="never", cache=CACHE)
 def get_forced_moves(bb_current: U64, bb_opponent: U64, bb_open: U64) -> U64:
     """Return moves that are either forced (defense) or forcing (attacking).
 

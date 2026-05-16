@@ -9,6 +9,7 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
+from .hyperparameters import CACHE
 from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
@@ -30,7 +31,7 @@ INF = I8(0x7f)
 FRACTIONNAL_PLY = np.array(LOG2, dtype=I8)
 
 
-@nb.njit("i1(u8[:], u8, u8, u1, u8, i1, i1, i1, i1)", cache=True)
+@nb.njit("i1(u8[:], u8, u8, u1, u8, i1, i1, i1, i1)", cache=CACHE)
 def pvs(
     TT: npt.NDArray[U64],
     bb_current: U64,

@@ -5,6 +5,7 @@ U64 = np.uint64
 
 
 # --- HYPERPARAMETERS ---
+CACHE = False
 # K = 64  # Auto-prune after K moves
 TT_BITS = 24  # >= 24
 

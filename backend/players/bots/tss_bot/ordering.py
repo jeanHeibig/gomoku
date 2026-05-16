@@ -1,6 +1,8 @@
 import numba as nb
 import numpy as np
 
+from .hyperparameters import CACHE
+
 
 I8 = np.int8
 U8 = np.uint8
@@ -12,7 +14,7 @@ MOVES = U64(1) << np.arange(64, dtype=U64)
 
 @nb.njit(
     "Tuple((u8[:], u1[:], u1))(u1[:], u8)",
-    inline="always", cache=True,
+    inline="always", cache=CACHE,
 )
 def sort_moves(move_scores, allowed_moves: U64):
     """Return moves sorted by descending heuristic score."""
@@ -60,7 +62,7 @@ def sort_moves(move_scores, allowed_moves: U64):
     return moves, move_indices, mv_nb
 
 
-@nb.njit("void(u8[:], u1[:], u1, u1)", inline="always", cache=True)
+@nb.njit("void(u8[:], u1[:], u1, u1)", inline="always", cache=CACHE)
 def move_to_front(
     moves,
     move_indices,

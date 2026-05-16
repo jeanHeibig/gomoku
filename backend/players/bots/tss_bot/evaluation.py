@@ -1,6 +1,7 @@
 import numba as nb
 import numpy as np
 
+from .hyperparameters import CACHE
 from .data import WIN_MASKS_ALL_BOARD
 
 I8 = np.int8
@@ -14,7 +15,7 @@ ADM = np.array(WIN_MASKS_ALL_BOARD[80:], dtype=U64)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
-@nb.njit("i1(u8, u8)", cache=True)
+@nb.njit("i1(u8, u8)", cache=CACHE)
 def fast_evaluation(bb_current: U64, bb_opponent: U64) -> I8:
     """Estimate the net game score for a board position."""
     bb_current_filled = ~bb_opponent

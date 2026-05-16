@@ -2,6 +2,7 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
+from .hyperparameters import CACHE
 from .data import WIN_MASKS_ALL_BOARD, ZOBRIST
 
 
@@ -15,7 +16,7 @@ ZOBRIST_SIDE = U64(0x9E3779B97F4A7C15)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
-@nb.njit("b1(u8)", inline="always", cache=True)
+@nb.njit("b1(u8)", inline="always", cache=CACHE)
 def is_winning(bb_current: U64) -> bool:
     """Return whether the bitboard contains a 5-alignment."""
 
@@ -29,7 +30,7 @@ def is_winning(bb_current: U64) -> bool:
     return False
 
 
-@nb.njit("b1(u8, u8)", inline="always", cache=True)
+@nb.njit("b1(u8, u8)", inline="always", cache=CACHE)
 def is_dead_draw(bb_current: U64, bb_opponent: U64) -> bool:
     """Return whether no player can still form a 5-alignment."""
 
@@ -40,7 +41,7 @@ def is_dead_draw(bb_current: U64, bb_opponent: U64) -> bool:
     )
 
 
-@nb.njit("u1(u8)", inline="always", cache=True)
+@nb.njit("u1(u8)", inline="always", cache=CACHE)
 def popcount(bb: U64) -> U8:
     """Return number of set bits in bitboard."""
 
@@ -53,7 +54,7 @@ def popcount(bb: U64) -> U8:
     return c
 
 
-@nb.njit("UniTuple(u8, 2)(u1[:, :])", cache=True)
+@nb.njit("UniTuple(u8, 2)(u1[:, :])", cache=CACHE)
 def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
     """Convert a 2D board matrix into two bitboards."""
 
@@ -72,7 +73,7 @@ def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
     return bb_current, bb_opponent
 
 
-# @nb.njit("u1(u8)", inline="always", cache=True)
+# @nb.njit("u1(u8)", inline="always", cache=CACHE)
 # def bitboard_to_index(bb: U64) -> U8:
 #     """Return index of least significant set bit."""
 
@@ -85,13 +86,13 @@ def board_to_bitboards(position: npt.NDArray[U8]) -> tuple[U64, U64]:
 #     return idx
 
 
-@nb.njit("UniTuple(u1, 2)(u1)", inline="always", cache=True)
+@nb.njit("UniTuple(u1, 2)(u1)", inline="always", cache=CACHE)
 def idx_to_ij(idx: U8) -> tuple[U8, U8]:
     """Convert idx from [0, 63] to (i, j) coordinates."""
     return idx // U8(8), idx % U8(8)
 
 
-@nb.njit("UniTuple(u1, 2)(u8)", inline="always", cache=True)
+@nb.njit("UniTuple(u1, 2)(u8)", inline="always", cache=CACHE)
 def bitboard_to_ij(bb: U64) -> tuple[U8, U8]:
     """Convert a single-bit bitboard into (i, j) coordinates."""
 
@@ -104,7 +105,7 @@ def bitboard_to_ij(bb: U64) -> tuple[U8, U8]:
     return idx_to_ij(idx)
 
 
-@nb.njit("u8(u8, u8, u1)", inline="always", cache=True)
+@nb.njit("u8(u8, u8, u1)", inline="always", cache=CACHE)
 def compute_hash(bb_current: U64, bb_opponent: U64, side_to_move: U8) -> U64:
     """Compute Zobrist hash from two bitboards."""
 

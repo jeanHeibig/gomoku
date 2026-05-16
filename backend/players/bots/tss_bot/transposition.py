@@ -2,7 +2,7 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
-from .hyperparameters import TT_MASK
+from .hyperparameters import CACHE, TT_MASK
 
 
 I8 = np.int8
@@ -15,7 +15,7 @@ LOWER = U8(1)
 UPPER = U8(2)
 
 
-@nb.njit("u8(u8, u1, u1, i1, i1)", inline="always", cache=True)
+@nb.njit("u8(u8, u1, u1, i1, i1)", inline="always", cache=CACHE)
 def tt_pack(signature: U64, move: U8, flag: U8, score: I8, depth: I8) -> U64:
     """Return the packed data."""
     return (
@@ -27,7 +27,7 @@ def tt_pack(signature: U64, move: U8, flag: U8, score: I8, depth: I8) -> U64:
     )
 
 
-@nb.njit("Tuple((u8, u1, u1, i1, i1))(u8)", inline="always", cache=True)
+@nb.njit("Tuple((u8, u1, u1, i1, i1))(u8)", inline="always", cache=CACHE)
 def tt_unpack(entry: U64) -> tuple[U64, U8, U8, I8, I8]:
     """Return signature, move, flag, score, depth."""
     return (
@@ -42,7 +42,7 @@ def tt_unpack(entry: U64) -> tuple[U64, U8, U8, I8, I8]:
 @nb.njit(
     "Tuple((b1, b1, i1, u1, i1, i1))"
     "(u8[:], u8, i1, i1, i1)",
-    inline="always", cache=True,
+    inline="always", cache=CACHE,
 )
 def tt_probe(
     TT: npt.NDArray[U64],
@@ -84,7 +84,7 @@ def tt_probe(
 
 @nb.njit(
     "void(u8[:], u8, i1, i1, u1, u1)",
-    inline="always", cache=True,
+    inline="always", cache=CACHE,
 )
 def tt_store(
     TT: npt.NDArray[U64],
@@ -108,7 +108,7 @@ def tt_store(
 
 @nb.njit(
     "void(u8[:], u8, i1, i1, i1, i1, u1)",
-    inline="always", cache=True,
+    inline="always", cache=CACHE,
 )
 def tt_store_search_result(
     TT: npt.NDArray[U64],
