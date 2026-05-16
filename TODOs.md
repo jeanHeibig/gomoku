@@ -3,6 +3,7 @@
 ## Bugs
 
 When playing handicap after a replay and a bot switch, the colors reverse at the end with replay
+Play starting from space bar should keep the clock, also keep memory -> need a specialized `submit_board`
 
 ## Frontend / GUI
 
@@ -56,6 +57,7 @@ Improve move ordering: add Killer Moves
 --- MEDIUM PRIORITY ---
 
 Improve time management
+Black needs to search for a win, only look at tactical moves
 Fix tactical weaknesses: implement proper Threat-Space Search (TSS)
 
 --- LOW PRIORITY ---

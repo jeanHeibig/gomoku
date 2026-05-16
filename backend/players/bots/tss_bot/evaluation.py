@@ -5,6 +5,7 @@ from .hyperparameters import CACHE
 from .data import WIN_MASKS_ALL_BOARD
 
 I8 = np.int8
+I16 = np.int16
 U64 = np.uint64
 
 
@@ -55,10 +56,11 @@ def fast_evaluation(bb_current: U64, bb_opponent: U64) -> I8:
         if (bb_opponent_filled & mask) == mask:
             bb_opponent_antidiag |= mask
 
-    score = I8(0)
+    score_current = I16(0)
+    score_opponent = I16(0)
     for cell in range(64):
-        threat_current_number = I8(0)
-        threat_opponent_number = I8(0)
+        threat_current_number = I16(0)
+        threat_opponent_number = I16(0)
 
         if bb_current_horizontal & MOVES[cell]:
             threat_current_number += 1
@@ -78,14 +80,19 @@ def fast_evaluation(bb_current: U64, bb_opponent: U64) -> I8:
         if bb_opponent_antidiag & MOVES[cell]:
             threat_opponent_number += 1
 
-        if threat_current_number == I8(2):
-            score += I8(1)
-        elif threat_current_number >= I8(3):
-            score += I8(3)
+        if threat_current_number == I16(2):
+            score_current += I16(1)
+        elif threat_current_number >= I16(3):
+            score_current += I16(3)
 
-        if threat_opponent_number == I8(2):
-            score -= I8(1)
-        elif threat_opponent_number >= I8(3):
-            score -= I8(3)
+        if threat_opponent_number == I16(2):
+            score_opponent += I16(1)
+        elif threat_opponent_number >= I16(3):
+            score_opponent += I16(3)
 
+    total = score_current + score_opponent
+    if not total:
+        return I8(0)
+
+    score = I8(((score_current - score_opponent) << I16(6)) // total)
     return score
