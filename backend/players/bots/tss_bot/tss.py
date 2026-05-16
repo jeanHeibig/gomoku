@@ -6,7 +6,7 @@ from .data import ZOBRIST, LOG2
 
 from .board import board_to_bitboards, bitboard_to_ij, compute_hash, idx_to_ij, move_to_square, prettyprint
 from .clock import ctime
-from .canonicalization import canonicalize, apply_inverse_symmetry
+from .canonicalization import canonicalize, get_symmetry_mask, apply_inverse_symmetry
 from .tactics import get_forced_moves
 from .heuristics import monte_carlo_heuristic, tactical_heuristic
 from .search import extract_pv, pvs
@@ -56,13 +56,21 @@ def find_best_move(
     # TODO: add symmetry here at root
 
     print(move_scores.reshape((8, 8)))
+
+    print("Figuring out symmetries...")
+    symmetries = get_symmetry_mask(bb_current, bb_opponent)
+    if symmetries != U64(0xffffffffffffffff):
+        print("Symmetry found! Filtering with this mask:")
+        prettyprint(symmetries)
+    else:
+        print("No symmetry found.")
     #print("Sorting moves...")
-    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
+    ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
     #print(f"Found {mv_nb} moves: {move_indices}")
 
     if mv_nb == 0:
-        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
-        ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
+        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open & symmetries)
+        ordered_moves, move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
 
     best_move_idx = move_indices[0]
     pv_move = move_indices[0]

@@ -2,10 +2,13 @@ import numba as nb
 import numpy as np
 
 from .hyperparameters import CACHE
-
+from .data import SQUARE_SYMMETRIES
 
 U8 = np.uint8
 U64 = np.uint64
+
+
+D8 = np.array(SQUARE_SYMMETRIES, dtype=U64)
 
 
 @nb.njit("u8(u8)", inline="always", cache=CACHE)
@@ -125,6 +128,29 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
         best_t = U8(128)
 
     return best_bb_c, best_bb_o, best_t
+
+
+@nb.njit("u8(u8, u8)", inline="always")
+def get_symmetry_mask(bb_current: U64, bb_opponent: U64) -> U64:
+    vc = _mirror_vertical(bb_current)
+    vo = _mirror_vertical(bb_opponent)
+    if vc == bb_current and vo == bb_opponent:  # stabilizes V
+        if _flip_diagonal(bb_current) == bb_current and _flip_diagonal(bb_opponent) == bb_opponent:
+            return D8[7]  # stabilizes also C -> stabilizes all group
+        return D8[1]
+    if _flip_diagonal(bb_current) == bb_current and _flip_diagonal(bb_opponent) == bb_opponent:
+        if _flip_anti_diagonal(bb_current) == bb_current and _flip_anti_diagonal(bb_opponent) == bb_opponent:
+            return D8[6]  # stabilizes subgroup
+        return D8[3]
+    if _mirror_horizontal(bb_current) == bb_current and _mirror_horizontal(bb_opponent) == bb_opponent:
+        return D8[2]  # stabilizes only H
+    if _flip_anti_diagonal(bb_current) == bb_current and _flip_anti_diagonal(bb_opponent) == bb_opponent:
+        return D8[4]  # stabilizes only A
+    if _mirror_horizontal(vc) == bb_current and _mirror_horizontal(vo) == bb_opponent:
+        if _flip_diagonal(vc) == bb_current and _flip_diagonal(vo) == bb_opponent:
+            return D8[5]  # stabilizes C
+        return D8[1]  # stabilizes R
+    return D8[0]
 
 
 @nb.njit("u8(u8, u1)", inline="always", cache=CACHE)

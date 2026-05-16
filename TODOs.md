@@ -4,6 +4,7 @@
 
 When playing handicap after a replay and a bot switch, the colors reverse at the end with replay
 Play starting from space bar should keep the clock, also keep memory -> need a specialized `submit_board`
+Starting from editor board leaves previous hovered cell active
 
 ## Frontend / GUI
 
@@ -68,7 +69,7 @@ Solve the handicap game
 
 --- HIGH PRIORITY ---
 
-Move reduction with symmetry should be made once at root only for the current stage
+...
 
 --- MEDIUM PRIORITY ---
 
