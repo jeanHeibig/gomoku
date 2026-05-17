@@ -31,7 +31,7 @@ import numpy as np
 from backend import Timer, Game, Player
 from backend.board import b2b, bb2m
 from backend.players import human, bots
-from backend.players.bots.tss_bot.tactics import get_forced_moves
+from backend.players.bots.ab_bot.tactics import get_forced_moves
 
 app = FastAPI()
 

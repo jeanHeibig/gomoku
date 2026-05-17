@@ -1,9 +1,9 @@
 import numpy as np
 
-from .hyperparameters import TT_SIZE
+from .hyperparameters import TT_SIZE, K
 from .data import ZOBRIST, LOG2
 
-from .board import board_to_bitboards, bitboard_to_ij, compute_hash, idx_to_ij, move_to_square  #prettyprint
+from .board import board_to_bitboards, bitboard_to_ij, compute_hash, idx_to_ij, move_to_square, prettyprint
 from .clock import ctime
 from .canonicalization import canonicalize, get_symmetry_mask, apply_inverse_symmetry
 from .tactics import get_forced_moves
@@ -24,6 +24,8 @@ INF = I8(0x7f)
 FATHER = np.array(LOG2, dtype=I8)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
+VERBOSE = False
+
 
 # @nb.njit
 def find_best_move(
@@ -38,30 +40,36 @@ def find_best_move(
     start_time = ctime()
 
     bb_open = ~(bb_current | bb_opponent)
-    #print("Looking for tactics...", end='')
+    if VERBOSE:
+        print("Looking for tactics...", end='')
     tactics = get_forced_moves(bb_current, bb_opponent, bb_open)
-    # if tactics != U64(0xffffffffffffffff):
-        #print(" tactics found! Filtering with this mask:")
-        #prettyprint(tactics)
-    # else:
-        #print(" no tactics found.")
+    if VERBOSE:
+        if tactics != U64(0xffffffffffffffff):
+            print(" tactics found! Filtering with this mask:")
+            prettyprint(tactics)
+        else:
+            print(" no tactics found.")
 
-    #print("Figuring out symmetries...", end='')
+    if VERBOSE:
+        print("Figuring out symmetries...", end='')
     symmetries = get_symmetry_mask(bb_current, bb_opponent)
-    # if symmetries != U64(0xffffffffffffffff):
-        #print(" symmetry found! Filtering with this mask:")
-        #prettyprint(symmetries)
+    if VERBOSE:
+        if symmetries != U64(0xffffffffffffffff):
+            print(" symmetry found! Filtering with this mask:")
+            prettyprint(symmetries)
+        else:
+            print(" no symmetry found.")
+
+    if VERBOSE:
+        print("Heuristic evaluation...", end='')
+    # if tactics == U64(0xffffffffffffffff):  # No tactics found
+    #     move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open & symmetries)
     # else:
-        #print(" no symmetry found.")
+    move_scores = monte_carlo_heuristic(bb_current, bb_opponent, tactics & bb_open & symmetries)
 
-    #print("Heuristic evaluation...", end='')
-    if tactics == U64(0xffffffffffffffff):  # No tactics found
-        move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open & symmetries)
-    else:
-        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, tactics & bb_open & symmetries)
-
-    #print(" scores:")
-    #print(move_scores.reshape((8, 8)))
+    if VERBOSE:
+        print(" scores:")
+        print(move_scores.reshape((8, 8)))
 
     move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
 
@@ -69,14 +77,15 @@ def find_best_move(
         move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open & symmetries)
         move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
 
-    best_move_idx = move_indices[0]
     pv_move = move_indices[0]
 
     if mv_nb == 1:
-        #print(f"Only move found: {move_to_square(pv_move)}! Playing it immediately.")
+        if VERBOSE:
+            print(f"Only move found: {move_to_square(pv_move)}! Playing it immediately.")
         return move_indices[0]
-    # else:
-        #print(f"Found {mv_nb} moves: {' '.join(move_to_square(idx) for idx in move_indices[:mv_nb])}.")
+    else:
+        if VERBOSE:
+            print(f"Found {mv_nb} moves: {' '.join(move_to_square(idx) for idx in move_indices[:mv_nb])}.")
 
     for depth in range(1, max_depth + 1):
 
@@ -89,7 +98,10 @@ def find_best_move(
         best_score = -INF
         best_move_depth = pv_move
 
-        for i in range(mv_nb):
+        move_to_front(move_indices, mv_nb, pv_move)
+
+        limit = min(K, mv_nb)
+        for i in range(limit):
 
             if ctime() - start_time >= time_limit:
                 break
@@ -155,7 +167,6 @@ def find_best_move(
                 alpha = score
 
         # --- update PV ---
-        best_move_idx = best_move_depth
         pv_move = best_move_depth
 
         pv = extract_pv(TT, U8(1) - side_to_move, hash_ ^ ZB[side_to_move, pv_move] ^ ZOBRIST_SIDE)
@@ -171,66 +182,76 @@ def find_best_move(
             mv_side = 1 - mv_side
         pv_str = " ".join(move_names)
 
-        # print(
-        #     f"Depth {depth} ({(depth - 1) // 12}), "
-        #     f"score {-best_score if side_to_move else best_score}, "
-        #     f"pv {pv_str}"
-        # )
 
-        if (best_score >= I8(65)) or (best_score <= I8(-65)):
-            return best_move_idx
+        if VERBOSE:
+            print(
+                f"Depth {depth} ({(depth - 1) // 12}), "
+                f"score {-best_score if side_to_move else best_score}, "
+                f"pv {pv_str}"
+            )
 
-    return best_move_idx
+        if (best_score >= I8(100)) or (best_score <= I8(-100)):
+            return pv_move
+
+    return pv_move
 
 
 # @nb.njit
-def tss_bot(position, current_player, timer, TT):
+def ab_bot(position, current_player, timer, TT):
     bitboards = board_to_bitboards(np.array(position, dtype=U8))
     current_player = U8(current_player)
     if TT is None:
         TT = np.zeros(TT_SIZE, dtype=U64)  # TODO: implement a 2-bucket TT
-        #print("No memory found: TT created.")
-    # else:
-        #print("TT Loaded from memory.")
+        if VERBOSE:
+            print("No memory found: TT created.")
+    else:
+        if VERBOSE:
+            print("TT Loaded from memory.")
 
     move_time = timer["times"][current_player] / 10 + timer["increments"][current_player] / 2
-    #print(f"Move time: {move_time:.2f}s.")
-    #print(f"Playing {'white' if current_player else 'black'}.")
+    if VERBOSE:
+        print(f"Move time: {move_time:.2f}s.")
+        print(f"Playing {'white' if current_player else 'black'}.")
 
     bb_current = U64(bitboards[current_player])
     bb_opponent = U64(bitboards[1 - current_player])
 
-    #print("Canonicalisation...", end='')
+    if VERBOSE:
+        print("Canonicalisation...", end='')
     bb_current_cr, bb_opponent_cr, symmetry = canonicalize(bb_current, bb_opponent)
     bb_current_cr = U64(bb_current_cr)
     bb_opponent_cr = U64(bb_opponent_cr)
-    sym_names = [
-        'identity',
-        'vertical flip',
-        '180° rotation',
-        'horizontal flip',
-        'counter-clockwise rotation',
-        'diagonal flip',
-        'clockwise rotation',
-        'antidiagonal flip'
-    ]
-    #print(f" with {sym_names[int(np.log2(symmetry))]}.")
-    #print(f"Current bb ({bb_current_cr}):")
-    #prettyprint(bb_current_cr)
-    #print(f"Opponent bb ({bb_opponent_cr}):")
-    #prettyprint(bb_opponent_cr)
+    if VERBOSE:
+        sym_names = [
+            'identity',
+            'vertical flip',
+            '180° rotation',
+            'horizontal flip',
+            'counter-clockwise rotation',
+            'diagonal flip',
+            'clockwise rotation',
+            'antidiagonal flip'
+        ]
+        print(f" with {sym_names[int(np.log2(symmetry))]}.")
+        print(f"Current bb ({bb_current_cr}):")
+        prettyprint(bb_current_cr)
+        print(f"Opponent bb ({bb_opponent_cr}):")
+        prettyprint(bb_opponent_cr)
 
     move_cr = lookup_opening_move(bb_current_cr, bb_opponent_cr)
     if move_cr:
         move = apply_inverse_symmetry(move_cr, symmetry)  # TODO: opening book should contain indexes too
         move_ij = bitboard_to_ij(move)
         i, j = move_ij
-        #print(f"Opening move found: {move_to_square(8 * i + j)}.")
+        if VERBOSE:
+            print(f"Opening move found: {move_to_square(8 * i + j)}.")
     else:
-        #print("No opening move found. Looking for best_move...")
+        if VERBOSE:
+            print("No opening move found. Looking for best_move...")
         hash_ = compute_hash(bb_current, bb_opponent, current_player)
-        #print(f"Zobrist: {hash_}.")
-        #print("Starting `find_best_move` routine...")
+        if VERBOSE:
+            print(f"Zobrist: {hash_}.")
+            print("Starting `find_best_move` routine...")
         move_idx = find_best_move(
             TT,
             bb_current,
@@ -240,7 +261,8 @@ def tss_bot(position, current_player, timer, TT):
             max_depth=INF - I8(1),
             time_limit=move_time
         )
-        #print(f"Ending `find_best_move` routine. Move found: {move_to_square(move_idx)}.")
+        if VERBOSE:
+            print(f"Ending `find_best_move` routine. Move found: {move_to_square(move_idx)}.")
         move_ij = idx_to_ij(move_idx)  # TODO: find_best_move should return ij directly
 
     return move_ij, TT

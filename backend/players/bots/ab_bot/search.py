@@ -9,7 +9,7 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
-from .hyperparameters import CACHE, TT_MASK
+from .hyperparameters import CACHE, TT_MASK, K
 from .data import ZOBRIST, LOG2
 
 from .board import is_winning, is_dead_draw, popcount
@@ -114,10 +114,10 @@ def pvs(
     bb_open = ~(bb_current | bb_opponent)
 
     tactics = get_forced_moves(bb_current, bb_opponent, bb_open)
-    if tactics == U64(0xffffffffffffffff):  # No tactics found
-        move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open)
-    else:
-        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
+    # if tactics == U64(0xffffffffffffffff):  # No tactics found
+    #     move_scores = tactical_heuristic(bb_current, bb_opponent, bb_open)
+    # else:
+    move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open)
 
     move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open)
     if move_hit:  # hash move first
@@ -134,12 +134,8 @@ def pvs(
     if mv_nb < 4:  # Reimbursement of threat moves
         child_depth += father - I8(1)
 
-    # if tactics == U64(0xffffffffffffffff):  # No tactics found
-    #     limit = min(K, mv_nb)
-    # else:
-    #     limit = mv_nb
-
-    for i in range(mv_nb):
+    limit = min(K, mv_nb)
+    for i in range(limit):
         cell = move_indices[i]
         move = MOVES[cell]
 

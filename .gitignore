@@ -100,7 +100,7 @@ ipython_config.py
 #   commonly ignored for libraries.
 
 # XOPP files
-backend/players/bots/tss_bot/xopp/
+backend/players/bots/ab_bot/xopp/
 #uv.lock
 
 # poetry

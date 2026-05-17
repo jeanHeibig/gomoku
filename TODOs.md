@@ -5,6 +5,7 @@
 In the PV line, black hasn't understood he's attacking... white alignments should be off the table
 Think the flag did not work in replay mode
 Started from replay white to move. Won with White, message was Black win (and the stone did not show)
+Tactical heuristic is not a good name, nor a good function -> replace it with move filtering by pairing, that's what it actually does
 
 ## Frontend / GUI
 

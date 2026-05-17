@@ -8,16 +8,18 @@ from .data import WIN_MASKS_ALL_BOARD, WIN_MASKS_INDEXES, RANDOM_GAMES
 
 I8 = np.int8
 U8 = np.uint8
+U32 = np.uint32
 U64 = np.uint64
 
 
 WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
 WMI = np.array(WIN_MASKS_INDEXES, dtype=U64)
+N_GAMES = 128
 RG = np.array(RANDOM_GAMES, dtype=U64)
-HZM = np.array(WIN_MASKS_ALL_BOARD[:32], dtype=U64)
-VTM = np.array(WIN_MASKS_ALL_BOARD[32:64], dtype=U64)
-DGM = np.array(WIN_MASKS_ALL_BOARD[64:80], dtype=U64)
-ADM = np.array(WIN_MASKS_ALL_BOARD[80:], dtype=U64)
+HZM = WMA[:32]
+VTM = WMA[32:64]
+DGM = WMA[64:80]
+ADM = WMA[80:]
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
@@ -28,10 +30,10 @@ def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> np
     The function evaluates every random fill scenario from the precomputed
     RG table and awards points for potential winning tile contributions.
     """
-    scores = np.zeros(64, dtype=U8)
+    count = np.zeros(64, dtype=U8)
 
     # Monte-Carlo evaluation
-    for t in range(128):
+    for t in range(N_GAMES):
         bb_current_completed = bb_current | (RG[t] & bb_open)
         bb_opponent_completed = bb_opponent | (~RG[t] & bb_open)
 
@@ -40,15 +42,9 @@ def monte_carlo_heuristic(bb_current: U64, bb_opponent: U64, bb_open: U64) -> np
             m = WMA[k]
             if ((bb_current_completed & m) == m) or ((bb_opponent_completed & m) == m):
                 for wt_idx in WMI[k]:
-                    scores[wt_idx] += 1
+                    count[wt_idx] += U8(1)
 
-    for idx in range(64):
-        bb_idx = MOVES[idx]
-        if ~bb_open & bb_idx:
-            scores[idx] = 0
-
-    # print(scores.reshape((8,8)))
-    return scores
+    return count
 
 
 @nb.njit("u1[:](u8, u8, u8)", cache=CACHE)

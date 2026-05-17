@@ -2,17 +2,21 @@ import numba as nb
 import numpy as np
 
 from .hyperparameters import CACHE
-from .data import WIN_MASKS_ALL_BOARD
+from .data import WIN_MASKS_ALL_BOARD, RANDOM_GAMES
 
 I8 = np.int8
 I16 = np.int16
+I32 = np.int32
 U64 = np.uint64
 
 
-HZM = np.array(WIN_MASKS_ALL_BOARD[:32], dtype=U64)
-VTM = np.array(WIN_MASKS_ALL_BOARD[32:64], dtype=U64)
-DGM = np.array(WIN_MASKS_ALL_BOARD[64:80], dtype=U64)
-ADM = np.array(WIN_MASKS_ALL_BOARD[80:], dtype=U64)
+WMA = np.array(WIN_MASKS_ALL_BOARD, dtype=U64)
+HZM = WMA[:32]
+VTM = WMA[32:64]
+DGM = WMA[64:80]
+ADM = WMA[80:]
+N_GAMES = 64
+RG = np.array(RANDOM_GAMES[:N_GAMES], dtype=U64)
 MOVES = U64(1) << np.arange(64, dtype=U64)
 
 
@@ -94,5 +98,23 @@ def fast_evaluation(bb_current: U64, bb_opponent: U64) -> I8:
     if not total:
         return I8(0)
 
-    score = I8(((score_current - score_opponent) << I16(6)) // total)
-    return score
+    strategic_score = I8(((score_current - score_opponent) << I16(6)) // total)
+
+    bb_open = ~(bb_current | bb_opponent)
+    monte_carlo_count = I8(0)
+
+    for t in range(N_GAMES):
+        bb_current_completed = bb_current | (RG[t] & bb_open)
+        bb_opponent_completed = bb_opponent | (~RG[t] & bb_open)
+
+        # Compute winning tiles for the random position
+        for k in range(96):
+            m = WMA[k]
+            if (bb_current_completed & m) == m:
+                monte_carlo_count += I8(1)
+            if (bb_opponent_completed & m) == m:
+                monte_carlo_count -= I8(1)
+
+    monte_carlo_count >>= I8(3)
+
+    return strategic_score + monte_carlo_count
