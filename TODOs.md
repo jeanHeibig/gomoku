@@ -2,25 +2,29 @@
 
 ## Bugs
 
+In the PV line, black hasn't understood he's attacking... white alignments should be off the table
+Think the flag did not work in replay mode
+Started from replay white to move. Won with White, message was Black win (and the stone did not show)
+
 ## Frontend / GUI
 
 --- HIGH PRIORITY ---
 
-Dead stones on board
 GUI book builder
 
 --- MEDIUM PRIORITY ---
 
+Dead stones on board
+Alignments on board
 Need to play bot vs bot and benchmark with elo
 Find a way to stop the bot and have it play its current best move
-Reject impossible positions from editor board
 Logger
-Alignments on board
 
 --- LOW PRIORITY ---
 
 Eval bar
 Watch bot vs bot games directly in GUI
+Reject impossible positions from editor board
 Add preset boards in the GUI
 Need more control for timer
 Space bar should keep the clock and memory
@@ -48,6 +52,7 @@ When the position is drawn, find the "best" draw
 --- HIGH PRIORITY ---
 
 Mate solver
+Draw Solver
 multi-PV support
 Improve move ordering: add Killer Moves
 
@@ -81,8 +86,9 @@ Root `find_best_move` should look for all moves in the opening book (for transpo
 
 --- HIGH PRIORITY ---
 
-TSS during quiescence
 Detect draws with pairing moves to kill cells
+TSS during quiescence
+Then only intensive evaluation (current one is ~good but can be improved)
 
 --- MEDIUM PRIORITY ---
 

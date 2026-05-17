@@ -305,7 +305,7 @@ def find_best_move(TT_keys, TT_moves, TT_depths, TT_scores, TT_flags,
             pv_move = best_move_depth
 
         # Optional debug
-        print(f"Depth {depth} ({depth // 12}), score {best_score}, move {best_move}")
+        # print(f"Depth {depth} ({depth // 12}), score {best_score}, move {best_move}")
 
     return best_move
 
@@ -332,7 +332,7 @@ def ab_tt_bot(position, current_player, timer, memory):
     bb_current_cr, bb_opponent_cr, s_idx = canonicalize(bb_current, bb_opponent)
     bb_current_cr = np.uint64(bb_current_cr)
     bb_opponent_cr = np.uint64(bb_opponent_cr)
-    print(bb_current_cr, bb_opponent_cr)
+    # print(bb_current_cr, bb_opponent_cr)
 
     move_cr = lookup_opening_moves(bb_current_cr, bb_opponent_cr)
     if move_cr is None:
@@ -343,6 +343,6 @@ def ab_tt_bot(position, current_player, timer, memory):
     move = np.uint64(apply_inverse_symmetry(move_cr, s_idx))
     move_ij = bb2m(move)
 
-    print(f"Move: {move_ij}")
+    # print(f"Move: {move_ij}")
 
     return move_ij, memory
