@@ -47,6 +47,7 @@ Benchmark different Heuristic functions
 
 Need to check alignment distribution in RG
 When the position is drawn, find the "best" draw
+Create specialized classes (aliases) like Bitboard: U64
 
 ### Search Improvements
 
@@ -65,7 +66,6 @@ Fix tactical weaknesses: implement proper Threat-Space Search (TSS)
 
 --- LOW PRIORITY ---
 
-Create self-play opening book
 Solve the handicap game
 Add tablebases
 

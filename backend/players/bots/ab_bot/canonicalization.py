@@ -11,6 +11,16 @@ U64 = np.uint64
 D8 = np.array(SQUARE_SYMMETRIES, dtype=U64)
 
 
+IDENTITY = U8(0)
+CLOCKWISE_ROTATION = U8(1)
+U_TURN = U8(2)
+COUNTERCLOCKWISE_ROTATION = U8(3)
+HORIZONTAL_FLIP = U8(4)
+ANTIDIAGONAL_FLIP = U8(5)
+VERTICAL_FLIP = U8(6)
+DIAGONAL_FLIP = U8(7)
+
+
 @nb.njit("u8(u8)", inline="always", cache=CACHE)
 def _mirror_vertical(x: U64) -> U64:
     k1 = U64(0x00FF00FF00FF00FF)
@@ -69,7 +79,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
 
     best_bb_c = bb_c
     best_bb_o = bb_o
-    best_t = U8(1)
+    best_t = IDENTITY
 
     # --- VERTICAL FLIP ---
     bb_c = _mirror_vertical(bb_c)
@@ -77,7 +87,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(2)
+        best_t = VERTICAL_FLIP
 
     # --- 180° ROTATION ---
     bb_c = _mirror_horizontal(bb_c)
@@ -85,7 +95,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(4)
+        best_t = U_TURN
 
     # --- HORIZONTAL FLIP ---
     bb_c = _mirror_vertical(bb_c)
@@ -93,15 +103,15 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(8)
+        best_t = HORIZONTAL_FLIP
 
-    # --- COUNTER-CLOCKWISE ROTATION ---
+    # --- COUNTERCLOCKWISE ROTATION ---
     bb_c = _flip_diagonal(bb_c)
     bb_o = _flip_diagonal(bb_o)
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(16)
+        best_t = COUNTERCLOCKWISE_ROTATION
 
     # --- MAIN DIAGONAL FLIP ---
     bb_c = _mirror_vertical(bb_c)
@@ -109,7 +119,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(32)
+        best_t = DIAGONAL_FLIP
 
     # --- CLOCKWISE ROTATION ---
     bb_c = _mirror_horizontal(bb_c)
@@ -117,7 +127,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(64)
+        best_t = CLOCKWISE_ROTATION
 
     # --- ANTI-DIAGONAL ROTATION ---
     bb_c = _mirror_vertical(bb_c)
@@ -125,7 +135,7 @@ def canonicalize(bb_current: U64, bb_opponent: U64) -> tuple[U64, U64, U8]:
     if bb_c < best_bb_c or (bb_c == best_bb_c and bb_o < best_bb_o):
         best_bb_c = bb_c
         best_bb_o = bb_o
-        best_t = U8(128)
+        best_t = ANTIDIAGONAL_FLIP
 
     return best_bb_c, best_bb_o, best_t
 
@@ -156,19 +166,19 @@ def get_symmetry_mask(bb_current: U64, bb_opponent: U64) -> U64:
 @nb.njit("u8(u8, u1)", inline="always", cache=CACHE)
 def apply_inverse_symmetry(representant: U64, symmetry: U8) -> U64:
     """Revert a move to its original position on the board."""
-    if symmetry == U8(1):  # I
+    if symmetry == IDENTITY:
         return representant
-    if symmetry == U8(2):  # V
+    if symmetry == VERTICAL_FLIP:
         return _mirror_vertical(representant)
-    if symmetry == U8(4):  # R
+    if symmetry == U_TURN:
         return _mirror_horizontal(_mirror_vertical(representant))
-    if symmetry == U8(8):  # H
+    if symmetry == HORIZONTAL_FLIP:
         return _mirror_horizontal(representant)
-    if symmetry == U8(16):  # T
+    if symmetry == COUNTERCLOCKWISE_ROTATION:
         return _flip_diagonal(_mirror_vertical(representant))
-    if symmetry == U8(32):  # D
+    if symmetry == DIAGONAL_FLIP:
         return _flip_diagonal(representant)
-    if symmetry == U8(64):  # C
+    if symmetry == CLOCKWISE_ROTATION:
         return _mirror_vertical(_flip_diagonal(representant))
 
-    return _flip_anti_diagonal(representant)  # A
+    return _flip_anti_diagonal(representant)  # ANTIDIAGONAL_FLIP

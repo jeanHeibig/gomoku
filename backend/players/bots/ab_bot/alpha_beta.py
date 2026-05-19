@@ -73,10 +73,6 @@ def find_best_move(
 
     move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
 
-    if mv_nb == 0:
-        move_scores = monte_carlo_heuristic(bb_current, bb_opponent, bb_open & symmetries)
-        move_indices, mv_nb = sort_moves(move_scores, tactics & bb_open & symmetries)
-
     pv_move = move_indices[0]
 
     if mv_nb == 1:

@@ -9,7 +9,7 @@ from ...board.bitboard import wm_bb, cm_bb, dt_bb, mc_bb
 from .prandom import make_random_u64
 
 
-MIN_TIME = 1
+MIN_TIME = 0.1
 MC_N = 10000
 
 
@@ -307,3 +307,48 @@ def prevent_double_threats_bot(position, current_player, timer, _):
     rs = make_random_u64(MC_N)
     movemc = mc_bb(bb_current, bb_open, rs)
     return random.choice(bb2m(movemc)), None
+
+
+def basic_bot_self_play(bb_current, bb_opponent):
+    """Same bot as prevent_double_threats_bot, without time limit and with bitboard as args."""
+
+    bb_open = ~(bb_current | bb_opponent)
+
+    # 1. Win immediately
+    winning_moves = wm_bb(bb_current, bb_open)
+    if winning_moves:
+        # print("Find winning moves:", time.time() - start_total)
+        # prettyprint(winning_moves)
+        return random.choice(bb2m(winning_moves))
+
+    # 2. Block opponent immediate win
+    opponent_winning_moves = wm_bb(bb_opponent, bb_open)
+    if opponent_winning_moves:
+        # print("Block threats:", time.time() - start_total)
+        # prettyprint(opponent_winning_moves)
+        return random.choice(bb2m(opponent_winning_moves))
+
+    # 3. Create double threat
+    double_threat_moves = dt_bb(bb_current, bb_open)
+    if double_threat_moves:
+        # print("Find double threats:", time.time() - start_total)
+        # prettyprint(double_threat_moves)
+        return random.choice(bb2m(double_threat_moves))
+
+    # 4. Block opponent double threats
+    opponent_double_threats = dt_bb(bb_opponent, bb_open)
+    if opponent_double_threats:
+        counter_moves = cm_bb(bb_current, bb_open)
+        if counter_moves:
+            # print("Block double threats:", time.time() - start_total)
+            # prettyprint(counter_moves)
+            return random.choice(bb2m(counter_moves))
+        # Better block one threat than nothing
+        # print("Block one of multiple threats:", time.time() - start_total)
+        # prettyprint(opponent_double_threats)
+        return random.choice(bb2m(opponent_double_threats))
+
+    # Monte-Carlo
+    rs = make_random_u64(MC_N)
+    movemc = mc_bb(bb_current, bb_open, rs)
+    return random.choice(bb2m(movemc))
