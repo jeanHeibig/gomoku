@@ -7,6 +7,9 @@ Think the flag did not work in replay mode
 Started from replay white to move. Won with White, message was Black win (and the stone did not show)
 Tactical heuristic is not a good name, nor a good function -> replace it with move filtering by pairing, that's what it actually does
 
+Playing 3s+1 from position with white to start, there a bug where visibly the black bot runs out of time? weird alert from js 'Black wins'
+Opening launch from RAW_ROOT_POSITION = move_names_to_raw_position(["D5", "e4", "F4", "d3"]) game really werid result (max_ply = 5)
+
 ## Frontend / GUI
 
 --- HIGH PRIORITY ---

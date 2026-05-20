@@ -1,7 +1,7 @@
 import numba as nb
 import numpy as np
 
-from self_play.canonicalization import BB
+from self_play.canonicalization import BB, RawPosition
 
 
 WIN_MASKS = np.array(
@@ -130,3 +130,25 @@ def is_dead_draw(bb_current: BB, bb_opponent: BB) -> bool:
         and
         not is_winning(~bb_current)
     )
+
+
+def move_names_to_raw_position(move_names: list[str]) -> RawPosition:
+    bb_current = BB(0)
+    bb_opponent = BB(0)
+
+    current_player = len(move_names) % 2
+    for move_name in move_names:
+        i = 8 - int(move_name[1])
+        j = ord(move_name[0].lower()) - 97
+        cell = 8 * i + j
+        move = BB(1) << cell
+
+        if current_player:
+            bb_opponent |= move
+        else:
+            bb_current |= move
+
+        current_player = 1 - current_player
+
+    raw_position = RawPosition(bb_current, bb_opponent)
+    return raw_position

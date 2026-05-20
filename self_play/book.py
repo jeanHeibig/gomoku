@@ -26,7 +26,7 @@ DRAW = Outcome(0)
 LOSS = Outcome(-1)
 
 
-BOOK_VERSION = 1
+BOOK_VERSION = 2
 
 
 @dataclass(slots=True)
@@ -178,7 +178,7 @@ def value_to_logit(
 def select_move_from_book(
     canonical_legal_moves: CanonicalMoveArray,
     values: F32Array,
-    temperature: float = 1.0,
+    temperature: float = 1.2,
 ) -> CanonicalMove:
 
     logits = np.empty(len(values), dtype=F32)

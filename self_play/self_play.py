@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-from backend.players.bots.ab_bot.board import move_to_square
+from backend.players.bots.ab_bot.board import move_to_square, popcount
 
 from self_play.canonicalization import (
     U8,
@@ -10,6 +10,7 @@ from self_play.canonicalization import (
     CanonicalPosition,
     RawMove,
     CanonicalMove,
+    SymmetryTransform,
     canonicalize_position,
     uncanonicalize_move,
     get_canonical_legal_moves,
@@ -29,6 +30,7 @@ from self_play.book import (
 from self_play.board import (
     is_winning,
     is_dead_draw,
+    move_names_to_raw_position
 )
 from self_play.bot import (
     TT,
@@ -37,17 +39,16 @@ from self_play.bot import (
     alpha_beta_bot,
 )
 
-PLY_MAX = 16
+PLY_MAX = 5
+TEMPERATURE = 1
+
+RAW_ROOT_POSITION = move_names_to_raw_position(["D5", "e4", "F4", "d3"])
 
 ALPHA_BETA = False
 
-MAX_DEPTH = 14
-TT_BITS = 32
+MAX_DEPTH = 12
+TT_BITS = 24
 
-ROOT_POSITION = CanonicalPosition(
-    current=(BB(1) << 27),
-    opponent=(BB(1) << 36),
-)
 
 @dataclass(slots=True)
 class SelfPlayTraceItem:
@@ -55,6 +56,7 @@ class SelfPlayTraceItem:
 
     canonical_position: CanonicalPosition
     canonical_move: CanonicalMove
+    transform: SymmetryTransform
 
 
 SelfPlayTrace = list[SelfPlayTraceItem]
@@ -66,6 +68,23 @@ class SelfPlayResult:
 
     trace: SelfPlayTrace
     outcome: Outcome
+
+
+def trace_to_move_names(trace: SelfPlayTrace) -> str:
+    moves = []
+
+    for item in trace:
+
+        raw_move = uncanonicalize_move(
+            item.canonical_move,
+            item.transform,
+        )
+
+        moves.append(
+            move_to_square(raw_move)
+        )
+
+    return ','.join(moves)
 
 
 def backpropagate_game(
@@ -120,6 +139,7 @@ def choose_book_move(
     canonical_chosen_move = select_move_from_book(
         canonical_legal_moves,
         values,
+        TEMPERATURE,
     )
 
     raw_chosen_move = uncanonicalize_move(
@@ -130,6 +150,7 @@ def choose_book_move(
     trace_item = SelfPlayTraceItem(
         canonical_position,
         canonical_chosen_move,
+        transform,
     )
 
     return raw_chosen_move, trace_item
@@ -160,7 +181,6 @@ def choose_bot_move(
 
 def self_play_game(
     opening_book: OpeningBook,
-    initial_ply: int = 0,
 ) -> SelfPlayResult:
     """
     Play one self-play game.
@@ -169,10 +189,8 @@ def self_play_game(
         outcome from the perspective of the initial player.
     """
 
-    raw_position = RawPosition(
-        current=ROOT_POSITION.current,
-        opponent=ROOT_POSITION.opponent,
-    )
+    raw_position = RAW_ROOT_POSITION
+    INITIAL_PLY = int(popcount(RAW_ROOT_POSITION.current) + popcount(RAW_ROOT_POSITION.opponent))
 
     trace: SelfPlayTrace = []
 
@@ -181,7 +199,7 @@ def self_play_game(
     else:
         tt = create_empty_tt(0)
 
-    ply = initial_ply
+    ply = INITIAL_PLY
 
     while True:
 
@@ -216,7 +234,7 @@ def self_play_game(
 
         if is_winning(raw_position.opponent):
 
-            if (ply - initial_ply) % 2:
+            if (ply - INITIAL_PLY) % 2:
                 outcome = WIN
             else:
                 outcome = LOSS
@@ -239,14 +257,18 @@ def self_play_loop(
 
         result = self_play_game(opening_book)
 
-        # print(f"Game {game_index + 1}: {result.outcome}.")
+        if ALPHA_BETA and result.outcome:
+            print(
+                f"Game {game_index + 1}: {result.outcome}. "
+                f"Opening: {trace_to_move_names(result.trace)}"
+            )
 
         backpropagate_game(
             opening_book,
             result,
         )
 
-        if (game_index + 1) % 20_000 == 0:
+        if (game_index + 1) % 100_000 == 0:
 
             save_opening_book(
                 opening_book,
@@ -254,9 +276,9 @@ def self_play_loop(
             )
 
         # --- DEBUG ---
-        if (game_index + 1) % 2_000 == 0:
+        if (game_index + 1) % 1_000 == 0:
 
-            root_position = ROOT_POSITION
+            root_position, _ = canonicalize_position(RAW_ROOT_POSITION)
 
             root_entry = get_or_create_entry(
                 opening_book,
