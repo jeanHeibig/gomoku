@@ -1,0 +1,2024 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALPSURBVHhe7ZhNaxNRFIZDk0ynkybzgYi6EFQsIigq3bgRFES6EcSPpb/AYiludOPChf4BF9qNW/EXVAR3LvwRuhFUUDfRxloyR6aSGs57Uu/MnBuQewPP5uS+d859Mh+Z26C8Ty7T4AXX8AJ4wTW8AF5wDS+AF1zDC+AF1/ACeME1vABecA0vgBdcwwvgBdfwAnihCnGaUmoAz8lsQE5ith0I2fKoCCDKoUGJ7Nh5zDLO7JmDnAQRZqugIyDv07nD2KQE0Q/I7kBDGC9xe20dsxVRE1CQCM1ywmYDciOCIILxnF7UhlwdVAUQfYGGJT5vDYWs2bVPNMBsDXQF5H06kbWhaSDpQm4+EcYxTl2/C7m6qAso4I1LLD99tTP+45vH8D0QozQNrAig4SdcgMCfO/l3o3tHcYOE4yhgR0Dep5ULh2ARnLAV0L6oBXXO6pOXML8W1gQUdGNcTFni+TmYVxOrAooPX1BZiH7ivIrYFZD36cbifliUKSev3oH5tLEuoMD0XWGcLI1hHhtMRYDpn5xxtj98HgtMScAmLHA3EkvPfImpCJhpmr3hjbOwtALz2MC6gHfrj2BxphBtwXza2BVQ8tTnJL0OzqmMVQEdhT9CM+FemFcTawJWl47CYqryfmDvUrAjwHBn59qD5xQEZjdIOIYSVgSYnPrx6Po2lNVOj8BxNFAXcO/ycWheothIHWUe3lyE7yW+/fqb0UJXgOHLT3TgNGTjNINxSAK5uqgKiLqJ0DQibmmT2U5S7+BZzNZATcDarUvQrMTrD18hOyKZNdhPTNPiBRmyVdERYHjqd8J/bGnTADIyepeCioCwZ3rqb0CW8/bZMuQksoWLkK1CbQEv7l+B5iTCVhOyk+DZSQzHniRVqS1g+1c1ged2gzYxPwmeLUl9Af85XgAvuIYXwAuu4QXwgmt4AbzgGl4AL7iGF8ALruEF8IJr/AaXCGEj1ErU3wAAAABJRU5ErkJggg==">
+    <style>
+
+/* ── base.css ────────────────────────────────────────────────────────────── */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--page-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: var(--default-color);
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+#game-row {
+    display: flex;
+    gap: 30px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 70px);
+    grid-template-rows: repeat(8, 70px);
+    border-radius: 10px;
+    border: 10px solid var(--board-border);
+    overflow: hidden;
+    box-shadow: 0 2px 5px var(--board-shadow);
+}
+
+#app[data-transform="rot90"]   .board { transform: rotate(90deg); }
+#app[data-transform="rot90"]   .cell  { transform: rotate(-90deg); }
+#app[data-transform="rot180"]  .board { transform: rotate(180deg); }
+#app[data-transform="rot180"]  .cell  { transform: rotate(-180deg); }
+#app[data-transform="rot270"]  .board { transform: rotate(270deg); }
+#app[data-transform="rot270"]  .cell  { transform: rotate(-270deg); }
+#app[data-transform="mirror-h"] .board { transform: scaleY(-1); }
+#app[data-transform="mirror-h"] .cell  { transform: scaleY(-1); }
+#app[data-transform="mirror-v"] .board { transform: scaleX(-1); }
+#app[data-transform="mirror-v"] .cell  { transform: scaleX(-1); }
+#app[data-transform="diag-main"] .board { transform: rotate(90deg) scaleY(-1); }
+#app[data-transform="diag-main"] .cell  { transform: scaleY(-1) rotate(-90deg); }
+#app[data-transform="diag-anti"] .board { transform: rotate(90deg) scaleX(-1); }
+#app[data-transform="diag-anti"] .cell  { transform: scaleX(-1) rotate(-90deg); }
+
+.cell {
+    width: 70px;
+    height: 70px;
+    position: relative;
+    isolation: isolate;
+    cursor: pointer;
+}
+
+.board.no-click .cell       { cursor: default; }
+.cell[data-occupied="true"] { cursor: default; }
+#app.finished .cell         { cursor: auto; }
+
+.cell.light { background-color: var(--cell-light); }
+.cell.dark  { background-color: var(--cell-dark); }
+
+.cell[data-marker]::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+}
+.cell[data-marker="green"]::after  { background-color: var(--green-marked-cell); }
+.cell[data-marker="red"]::after    { background-color: var(--red-marked-cell); }
+.cell[data-marker="blue"]::after   { background-color: var(--blue-marked-cell); }
+.cell[data-marker="threat"]::after { background-color: var(--threat-marked-cell); }
+
+.cell.light[data-last-move] { background-color: var(--last-move-light); }
+.cell.dark[data-last-move]  { background-color: var(--last-move-dark); }
+
+.cell[data-win] .stone {
+    box-shadow:
+        0 0 12px var(--win-glow),
+        inset -4px -6px 8px var(--stone-shadow-dark),
+        inset 3px 4px 6px var(--stone-shadow-light);
+}
+
+.stone {
+    width: 52px;
+    height: 48px;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
+    box-shadow:
+        inset -4px -6px 8px var(--stone-shadow-dark),
+        inset 3px 4px 6px var(--stone-shadow-light);
+    transition: opacity 0.15s ease, transform 0.1s ease;
+    display: none;
+}
+
+.cell[data-state="black"] .stone,
+.cell[data-state="white"] .stone,
+.cell[data-preview] .stone,
+.stone.stone-label { display: block; }
+
+.cell[data-state="black"] .stone,
+.cell[data-preview="black"] .stone,
+.stone.stone-black {
+    background: radial-gradient(circle at 30% 30%, var(--stone-black-light), var(--stone-black-dark));
+}
+
+.cell[data-state="white"] .stone,
+.cell[data-preview="white"] .stone,
+.stone.stone-white {
+    background: radial-gradient(circle at 30% 30%, var(--stone-white-light), var(--stone-white-dark));
+    border: 1px solid var(--stone-white-border);
+}
+
+.cell[data-preview] .stone {
+    opacity: 0.35;
+    filter: brightness(1.2);
+    transform: translate(-50%, -50%) scale(0.95) rotate(-10deg);
+    cursor: pointer;
+}
+
+.move-number {
+    position: absolute;
+    z-index: 3;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+#app:not(.morpion-mode) .move-number {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--move-number-on-black);
+    text-shadow: 0 0 4px var(--move-number-shadow-dark);
+    pointer-events: none;
+}
+
+#app:not(.morpion-mode) .cell[data-state="white"] .stone + .move-number {
+    color: var(--move-number-on-white);
+    text-shadow: 0 0 4px var(--move-number-shadow-light);
+}
+
+#app.morpion-mode .stone {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 800;
+    font-family: Arial, sans-serif;
+    color: var(--morpion-piece);
+}
+
+#app.morpion-mode .cell[data-state="black"] .stone::before,
+#app.morpion-mode .cell[data-preview="black"] .stone::before,
+#app.morpion-mode .stone-black::before { content: "X"; }
+
+#app.morpion-mode .cell[data-state="white"] .stone::before,
+#app.morpion-mode .cell[data-preview="white"] .stone::before,
+#app.morpion-mode .stone-white::before { content: "O"; }
+
+#app.morpion-mode .cell[data-win] .stone { color: var(--morpion-win); }
+
+/* ── components.css ──────────────────────────────────────────────────────── */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#player-black { order: 1; }
+#controls     { order: 2; }
+#player-white { order: 3; }
+
+.local-black #player-black { order: 3; }
+.local-black #player-white { order: 1; }
+
+.player {
+    background: var(--panel-bg);
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    box-shadow: 0 2px 5px var(--panel-shadow);
+}
+
+.stone-label {
+    width: 26px;
+    height: 24px;
+    position: static;
+    transform: scale(0.9) rotate(-10deg);
+}
+
+#app.morpion-mode .stone-label { transform: translate(-10%, -10%) scale(0.5); }
+
+.player-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.bot-label {
+    color: var(--bot-label-text);
+    background: var(--bot-label-bg);
+    border: 1px solid var(--bot-label-border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.clock {
+    font-size: 24px;
+    margin-top: 10px;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.active-clock .colon { animation: blink 2s infinite; }
+
+@keyframes blink {
+    0%   { opacity: 1; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#app.finished .colon, .clock:not(.active-clock) .colon { animation: none; }
+
+.centi-seconds { font-size: 0.6em; margin-left: 2px; opacity: 0.8; }
+.clock.low-time { color: var(--low-time); }
+.player-active  { outline: 3px solid var(--player-active-outline); }
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#new-game-btn {
+    margin: 20px 0;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    cursor: pointer;
+    box-shadow: 0 2px 5px var(--button-shadow);
+    display: block;
+    transition: all 0.2s ease;
+}
+
+#new-game-btn:hover { background: var(--button-bg-hover); transform: scale(1.05); }
+
+/* ── view-menu dropdown ───────────────────────────────────────────────────── */
+#view-menu {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 200;
+}
+
+#view-menu-btn {
+    background: none;
+    border: none;
+    color: var(--default-color);
+    cursor: pointer;
+    font-size: 1.4em;
+    line-height: 1;
+    padding: 4px 8px;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+}
+#view-menu-btn:hover { opacity: 1; }
+
+.view-menu-panel {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    background: var(--panel-bg);
+    border: 1px solid var(--button-border);
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+    box-shadow: 0 4px 14px var(--panel-shadow);
+    min-width: 190px;
+}
+.view-menu-panel.hidden { display: none; }
+
+.view-menu-row {
+    display: flex;
+    gap: 6px;
+}
+
+.view-menu-panel > button,
+.view-menu-row   > button {
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 0.85em;
+    border-radius: 7px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--default-color);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    white-space: nowrap;
+}
+.view-menu-panel > button:hover,
+.view-menu-row   > button:hover { background: var(--button-bg-hover); }
+
+.view-menu-panel button.vm-active {
+    outline: 2px solid var(--player-active-outline);
+    outline-offset: -2px;
+}
+
+.view-menu-panel kbd {
+    font-size: 0.75em;
+    opacity: 0.5;
+    font-family: monospace;
+}
+
+/* ── board nav buttons ────────────────────────────────────────────────────── */
+#nav-btns {
+    /* 8×70px board content + 2×10px border = 580px total board width */
+    width: 580px;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+#nav-btns button {
+    background: none;
+    border: none;
+    color: var(--default-color);
+    cursor: pointer;
+    font-size: 1.3em;
+    padding: 2px 12px;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+}
+
+#nav-btns button:hover { opacity: 1; }
+
+.timer-selector, .level-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+#app:not(.finished):not(.editor-mode) .controls { display: none; }
+
+#time-slider, #increment-slider, #level {
+    width: 150px;
+    cursor: pointer;
+    accent-color: var(--slider-accent);
+}
+
+.editor-mode .board { border: 10px dashed var(--editor-board-border); }
+.editor-mode .cell  {
+    cursor: crosshair;
+    outline: 4px dashed var(--editor-cell-outline);
+    outline-offset: -2px;
+}
+
+/* ── themes.css ──────────────────────────────────────────────────────────── */
+body[data-theme="light"] {
+    --page-bg: #eee;
+    --default-color: black;
+    --board-shadow: rgba(0,0,0,0.2);
+    --board-border: rgb(85,50,25,1);
+    --cell-light: #f0d9b5;
+    --cell-dark: #b58863;
+    --last-move-light: #c6d26b;
+    --last-move-dark: #a9a23b;
+    --green-marked-cell: rgba(119,255,61,0.5);
+    --red-marked-cell: rgba(255,61,61,0.5);
+    --blue-marked-cell: rgba(0,27,90,0.5);
+    --threat-marked-cell: rgba(255,0,0,0.8);
+    --win-glow: rgba(255,0,0,0.8);
+    --stone-black-light: #555;
+    --stone-black-dark: #000;
+    --stone-white-light: #fff;
+    --stone-white-dark: #ccc;
+    --stone-white-border: #999;
+    --stone-shadow-dark: rgba(0,0,0,0.4);
+    --stone-shadow-light: rgba(255,255,255,0.2);
+    --move-number-on-black: #fff;
+    --move-number-on-white: #000;
+    --move-number-shadow-dark: rgba(0,0,0,0.8);
+    --move-number-shadow-light: rgba(128,128,128,0.8);
+    --morpion-piece: #222;
+    --morpion-win: #d32f2f;
+    --panel-bg: white;
+    --panel-shadow: rgba(0,0,0,0.2);
+    --bot-label-text: #8a4f22;
+    --bot-label-bg: #f0d9b5;
+    --bot-label-border: #b58863;
+    --low-time: #d32f2f;
+    --player-active-outline: #b58863;
+    --button-bg: white;
+    --button-bg-hover: #f3f3f3;
+    --button-border: grey;
+    --button-shadow: rgba(0,0,0,0.2);
+    --slider-accent: #b58863;
+    --editor-board-border: rgba(255,0,0,0.9);
+    --editor-cell-outline: rgba(0,0,0,0.3);
+}
+
+body[data-theme="dark"] {
+    --page-bg: #222;
+    --default-color: #ddd;
+    --board-shadow: rgba(128,128,128,0.5);
+    --board-border: rgb(0,0,0,0);
+    --cell-light: #4a4a4a;
+    --cell-dark: #2b2b2b;
+    --last-move-light: #5c6f2f;
+    --last-move-dark: #4a5a26;
+    --green-marked-cell: rgba(36,128,34,0.5);
+    --red-marked-cell: rgba(162,36,34,0.5);
+    --blue-marked-cell: rgba(17,36,81,0.5);
+    --threat-marked-cell: rgba(192,0,0,0.8);
+    --win-glow: #ad2929;
+    --stone-black-light: #333;
+    --stone-black-dark: #000;
+    --stone-white-light: #ddd;
+    --stone-white-dark: #999;
+    --stone-white-border: #777;
+    --stone-shadow-dark: rgba(0,0,0,0.4);
+    --stone-shadow-light: rgba(255,255,255,0.2);
+    --move-number-on-black: #fff;
+    --move-number-on-white: #000;
+    --move-number-shadow-dark: rgba(0,0,0,0.8);
+    --move-number-shadow-light: rgba(128,128,128,0.8);
+    --morpion-piece: #ddd;
+    --morpion-win: #ad2929;
+    --panel-bg: #333;
+    --panel-shadow: rgba(128,128,128,0.5);
+    --bot-label-text: #aaa;
+    --bot-label-bg: #555;
+    --bot-label-border: #777;
+    --low-time: #ad2929;
+    --player-active-outline: #777;
+    --button-bg: #555;
+    --button-bg-hover: #666;
+    --button-border: grey;
+    --button-shadow: rgba(255,255,255,0.2);
+    --slider-accent: #aaa;
+    --editor-board-border: rgba(173,41,41,0.9);
+    --editor-cell-outline: rgba(255,255,255,0.3);
+}
+
+body[data-theme="blue"] {
+    --page-bg: #eef;
+    --default-color: black;
+    --board-shadow: rgba(0,0,0,0.2);
+    --board-border: rgb(25,50,85,1);
+    --cell-light: #fffef3;
+    --cell-dark: #7ca2be;
+    --last-move-light: #c9f0bd;
+    --last-move-dark: #80b861;
+    --green-marked-cell: rgba(75,255,48,0.5);
+    --red-marked-cell: rgba(255,79,50,0.7);
+    --blue-marked-cell: rgba(35,46,255,0.7);
+    --threat-marked-cell: rgba(255,0,0,0.8);
+    --win-glow: rgba(255,0,0,0.8);
+    --stone-black-light: #333;
+    --stone-black-dark: #000;
+    --stone-white-light: #eef;
+    --stone-white-dark: #bbb;
+    --stone-white-border: #999;
+    --stone-shadow-dark: rgba(0,0,0,0.4);
+    --stone-shadow-light: rgba(255,255,255,0.2);
+    --move-number-on-black: #fff;
+    --move-number-on-white: #000;
+    --move-number-shadow-dark: rgba(0,0,0,0.8);
+    --move-number-shadow-light: rgba(128,128,128,0.8);
+    --morpion-piece: #111;
+    --morpion-win: #d32f2f;
+    --panel-bg: #7ca2be;
+    --panel-shadow: rgba(0,0,0,0.2);
+    --bot-label-text: #000;
+    --bot-label-bg: #f6cb9a;
+    --bot-label-border: #000;
+    --low-time: #d32f2f;
+    --player-active-outline: #193255;
+    --button-bg: #f6cb9a;
+    --button-bg-hover: #eca351;
+    --button-border: grey;
+    --button-shadow: rgba(0,0,0,0.2);
+    --slider-accent: #f6cb9a;
+    --editor-board-border: rgba(255,0,0,0.9);
+    --editor-cell-outline: rgba(25,50,85,0.5);
+}
+
+body[data-theme="green"] {
+    --page-bg: rgb(143,152,143);
+    --default-color: black;
+    --board-shadow: rgba(0,0,0,0.2);
+    --board-border: rgb(18,62,36);
+    --cell-light: #fff3fe;
+    --cell-dark: #3f7a62;
+    --last-move-light: #c9f0bd;
+    --last-move-dark: #80b861;
+    --green-marked-cell: rgba(89,233,0,0.822);
+    --red-marked-cell: rgba(208,22,22,0.5);
+    --blue-marked-cell: rgba(9,15,121,0.5);
+    --threat-marked-cell: rgba(255,0,0,0.8);
+    --win-glow: rgba(255,0,0,0.8);
+    --stone-black-light: #333;
+    --stone-black-dark: #000;
+    --stone-white-light: #efe;
+    --stone-white-dark: #bbb;
+    --stone-white-border: #999;
+    --stone-shadow-dark: rgba(0,0,0,0.4);
+    --stone-shadow-light: rgba(255,255,255,0.2);
+    --move-number-on-black: #fff;
+    --move-number-on-white: #000;
+    --move-number-shadow-dark: rgba(0,0,0,0.8);
+    --move-number-shadow-light: rgba(128,128,128,0.8);
+    --morpion-piece: #111;
+    --morpion-win: #d32f2f;
+    --panel-bg: #7cbea2;
+    --panel-shadow: rgba(0,0,0,0.2);
+    --bot-label-text: #000;
+    --bot-label-bg: #dcced5;
+    --bot-label-border: #000;
+    --low-time: #d32f2f;
+    --player-active-outline: #0d2e12;
+    --button-bg: #dcced5;
+    --button-bg-hover: #fff6fb;
+    --button-border: grey;
+    --button-shadow: rgba(0,0,0,0.2);
+    --slider-accent: #dcced5;
+    --editor-board-border: rgba(255,0,0,0.9);
+    --editor-cell-outline: rgba(25,85,50,0.5);
+}
+
+    </style>
+</head>
+
+<body>
+    <div id="app" class="app-container morpion-mode">
+
+        <!-- loader.js: apply saved preferences before first paint -->
+        <script>
+        (function () {
+            var morpion = localStorage.getItem("morpionMode");
+            if (morpion === "false") document.getElementById("app").classList.remove("morpion-mode");
+            var theme = localStorage.getItem("theme");
+            if (theme) document.body.setAttribute("data-theme", theme);
+        })();
+        </script>
+
+        <div id="game-row">
+            <div id="board" class="board"></div>
+
+            <div class="sidebar">
+
+                <div id="player-black" class="player player-active">
+                    <div id="player-name-black" class="player-name">
+                        <span class="stone stone-label stone-black"></span>
+                        <span class="player-name-text">Black</span>
+                    </div>
+                    <div id="clock-black" class="clock">
+                        <span class="minutes"></span>
+                        <span class="colon">:</span>
+                        <span class="seconds"></span>
+                        <span class="centi-seconds"></span>
+                    </div>
+                </div>
+
+                <div id="controls" class="controls">
+                    <button id="new-game-btn">NEW GAME</button>
+                    <div class="timer-selector">
+                        <label><span id="time-label"></span></label>
+                        <input type="range" id="time-slider" min="0" step="1">
+                    </div>
+                    <div class="timer-selector">
+                        <label>+<span id="increment-label"></span></label>
+                        <input type="range" id="increment-slider" min="0" step="1">
+                    </div>
+                    <div class="level-selector">
+                        <label id="level-label" for="level">Hard</label>
+                        <input type="range" id="level" min="1" max="4" value="3" step="1">
+                    </div>
+                </div>
+
+                <div id="player-white" class="player">
+                    <div id="player-name-white" class="player-name">
+                        <span class="stone stone-label stone-white"></span>
+                        <span class="player-name-text">White</span>
+                    </div>
+                    <div id="clock-white" class="clock">
+                        <span class="minutes"></span>
+                        <span class="colon">:</span>
+                        <span class="seconds"></span>
+                        <span class="centi-seconds"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="nav-btns">
+            <button id="btn-begin" title="Begin (Home)">⏮</button>
+            <button id="btn-prev"  title="Previous (←)">◀</button>
+            <button id="btn-next"  title="Next (→)">▶</button>
+            <button id="btn-end"   title="End (End)">⏭</button>
+        </div>
+    </div>
+
+    <div id="view-menu">
+        <button id="view-menu-btn" title="View options">☰</button>
+        <div id="view-menu-panel" class="view-menu-panel hidden">
+            <button id="btn-toggle-bot">Toggle bot <kbd>Space</kbd></button>
+            <button id="btn-morpion">Morpion <kbd>M</kbd></button>
+            <button id="btn-editor">Editor <kbd>E</kbd></button>
+            <div class="view-menu-row">
+                <button id="btn-flip-h">↕ Flip <kbd>F</kbd></button>
+                <button id="btn-flip-v">↔ Flip <kbd>⇧F</kbd></button>
+            </div>
+            <div class="view-menu-row">
+                <button id="btn-rotate-cw">↻ <kbd>R</kbd></button>
+                <button id="btn-rotate-ccw">↺ <kbd>⇧R</kbd></button>
+            </div>
+            <div class="view-menu-row">
+                <button id="btn-theme-prev">◀ Theme <kbd>⇧D</kbd></button>
+                <button id="btn-theme-next">Theme ▶ <kbd>D</kbd></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- All JS modules inlined in dependency order. -->
+    <script type="module">
+
+    // ── constants.js ──────────────────────────────────────────────────────────
+    const BOARD_SIZE = 8;
+    const TIME_PRESETS = [3, 15, 30, 60, 120, 180, 300, 600, 900, 1800, 3600];
+    const INCREMENT_PRESETS = [0, 1, 2, 3, 5, 10, 15, 30, 60];
+    const THEMES = ["light", "dark", "blue", "green"];
+    const LEVEL_LABELS = ["Random", "Easy", "Medium", "Hard", "Expert"];
+    const BOARD_TRANSFORMS = ["identity", "rot90", "rot180", "rot270", "mirror-h", "diag-anti", "mirror-v", "diag-main"];
+
+    // ── bot.js ────────────────────────────────────────────────────────────────
+    const MASK64 = 0xFFFFFFFFFFFFFFFFn;
+
+    const BT = [
+        1190112520884487201n,
+        2380225041768974402n,
+        4760450083537948804n,
+        9520900167075897608n,
+         595056260442243600n,
+    ];
+
+    const WMA = [
+        31n,62n,124n,248n,
+        7936n,15872n,31744n,63488n,
+        2031616n,4063232n,8126464n,16252928n,
+        520093696n,1040187392n,2080374784n,4160749568n,
+        133143986176n,266287972352n,532575944704n,1065151889408n,
+        34084860461056n,68169720922112n,136339441844224n,272678883688448n,
+        8725724278030336n,17451448556060672n,34902897112121344n,69805794224242688n,
+        2233785415175766016n,4467570830351532032n,8935141660703064064n,17870283321406128128n,
+        4311810305n,1103823438080n,282578800148480n,72340172838010880n,
+        8623620610n,2207646876160n,565157600296960n,144680345676021760n,
+        17247241220n,4415293752320n,1130315200593920n,289360691352043520n,
+        34494482440n,8830587504640n,2260630401187840n,578721382704087040n,
+        68988964880n,17661175009280n,4521260802375680n,1157442765408174080n,
+        137977929760n,35322350018560n,9042521604751360n,2314885530816348160n,
+        275955859520n,70644700037120n,18085043209502720n,4629771061632696320n,
+        551911719040n,141289400074240n,36170086419005440n,9259542123265392640n,
+        68853957121n,137707914242n,275415828484n,550831656968n,
+        17626613022976n,35253226045952n,70506452091904n,141012904183808n,
+        4512412933881856n,9024825867763712n,18049651735527424n,36099303471054848n,
+        1155177711073755136n,2310355422147510272n,4620710844295020544n,9241421688590041088n,
+        4328785936n,8657571872n,17315143744n,34630287488n,
+        1108169199616n,2216338399232n,4432676798464n,8865353596928n,
+        283691315101696n,567382630203392n,1134765260406784n,2269530520813568n,
+        72624976666034176n,145249953332068352n,290499906664136704n,580999813328273408n,
+    ];
+
+    const MOVES = Array.from({length: 64}, (_, k) => 1n << BigInt(k));
+
+    function getWinningTilesBB(bb) {
+        let res = 0n;
+        for (let i = 0; i < 96; i++) {
+            const m = WMA[i];
+            if ((bb & m) === m) res |= m;
+        }
+        return res;
+    }
+
+    function wmBB(bbCurrent, bbOpen) {
+        let res = 0n;
+        for (let k = 0; k < 5; k++) {
+            const move = BT[k] & bbOpen;
+            const wt   = getWinningTilesBB(bbCurrent | move);
+            if (wt !== 0n) res |= (wt & move);
+        }
+        return res;
+    }
+
+    function hasMultipleBits(bb) {
+        return bb !== 0n && (bb & (bb - 1n)) !== 0n;
+    }
+
+    function dtBB(bbCurrent, bbOpen) {
+        let res = 0n;
+        for (let k = 0; k < 64; k++) {
+            const move = MOVES[k];
+            if ((move & bbOpen) !== 0n)
+                if (hasMultipleBits(wmBB(bbCurrent | move, bbOpen ^ move)))
+                    res |= move;
+        }
+        return res;
+    }
+
+    function cmBB(bbCurrent, bbOpen) {
+        let res = 0n;
+        const bbOpponent = (MASK64 ^ bbOpen) ^ bbCurrent;
+        for (let k = 0; k < 64; k++) {
+            const move = MOVES[k];
+            if ((move & bbOpen) !== 0n) {
+                const bbAfter     = bbCurrent | move;
+                const bbRemaining = bbOpen    ^ move;
+                if (wmBB(bbAfter, bbRemaining) !== 0n) {
+                    res |= move;
+                } else if (dtBB(bbOpponent, bbRemaining) === 0n) {
+                    res |= move;
+                }
+            }
+        }
+        return res;
+    }
+
+    function makeRandomU64() {
+        const hi = BigInt(Math.floor(Math.random() * 0x100000000));
+        const lo = BigInt(Math.floor(Math.random() * 0x100000000));
+        return (hi << 32n) | lo;
+    }
+
+    function mcBB(bbCurrent, bbOpen, n) {
+        const scores = new Array(64).fill(0);
+        for (let t = 0; t < n; t++) {
+            const wt = getWinningTilesBB(bbCurrent | (makeRandomU64() & bbOpen)) & bbOpen;
+            for (let k = 0; k < 64; k++)
+                if ((wt & MOVES[k]) !== 0n) scores[k]++;
+        }
+        let bestK = -1, bestScore = -1;
+        for (let k = 0; k < 64; k++)
+            if ((MOVES[k] & bbOpen) !== 0n && scores[k] > bestScore)
+                { bestScore = scores[k]; bestK = k; }
+        return bestK;
+    }
+
+    function bb2m(bb) {
+        const out = [];
+        for (let k = 0; k < 64; k++)
+            if ((bb & MOVES[k]) !== 0n) out.push(k);
+        return out;
+    }
+
+    function pick(bb) {
+        const ms = bb2m(bb);
+        return ms[Math.floor(Math.random() * ms.length)];
+    }
+
+    function randomOpen(bbOpen) {
+        const ms = bb2m(bbOpen);
+        return ms[Math.floor(Math.random() * ms.length)];
+    }
+
+    function boardToBB(board, playerValue) {
+        let bb = 0n;
+        for (let r = 0; r < 8; r++)
+            for (let c = 0; c < 8; c++)
+                if (board[r][c] === playerValue) bb |= MOVES[r * 8 + c];
+        return bb;
+    }
+
+    function bbToTiles(bb) {
+        const out = [];
+        for (let k = 0; k < 64; k++)
+            if ((bb & MOVES[k]) !== 0n) out.push([k >> 3, k & 7]);
+        return out;
+    }
+
+    function isWinning(bb) {
+        for (let i = 0; i < 96; i++) {
+            const m = WMA[i];
+            if ((bb & m) === m) return true;
+        }
+        return false;
+    }
+
+    function isDeadDraw(bbCurrent, bbOpponent) {
+        return !isWinning(MASK64 ^ bbOpponent) && !isWinning(MASK64 ^ bbCurrent);
+    }
+
+    function computeWin(board, player) {
+        return bbToTiles(getWinningTilesBB(boardToBB(board, player + 1)));
+    }
+
+    function isBoardFull(board) {
+        for (let r = 0; r < 8; r++)
+            for (let c = 0; c < 8; c++)
+                if (board[r][c] === 0) return false;
+        return true;
+    }
+
+    function computeTactics(board, currentPlayer) {
+        const bbCur  = boardToBB(board, currentPlayer + 1);
+        const bbOpp  = boardToBB(board, 2 - currentPlayer);
+        const bbOpen = MASK64 ^ (bbCur | bbOpp);
+
+        // 1. Immediate win
+        let forced = wmBB(bbCur, bbOpen);
+        if (forced === 0n) {
+            // 2. Opponent winning threat (must block)
+            forced = wmBB(bbOpp, bbOpen);
+        }
+        if (forced === 0n) {
+            // 3. Current player's double threats
+            forced = dtBB(bbCur, bbOpen);
+        }
+        if (forced === 0n) {
+            // 4. Opponent double threats → try counter, else show opponent's threats
+            const ot = dtBB(bbOpp, bbOpen);
+            if (ot !== 0n) {
+                const cm = cmBB(bbCur, bbOpen);
+                forced = cm !== 0n ? cm : ot;
+            }
+        }
+
+        const result = Array.from({length: 8}, () => Array(8).fill(0));
+        for (let k = 0; k < 64; k++)
+            if ((forced & MOVES[k]) !== 0n) result[k >> 3][k & 7] = 1;
+        return result;
+    }
+
+    function computeBotMove(board, currentPlayer, level) {
+        const bbCur  = boardToBB(board, currentPlayer + 1);
+        const bbOpp  = boardToBB(board, 2 - currentPlayer);
+        const bbOpen = MASK64 ^ (bbCur | bbOpp);
+
+        if (level === 0) { const k = randomOpen(bbOpen); return [k >> 3, k & 7]; }
+
+        const MC_BY_LEVEL = [1, 10, 100, 10_000];
+        const mcN = MC_BY_LEVEL[level] ?? 1;
+
+        const wm = wmBB(bbCur, bbOpen);
+        if (wm !== 0n) { const k = pick(wm); return [k >> 3, k & 7]; }
+
+        if (level >= 1) {
+            const owm = wmBB(bbOpp, bbOpen);
+            if (owm !== 0n) { const k = pick(owm); return [k >> 3, k & 7]; }
+        }
+
+        if (level >= 2) {
+            const dt = dtBB(bbCur, bbOpen);
+            if (dt !== 0n) { const k = pick(dt); return [k >> 3, k & 7]; }
+        }
+
+        if (level >= 3) {
+            const odt = dtBB(bbOpp, bbOpen);
+            if (odt !== 0n) {
+                const cm = cmBB(bbCur, bbOpen);
+                const k  = pick(cm !== 0n ? cm : odt);
+                return [k >> 3, k & 7];
+            }
+        }
+
+        const k = mcBB(bbCur, bbOpen, mcN);
+        if (k === -1) { const idx = randomOpen(bbOpen); return [idx >> 3, idx & 7]; }
+        return [k >> 3, k & 7];
+    }
+
+    // ── Bot worker ────────────────────────────────────────────────────────────
+    // Runs the bot (JS or WASM) off the main thread so the clock can tick
+    // freely and flag the bot if time runs out while it is thinking.
+    const BOT_WORKER_SRC = `
+const WASM_B64 = "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IAFCgICEkMCAggiDUBuEQoCAiKCAgYQQQgAgAUKAgIiggIGEEINQG4RCgICQwICCiCBCACABQoCAkMCAgoggg1AbhEKAgKCAgYSQwABCACABQoCAoICBhJDAAINQG4RCgICAiKCAgYQQQgAgAUKAgICIoICBhBCDUBuEQoCAgJDAgIKIIEIAIAFCgICAkMCAgoggg1AbhEKAgICggIGEkMAAQgAgAUKAgICggIGEkMAAg1AbhEKAgIDAgIKIoIB/QgAgAUKAgIDAgIKIoIB/g1AbhCEMQqCgoKAgQgAgAUKgoKCgIINQG0KQkJCQEEIAIAFCkJCQkBCDUBuEQsDAwMDAAEIAIAFCwMDAwMAAg1AbhEKAgYGBgQFCACABQoCBgYGBAYNQG4RCgKCgoKAgQgAgAUKAoKCgoCCDUBuEQoDAwMDAwABCACABQoDAwMDAwACDUBuEQoCAgYGBgQFCACABQoCAgYGBgQGDUBuEQoCAgoKCggJCACABQoCAgoKCggKDUBuEQoCAwMDAwMAAQgAgAUKAgMDAwMDAAINQG4RCgICAgYGBgQFCACABQoCAgIGBgYEBg1AbhEKAgICCgoKCAkIAIAFCgICAgoKCggKDUBuEQoCAgISEhIQEQgAgAUKAgICEhISEBINQG4RCgICAgIGBgYEBQgAgAUKAgICAgYGBgQGDUBuEQoCAgICCgoKCAkIAIAFCgICAgIKCgoICg1AbhEKAgICAhISEhARCACABQoCAgICEhISEBINQG4RCgICAgIiIiIgIQgAgAUKAgICAiIiIiAiDUBuEIQ1CgoiggIEEQgAgAEKCiKCAgQSDUBtCgYSQwIACQgAgAEKBhJDAgAKDUBuEQoSQwICCCEIAIABChJDAgIIIg1AbhEKIoICBhBBCACAAQoiggIGEEINQG4RCgIKIoICBBEIAIABCgIKIoICBBINQG4RCgISQwICCCEIAIABCgISQwICCCINQG4RCgIiggIGEEEIAIABCgIiggIGEEINQG4RCgJDAgIKIIEIAIABCgJDAgIKIIINQG4RCgICEkMCAgghCACAAQoCAhJDAgIIIg1AbhEKAgIiggIGEEEIAIABCgICIoICBhBCDUBuEQoCAkMCAgoggQgAgAEKAgJDAgIKIIINQG4RCgICggIGEkMAAQgAgAEKAgKCAgYSQwACDUBuEQoCAgIiggIGEEEIAIABCgICAiKCAgYQQg1AbhEKAgICQwICCiCBCACAAQoCAgJDAgIKIIINQG4RCgICAoICBhJDAAEIAIABCgICAoICBhJDAAINQG4RCgICAwICCiKCAf0IAIABCgICAwICCiKCAf4NQG4QhDkKgoKCgIEIAIABCoKCgoCCDUBtCkJCQkBBCACAAQpCQkJAQg1AbhELAwMDAwABCACAAQsDAwMDAAINQG4RCgIGBgYEBQgAgAEKAgYGBgQGDUBuEQoCgoKCgIEIAIABCgKCgoKAgg1AbhEKAwMDAwMAAQgAgAEKAwMDAwMAAg1AbhEKAgIGBgYEBQgAgAEKAgIGBgYEBg1AbhEKAgIKCgoICQgAgAEKAgIKCgoICg1AbhEKAgMDAwMDAAEIAIABCgIDAwMDAwACDUBuEQoCAgIGBgYEBQgAgAEKAgICBgYGBAYNQG4RCgICAgoKCggJCACAAQoCAgIKCgoICg1AbhEKAgICEhISEBEIAIABCgICAhISEhASDUBuEQoCAgICBgYGBAUIAIABCgICAgIGBgYEBg1AbhEKAgICAgoKCggJCACAAQoCAgICCgoKCAoNQG4RCgICAgISEhIQEQgAgAEKAgICAhISEhASDUBuEQoCAgICIiIiICEIAIABCgICAgIiIiIgIg1AbhCEDQh9CACABQh+DUBtCgICAgICAgIB4QgAgAUKAgICAgICAgAhUG4RCPkIAIAFCPoNQG4RC/ABCACABQvwAg1AbhEL4AUIAIAFC+AGDUBuEQoA+QgAgAUKAPoNQG4RCgPwAQgAgAUKA/ACDUBuEQoD4AUIAIAFCgPgBg1AbhEKA8ANCACABQoDwA4NQG4RCgID8AEIAIAFCgID8AINQG4RCgID4AUIAIAFCgID4AYNQG4RCgIDwA0IAIAFCgIDwA4NQG4RCgIDgB0IAIAFCgIDgB4NQG4RCgICA+AFCACABQoCAgPgBg1AbhEKAgIDwA0IAIAFCgICA8AODUBuEQoCAgOAHQgAgAUKAgIDgB4NQG4RCgICAwA9CACABQoCAgMAPg1AbhEKAgICA8ANCACABQoCAgIDwA4NQG4RCgICAgOAHQgAgAUKAgICA4AeDUBuEQoCAgIDAD0IAIAFCgICAgMAPg1AbhEKAgICAgB9CACABQoCAgICAH4NQG4RCgICAgIDgB0IAIAFCgICAgIDgB4NQG4RCgICAgIDAD0IAIAFCgICAgIDAD4NQG4RCgICAgICAH0IAIAFCgICAgICAH4NQG4RCgICAgICAPkIAIAFCgICAgICAPoNQG4RCgICAgICAwA9CACABQoCAgICAgMAPg1AbhEKAgICAgICAH0IAIAFCgICAgICAgB+DUBuEQoCAgICAgIA+QgAgAUKAgICAgICAPoNQG4RCgICAgICAgPwAQgAgAUKAgICAgICA/ACDUBuEQoCAgICAgICAH0IAIAFCgICAgICAgIAfg1AbhEKAgICAgICAgD5CACABQoCAgICAgICAPoNQG4RCgICAgICAgID8AEIAIAFCgICAgICAgID8AINQG4QhD0KAgoSIkCBCACABQoCChIiQIINQG0KBgoSIEEIAIAFCgYKEiBCDUBuEQoCAhIiQoMAAQgAgAUKAgISIkKDAAINQG4RCgICAiJCgwIABQgAgAUKAgICIkKDAgAGDUBuEQoKEiJAgQgAgAUKChIiQIINQG4RCgISIkKDAAEIAIAFCgISIkKDAAINQG4RCgICIkKDAgAFCACABQoCAiJCgwIABg1AbhEKAgICQoMCAgQJCACABQoCAgJCgwICBAoNQG4RChIiQoMAAQgAgAUKEiJCgwACDUBuEQoCIkKDAgAFCACABQoCIkKDAgAGDUBuEQoCAkKDAgIECQgAgAUKAgJCgwICBAoNQG4RCgICAoMCAgYIEQgAgAUKAgICgwICBggSDUBuEQoiQoMCAAUIAIAFCiJCgwIABg1AbhEKAkKDAgIECQgAgAUKAkKDAgIECg1AbhEKAgKDAgIGCBEIAIAFCgICgwICBggSDUBuEQoCAgMCAgYKECEIAIAFCgICAwICBgoQIg1AbhEKQoMCAgQJCACABQpCgwICBAoNQG4RCgKDAgIGCBEIAIAFCgKDAgIGCBINQG4RCgIDAgIGChAhCACABQoCAwICBgoQIg1AbhEKAgICAgYKEiBBCACABQoCAgICBgoSIEINQG4RCoMCAgYIEQgAgAUKgwICBggSDUBuEQoDAgIGChAhCACABQoDAgIGChAiDUBuEQoCAgIGChIgQQgAgAUKAgICBgoSIEINQG4RCgICAgIKEiJAgQgAgAUKAgICAgoSIkCCDUBuEQsCAgYKECEIAIAFCwICBgoQIg1AbhEKAgIGC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AkIANwMIIAJCADcDAEEAIQYDQCAGKQPQj8CAACIDIA6DIAiEIREgA0J/hSAOgyAJhCEQQdCTwIAAIQVBgHohBANAAkACQCAEQeiGwIAAaikDACIDIBGDIANRDQAgAyAQgyADUg0BCyACIAUtAABqIgAgAC0AAEEBaiIAQf8BIABB/wFJGzoAACACIAVBAWotAABqIgAgAC0AAEEBaiIAQf8BIABB/wFJGzoAACACIAVBAmotAABqIgAgAC0AAEEBaiIAQf8BIABB/wFJGzoAACACIAVBA2otAABqIgAgAC0AAEEBaiIAQf8BIABB/wFJGzoAACACIAVBBGotAABqIgAgAC0AAEEBaiIAQf8BIABB/wFJGzoAAAsgBUEFaiEFIARBCGoiBA0ACyAGQQhqIgZBgARHDQALIAJBkAFqIAIgDyAOgxCBgICAACACIAIpAJEBNwNAIAIgAikAmQE3A0ggAiACKQChATcDUCACIAIpAKkBNwNYIAIgAikAsQE3A2AgAiACKQC5ATcDaCACIAIpAMEBNwNwIAIgAikAyAE3AHcCQCACKALQASIBDQBBACEEIAJBkAFqQQBBgAL8CwBBACkDwJnAgAAhCgNAIApCrf7V5NSF/ajYAH5Cz4Keu+/v3oIUfCIKIA6DIAiEIQNBgHohBUIAIRADQCAFQYCHwIAAaikDACIRQgAgESARIAODURsgBUH4hsCAAGopAwAiEUIAIBEgESADg1EbIAVB8IbAgABqKQMAIhFCACARIBEgA4NRGyAFQeiGwIAAaikDACIRQgAgESARIAODURsgEISEhIQhECAFQSBqIgUNAAsCQCAQIA6DIgNQDQADQCACQZABaiADeqdBAnRqIgUgBSgCAEEBajYCACADQn98IAODIgNQRQ0ACwsgBEEBaiIEQcAARw0AC0EAIAo3A8CZwIAAIA56pyEFIA1Cf1ENAUF/IQQDQCACQZABaiAOeqciAEECdGooAgAiBiAEIAYgBEoiBhshBCAAIAUgBhshBSAOQn98IA6DIg5QRQ0ADAILCyACLQCQASESIAJBHDoAjgEgAkGUMDsBjAEgAkGEkLCAATYCiAFBf0EAIAFBwAAgAUHAAEkbLQDohsCAACITayABQQRJGyEUIApClfip+pe33puef4UhECABQQwgAUEMSRtBf2ohFSACQZABakEBaiEW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";
+
+const MASK64=0xFFFFFFFFFFFFFFFFn;
+const BT=[1190112520884487201n,2380225041768974402n,4760450083537948804n,9520900167075897608n,595056260442243600n];
+const WMA=[31n,62n,124n,248n,7936n,15872n,31744n,63488n,2031616n,4063232n,8126464n,16252928n,520093696n,1040187392n,2080374784n,4160749568n,133143986176n,266287972352n,532575944704n,1065151889408n,34084860461056n,68169720922112n,136339441844224n,272678883688448n,8725724278030336n,17451448556060672n,34902897112121344n,69805794224242688n,2233785415175766016n,4467570830351532032n,8935141660703064064n,17870283321406128128n,4311810305n,1103823438080n,282578800148480n,72340172838010880n,8623620610n,2207646876160n,565157600296960n,144680345676021760n,17247241220n,4415293752320n,1130315200593920n,289360691352043520n,34494482440n,8830587504640n,2260630401187840n,578721382704087040n,68988964880n,17661175009280n,4521260802375680n,1157442765408174080n,137977929760n,35322350018560n,9042521604751360n,2314885530816348160n,275955859520n,70644700037120n,18085043209502720n,4629771061632696320n,551911719040n,141289400074240n,36170086419005440n,9259542123265392640n,68853957121n,137707914242n,275415828484n,550831656968n,17626613022976n,35253226045952n,70506452091904n,141012904183808n,4512412933881856n,9024825867763712n,18049651735527424n,36099303471054848n,1155177711073755136n,2310355422147510272n,4620710844295020544n,9241421688590041088n,4328785936n,8657571872n,17315143744n,34630287488n,1108169199616n,2216338399232n,4432676798464n,8865353596928n,283691315101696n,567382630203392n,1134765260406784n,2269530520813568n,72624976666034176n,145249953332068352n,290499906664136704n,580999813328273408n];
+const MOVES=Array.from({length:64},(_,k)=>1n<<BigInt(k));
+
+function getWTBB(bb){let r=0n;for(let i=0;i<96;i++){const m=WMA[i];if((bb&m)===m)r|=m;}return r;}
+function wmBB(bb,open){let r=0n;for(let k=0;k<5;k++){const mv=BT[k]&open;const wt=getWTBB(bb|mv);if(wt!==0n)r|=(wt&mv);}return r;}
+function hasMB(bb){return bb!==0n&&(bb&(bb-1n))!==0n;}
+function dtBB(bb,open){let r=0n;for(let k=0;k<64;k++){const mv=MOVES[k];if((mv&open)!==0n&&hasMB(wmBB(bb|mv,open^mv)))r|=mv;}return r;}
+function cmBB(bb,open){let r=0n;const opp=(MASK64^open)^bb;for(let k=0;k<64;k++){const mv=MOVES[k];if((mv&open)!==0n){const af=bb|mv,re=open^mv;if(wmBB(af,re)!==0n||dtBB(opp,re)===0n)r|=mv;}}return r;}
+function rnd64(){return(BigInt(Math.floor(Math.random()*0x100000000))<<32n)|BigInt(Math.floor(Math.random()*0x100000000));}
+function mcFallback(bb,open,n){const s=new Array(64).fill(0);for(let t=0;t<n;t++){const wt=getWTBB(bb|(rnd64()&open))&open;for(let k=0;k<64;k++)if((wt&MOVES[k])!==0n)s[k]++;}let bk=-1,bs=-1;for(let k=0;k<64;k++)if((MOVES[k]&open)!==0n&&s[k]>bs){bs=s[k];bk=k;}return bk;}
+function bb2m(bb){const o=[];for(let k=0;k<64;k++)if((bb&MOVES[k])!==0n)o.push(k);return o;}
+function pick(bb){const ms=bb2m(bb);return ms[Math.floor(Math.random()*ms.length)];}
+function openRnd(open){const ms=bb2m(open);return ms[Math.floor(Math.random()*ms.length)];}
+function boardToBB(board,v){let bb=0n;for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(board[r][c]===v)bb|=MOVES[r*8+c];return bb;}
+function computeBotMove(board,cp,level){
+  const bbC=boardToBB(board,cp+1),bbO=boardToBB(board,2-cp),bbOp=MASK64^(bbC|bbO);
+  if(level===0){const k=openRnd(bbOp);return[k>>3,k&7];}
+  const wm=wmBB(bbC,bbOp);if(wm!==0n){const k=pick(wm);return[k>>3,k&7];}
+  if(level>=1){const ow=wmBB(bbO,bbOp);if(ow!==0n){const k=pick(ow);return[k>>3,k&7];}}
+  if(level>=2){const dt=dtBB(bbC,bbOp);if(dt!==0n){const k=pick(dt);return[k>>3,k&7];}}
+  if(level>=3){const od=dtBB(bbO,bbOp);if(od!==0n){const cm=cmBB(bbC,bbOp);const k=pick(cm!==0n?cm:od);return[k>>3,k&7];}}
+  const MC=[1,10,100,10000];const k=mcFallback(bbC,bbOp,MC[Math.min(level,3)]??1);
+  if(k===-1){const i=openRnd(bbOp);return[i>>3,i&7];}return[k>>3,k&7];
+}
+
+let wasmX=null;
+function b64ToBytes(s){const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+async function ensureWasm(){
+  if(wasmX)return;
+  const{instance}=await WebAssembly.instantiate(b64ToBytes(WASM_B64),{env:{get_time_ms:()=>performance.now()}});
+  wasmX=instance.exports;
+}
+
+self.onmessage=async function(e){
+  const{board,currentPlayer,level,timeBudgetMs}=e.data;
+  let move;
+  if(level>=4){
+    await ensureWasm();
+    const ptr=wasmX.get_board_ptr();
+    const mem=new Uint8Array(wasmX.memory.buffer);
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++)mem[ptr+r*8+c]=board[r][c];
+    const cell=wasmX.compute_bot_move(currentPlayer,timeBudgetMs>>>0);
+    move=[cell>>3,cell&7];
+  }else{
+    move=computeBotMove(board,currentPlayer,level);
+  }
+  self.postMessage({move});
+};
+`;
+    const botWorker = new Worker(
+        URL.createObjectURL(new Blob([BOT_WORKER_SRC], { type: 'application/javascript' }))
+    );
+
+    // ── dom.js ────────────────────────────────────────────────────────────────
+    const dom = {
+        app: document.getElementById("app"),
+        board: document.getElementById("board"),
+        controls: {
+            newGameBtn:       document.getElementById("new-game-btn"),
+            timeSlider:       document.getElementById("time-slider"),
+            timeLabel:        document.getElementById("time-label"),
+            incrementSlider:  document.getElementById("increment-slider"),
+            incrementLabel:   document.getElementById("increment-label"),
+            levelSlider:      document.getElementById("level"),
+            levelLabel:       document.getElementById("level-label"),
+        },
+        players: {
+            black: {
+                app:   document.getElementById("player-black"),
+                clock: document.getElementById("clock-black"),
+                name:  document.getElementById("player-name-black"),
+            },
+            white: {
+                app:   document.getElementById("player-white"),
+                clock: document.getElementById("clock-white"),
+                name:  document.getElementById("player-name-white"),
+            },
+        },
+        viewMenu: {
+            btn:       document.getElementById("view-menu-btn"),
+            panel:     document.getElementById("view-menu-panel"),
+            toggleBot: document.getElementById("btn-toggle-bot"),
+            morpion:   document.getElementById("btn-morpion"),
+            editor:    document.getElementById("btn-editor"),
+            flipH:     document.getElementById("btn-flip-h"),
+            flipV:     document.getElementById("btn-flip-v"),
+            rotateCW:   document.getElementById("btn-rotate-cw"),
+            rotateCCW:  document.getElementById("btn-rotate-ccw"),
+            themePrev:  document.getElementById("btn-theme-prev"),
+            themeNext:  document.getElementById("btn-theme-next"),
+        },
+        navBtns: {
+            begin: document.getElementById("btn-begin"),
+            prev:  document.getElementById("btn-prev"),
+            next:  document.getElementById("btn-next"),
+            end:   document.getElementById("btn-end"),
+        },
+    };
+
+    // ── state.js ──────────────────────────────────────────────────────────────
+    const state = {
+        gameId: null,
+        players: null,
+        board: null,
+        lastMove: null,
+        hoveredCell: null,
+        moveList: [],
+        winningTiles: [],
+        currentPlayer: 0,
+        winner: null,
+        finished: false,
+        localPlayerIndex: 0,
+        remainingTimes: [0, 0],
+        increments: [0, 0],
+        clockPly: 0,
+        lastUpdate: Date.now(),
+        clockInterval: null,
+        editorMode: false,
+        editorBoard: null,
+        editorPlayer: null,
+        replayMode: false,
+        replayPly: null,
+        replayBoard: null,
+        initialBoard: null,
+        initialPlayer: 0,
+        tacticalData: null,
+        markers: {},
+        transformIndex: 0,
+        botMoveInProgress: false,
+        level: 3,
+        timesNeedSync: true,
+    };
+
+    function applyServerState(data) {
+        state.board         = data.board;
+        state.lastMove      = data.lastMove;
+        state.moveList      = data.moveList;
+        state.winningTiles  = data.winningTiles;
+        if (state.timesNeedSync) {
+            state.remainingTimes = [...data.times.times];
+            state.timesNeedSync  = false;
+        }
+        state.increments    = [...data.times.increments];
+        state.clockPly      = data.clockPly;
+        state.currentPlayer = data.currentPlayer;
+        state.finished      = data.finished;
+        state.winner        = data.winner;
+        state.lastUpdate    = Date.now();
+    }
+
+    function currentBoard() {
+        if (state.editorMode) return state.editorBoard;
+        if (state.replayMode) return state.replayBoard;
+        return state.board;
+    }
+
+    function currentActivePlayer() {
+        if (state.editorMode) return state.editorPlayer;
+        if (state.replayMode && state.finished) return replayCurrentPlayer();
+        return state.currentPlayer;
+    }
+
+    function replayMoveList() {
+        if (!state.replayMode) return state.moveList;
+        return state.moveList.slice(0, state.replayPly);
+    }
+
+    function replayCurrentPlayer() {
+        if (state.finished && state.replayPly === state.moveList.length)
+            return state.currentPlayer;
+        return (state.initialPlayer + state.replayPly) % 2;
+    }
+
+    // ── api.js ────────────────────────────────────────────────────────────────
+    let game = null;
+
+    function emptyBoard() {
+        return Array.from({length: 8}, () => Array(8).fill(0));
+    }
+
+    function stateResponse() {
+        return {
+            board:          game.board.map(r => [...r]),
+            lastMove:       game.lastMove,
+            moveList:       [...game.moveList],
+            winningTiles:   game.winningTiles,
+            times:          { times: [...game.times], increments: [...game.increments] },
+            clockPly:       game.clockPly,
+            currentPlayer:  game.currentPlayer,
+            finished:       game.finished,
+            winner:         game.winner,
+        };
+    }
+
+    function applyMove(i, j) {
+        game.board[i][j] = game.currentPlayer + 1;
+        game.lastMove    = [i, j];
+        game.moveList.push([i, j]);
+
+        const winTiles = computeWin(game.board, game.currentPlayer);
+        if (winTiles.length > 0) {
+            game.winningTiles = winTiles;
+            game.finished     = true;
+            game.winner       = game.currentPlayer;
+            return;
+        }
+        if (isBoardFull(game.board)) {
+            game.finished = true;
+            game.winner   = null;
+            return;
+        }
+
+        const bbCur = boardToBB(game.board, game.currentPlayer + 1);
+        const bbOpp = boardToBB(game.board, 2 - game.currentPlayer);
+        if (isDeadDraw(bbCur, bbOpp)) {
+            game.finished = true;
+            game.winner   = null;
+            return;
+        }
+
+        game.times[game.currentPlayer] += game.increments[game.currentPlayer];
+        game.clockPly++;
+        game.currentPlayer = 1 - game.currentPlayer;
+    }
+
+    function newGameResponse() {
+        return {
+            gid:           game.gid,
+            board:         game.board.map(r => [...r]),
+            currentPlayer: game.currentPlayer,
+            players:       game.players,
+            level:         game.level,
+        };
+    }
+
+    function handleNewGame(p) {
+        const level     = parseInt(p.get('level'))      || 3;
+        const time      = parseFloat(p.get('time'))     || 1;
+        const increment = parseFloat(p.get('increment')) || 1;
+
+        const botIsBlack = Math.random() < 0.5;
+
+        game = {
+            gid:           Math.random().toString(36).slice(2),
+            board:         emptyBoard(),
+            currentPlayer: 0,
+            lastMove:      null,
+            moveList:      [],
+            winningTiles:  [],
+            finished:      false,
+            winner:        null,
+            times:         [time, time],
+            increments:    [increment, increment],
+            clockPly:      0,
+            level:         level,
+
+            players: botIsBlack
+                ? [
+                    { nickname: 'Player', isBot: false },
+                    { nickname: 'Bot',    isBot: true  },
+                ] : [
+                    { nickname: 'Bot',    isBot: true  },
+                    { nickname: 'Player', isBot: false },
+                ],
+        };
+
+        return newGameResponse();
+    }
+
+    function handleState() { return stateResponse(); }
+
+    function handleMove(p) {
+        const i = parseInt(p.get('i'));
+        const j = parseInt(p.get('j'));
+        if (!game.finished && game.board[i][j] === 0) applyMove(i, j);
+        return {};
+    }
+
+    function handleBotMove() {
+        if (!game.finished && game.players[game.currentPlayer].isBot) {
+            const [i, j] = computeBotMove(game.board, game.currentPlayer, game.level);
+            applyMove(i, j);
+        }
+        return {};
+    }
+
+    function handleFlag() {
+        if (!game.finished) { game.finished = true; game.winner = 1 - game.currentPlayer; }
+        return {};
+    }
+
+    function handleSubmitBoard(body) {
+        const { board, editorPlayer, moveList, localPlayer, time, increment, level } = body;
+        const board2 = board.map(r => [...r]);
+        const ml     = moveList || [];
+        const lp     = localPlayer ?? 0;
+
+        let finished = false, winner = null, winningTiles = [];
+        const wt0 = computeWin(board2, 0);
+        const wt1 = computeWin(board2, 1);
+        if      (wt0.length > 0)     { finished = true; winner = 0; winningTiles = wt0; }
+        else if (wt1.length > 0)     { finished = true; winner = 1; winningTiles = wt1; }
+        else if (isBoardFull(board2)){ finished = true; }
+
+        game = {
+            gid:           Math.random().toString(36).slice(2),
+            board:         board2,
+            currentPlayer: editorPlayer,
+            lastMove:      ml.length > 0 ? ml[ml.length - 1] : null,
+            moveList:      ml,
+            winningTiles,
+            finished,
+            winner,
+            times:         [parseFloat(time) || 1, parseFloat(time) || 1],
+            increments:    [parseFloat(increment) || 1, parseFloat(increment) || 1],
+            clockPly:      ml.length,
+            level:         parseInt(level) || 3,
+            players: [
+                { nickname: lp === 0 ? 'Player' : 'Bot', isBot: lp !== 0 },
+                { nickname: lp === 1 ? 'Player' : 'Bot', isBot: lp !== 1 },
+            ],
+        };
+        return newGameResponse();
+    }
+
+    function handleTactics(body) {
+        const { board, currentPlayer } = body;
+        return computeTactics(board, currentPlayer);
+    }
+
+    async function api(path, options = {}) {
+        const [pathname, qs] = path.split('?');
+        const p    = new URLSearchParams(qs);
+        const body = options.body ? JSON.parse(options.body) : null;
+        switch (pathname) {
+            case '/new_game':     return handleNewGame(p);
+            case '/state':        return handleState();
+            case '/move':         return handleMove(p);
+            case '/botMove':      return handleBotMove();
+            case '/flag':         return handleFlag();
+            case '/submit_board': return handleSubmitBoard(body);
+            case '/tactics':      return handleTactics(body);
+            default: throw new Error(`Unknown local API route: ${path}`);
+        }
+    }
+
+    // ── render.js ─────────────────────────────────────────────────────────────
+    const cells = [];
+
+    function createBoard() {
+        dom.board.innerHTML = "";
+        for (let row = 0; row < BOARD_SIZE; row++) {
+            for (let col = 0; col < BOARD_SIZE; col++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.classList.add((row + col) % 2 === 0 ? "light" : "dark");
+                cell.dataset.row   = row;
+                cell.dataset.col   = col;
+                cell.dataset.index = row * BOARD_SIZE + col;
+                const stone = document.createElement("div");
+                stone.classList.add("stone");
+                cell.appendChild(stone);
+                dom.board.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+    }
+
+    function getCell(row, col) { return cells[row * BOARD_SIZE + col]; }
+
+    function render() {
+        renderAppState();
+        renderOrientation();
+        renderBoard();
+        renderCursor();
+        renderMoveNumbers();
+        renderPlayers();
+        renderNicknames();
+        renderClocks();
+    }
+
+    function renderAppState() {
+        dom.app.classList.toggle("finished",    state.finished);
+        dom.app.classList.toggle("editor-mode", state.editorMode);
+        dom.app.classList.toggle("local-black", state.localPlayerIndex === 0);
+        updateViewMenu();
+    }
+
+    function updateViewMenu() {
+        dom.viewMenu.morpion.classList.toggle("vm-active", dom.app.classList.contains("morpion-mode"));
+        dom.viewMenu.editor.classList.toggle("vm-active",  state.editorMode);
+    }
+
+    function renderBoard() {
+        for (let row = 0; row < BOARD_SIZE; row++)
+            for (let col = 0; col < BOARD_SIZE; col++)
+                renderCell(row, col);
+    }
+
+    function renderOrientation() {
+        dom.app.dataset.transform = BOARD_TRANSFORMS[state.transformIndex];
+    }
+
+    function renderCell(row, col) {
+        const cell   = getCell(row, col);
+        const marker = state.markers[`${row},${col}`];
+        const boardData = currentBoard();
+        const value  = boardData[row][col];
+
+        let effectiveLastMove    = null;
+        let effectiveWinningTiles = [];
+
+        if (!state.editorMode) {
+            if (state.replayMode) {
+                if (state.replayPly > 0) effectiveLastMove = state.moveList[state.replayPly - 1];
+                if (state.replayPly === state.moveList.length) effectiveWinningTiles = state.winningTiles;
+            } else {
+                effectiveLastMove     = state.lastMove;
+                effectiveWinningTiles = state.winningTiles;
+            }
+        }
+
+        cell.dataset.state    = value === 1 ? "black" : value === 2 ? "white" : "empty";
+        cell.dataset.occupied = value !== 0;
+
+        if (marker) cell.dataset.marker = marker;
+        else        delete cell.dataset.marker;
+
+        if (state.tacticalData?.[row][col]) cell.dataset.marker = "threat";
+
+        if (effectiveLastMove && effectiveLastMove[0] === row && effectiveLastMove[1] === col)
+            cell.dataset.lastMove = "true";
+        else
+            delete cell.dataset.lastMove;
+
+        if (effectiveWinningTiles.some(([i, j]) => i === row && j === col))
+            cell.dataset.win = "true";
+        else
+            delete cell.dataset.win;
+    }
+
+    function renderCursor() {
+        const canClick =
+            !state.finished &&
+            !state.replayMode &&
+            state.players &&
+            !state.players[state.currentPlayer].isBot &&
+            state.localPlayerIndex === state.currentPlayer;
+        dom.board.classList.toggle("no-click", !canClick);
+    }
+
+    function renderMoveNumbers() {
+        document.querySelectorAll(".move-number").forEach(el => el.remove());
+        if (!state.finished || !state.moveList || state.editorMode) return;
+
+        const visibleMoves = state.replayMode
+            ? state.moveList.slice(0, state.replayPly)
+            : state.moveList;
+
+        visibleMoves.forEach(([i, j], idx) => {
+            const label = document.createElement("div");
+            label.className   = "move-number";
+            label.textContent = idx + 1;
+            dom.board.children[i * BOARD_SIZE + j].appendChild(label);
+        });
+    }
+
+    function renderPlayers() {
+        const activePlayer = currentActivePlayer();
+        dom.players.black.app.classList.toggle("player-active", activePlayer === 0);
+        dom.players.white.app.classList.toggle("player-active", activePlayer === 1);
+    }
+
+    function renderNicknames() {
+        const black = state.players[0];
+        const white = state.players[1];
+        document.title = `Game ${black.nickname} - ${white.nickname}`;
+        renderPlayerName(dom.players.black.name, black);
+        renderPlayerName(dom.players.white.name, white);
+    }
+
+    function renderPlayerName(playerDom, playerData) {
+        const nameSpan = playerDom.querySelector(".player-name-text");
+        nameSpan.textContent = playerData.nickname;
+        const existing = playerDom.querySelector(".bot-label");
+        if (existing) existing.remove();
+        if (playerData.isBot) {
+            const botLabel = document.createElement("span");
+            botLabel.classList.add("bot-label");
+            botLabel.textContent = "BOT";
+            playerDom.appendChild(botLabel);
+        }
+    }
+
+    function renderClocks() {
+        updateClockDisplay(dom.players.black.clock, state.remainingTimes[0]);
+        updateClockDisplay(dom.players.white.clock, state.remainingTimes[1]);
+        dom.players.black.clock.classList.toggle("low-time",    state.remainingTimes[0] < 10);
+        dom.players.white.clock.classList.toggle("low-time",    state.remainingTimes[1] < 10);
+        dom.players.black.clock.classList.toggle("active-clock", state.currentPlayer === 0);
+        dom.players.white.clock.classList.toggle("active-clock", state.currentPlayer === 1);
+    }
+
+    function renderReplay() {
+        renderBoard();
+        renderPlayers();
+        renderMoveNumbers();
+        renderCursor();
+    }
+
+    function updateClockDisplay(clockEl, time) {
+        const safeTime = Math.max(0, time);
+        const m  = Math.floor(safeTime / 60);
+        const s  = Math.floor(safeTime % 60);
+        const cs = Math.floor((safeTime * 100) % 100);
+        clockEl.querySelector(".minutes").textContent      = m.toString().padStart(2, "0");
+        clockEl.querySelector(".seconds").textContent      = s.toString().padStart(2, "0");
+        clockEl.querySelector(".centi-seconds").textContent =
+            safeTime >= 20 ? "" : cs.toString().padStart(2, "0");
+    }
+
+    // ── clock.js ──────────────────────────────────────────────────────────────
+    let onFlagged      = null;
+    let flagInProgress = false;
+
+    function configureClock({ onFlagged: callback }) { onFlagged = callback; }
+
+    function startClock() {
+        if (state.clockPly < 2 || state.finished) return;
+        stopClock();
+        state.clockInterval = setInterval(tickClock, 73);
+    }
+
+    function stopClock() {
+        if (state.clockInterval) { clearInterval(state.clockInterval); state.clockInterval = null; }
+    }
+
+    function syncClockState() {
+        if (state.finished) stopClock();
+        else                startClock();
+    }
+
+    async function tickClock() {
+        if (state.finished) { stopClock(); return; }
+        const now = Date.now();
+        const dt  = (now - state.lastUpdate) / 1000;
+        state.lastUpdate = now;
+        state.remainingTimes[state.currentPlayer] -= dt;
+        if (state.remainingTimes[state.currentPlayer] <= 0) {
+            state.remainingTimes[state.currentPlayer] = 0;
+            await flagCurrentPlayer();
+        }
+        renderClocks();
+    }
+
+    async function flagCurrentPlayer() {
+        if (flagInProgress || state.finished) return;
+        flagInProgress = true;
+        await api(`/flag?gid=${state.gameId}`, { method: 'POST' });
+        if (onFlagged) await onFlagged();
+        flagInProgress = false;
+    }
+
+    // ── effects.js ────────────────────────────────────────────────────────────
+    function handleGameEnd() {
+        stopClock();
+        const isMorpionMode = dom.app.classList.contains("morpion-mode");
+        setTimeout(() => {
+            alert(
+                state.winner === 0 ? (isMorpionMode ? "X wins!"  : "Black wins!") :
+                state.winner === 1 ? (isMorpionMode ? "O wins!"  : "White wins!") :
+                "Draw."
+            );
+        }, 50);
+    }
+
+    // ── preferences.js ────────────────────────────────────────────────────────
+    function loadSystemPreferences() {
+        const isMorpionMode = localStorage.getItem("morpionMode");
+        if (isMorpionMode === "false") dom.app.classList.remove("morpion-mode");
+        const theme = localStorage.getItem("theme") || "light";
+        setTheme(theme);
+    }
+
+    function setTheme(theme) {
+        document.body.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+    }
+
+    function cycleTheme(backward) {
+        const current     = document.body.getAttribute("data-theme") || "light";
+        const current_idx = THEMES.indexOf(current);
+        const nextTheme   = THEMES[(current_idx + (backward ? THEMES.length - 1 : 1)) % THEMES.length];
+        setTheme(nextTheme);
+    }
+
+    function toggleMorpionMode() {
+        const enabled = dom.app.classList.toggle("morpion-mode");
+        localStorage.setItem("morpionMode", enabled);
+    }
+
+    function initSliders() {
+        dom.controls.timeSlider.max      = TIME_PRESETS.length - 1;
+        dom.controls.incrementSlider.max = INCREMENT_PRESETS.length - 1;
+        dom.controls.levelSlider.max     = LEVEL_LABELS.length - 1;
+
+        dom.controls.timeSlider.value      = localStorage.getItem("time")      || 1;
+        dom.controls.incrementSlider.value = localStorage.getItem("increment") || 1;
+        dom.controls.levelSlider.value     = localStorage.getItem("level")     || 3;
+
+        dom.controls.timeSlider.addEventListener("input",      updateTimeLabel);
+        dom.controls.incrementSlider.addEventListener("input", updateIncrementLabel);
+        dom.controls.levelSlider.addEventListener("input",     updateLevelLabel);
+
+        updateTimeLabel();
+        updateIncrementLabel();
+        updateLevelLabel();
+    }
+
+    function selectedSliders() {
+        return {
+            time:      TIME_PRESETS[dom.controls.timeSlider.value],
+            increment: INCREMENT_PRESETS[dom.controls.incrementSlider.value],
+            level:     dom.controls.levelSlider.value,
+        };
+    }
+
+    function updateTimeLabel() {
+        localStorage.setItem("time", dom.controls.timeSlider.value);
+        dom.controls.timeLabel.textContent = formatTime(TIME_PRESETS[dom.controls.timeSlider.value]);
+    }
+
+    function updateIncrementLabel() {
+        localStorage.setItem("increment", dom.controls.incrementSlider.value);
+        dom.controls.incrementLabel.textContent = formatTime(INCREMENT_PRESETS[dom.controls.incrementSlider.value]);
+    }
+
+    function updateLevelLabel() {
+        localStorage.setItem("level", dom.controls.levelSlider.value);
+        dom.controls.levelLabel.textContent = LEVEL_LABELS[dom.controls.levelSlider.value];
+    }
+
+    function formatTime(seconds) {
+        if (seconds < 60)   return `${seconds}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+        return `${Math.floor(seconds / 3600)}h`;
+    }
+
+    // ── actions.js ────────────────────────────────────────────────────────────
+    async function newGame() {
+        if (state.editorMode) { await submitEditorBoard(); return; }
+        exitReplayMode();
+        stopClock();
+        const { time, increment, level } = selectedSliders();
+        const data = await api(`/new_game?level=${level}&time=${time}&increment=${increment}`, { method: 'POST' });
+        await launchNewGame(data);
+    }
+
+    async function launchNewGame(data) {
+        state.gameId         = data.gid;
+        state.initialBoard   = JSON.stringify(data.board);
+        state.initialPlayer  = data.currentPlayer;
+        state.players        = data.players;
+        state.level          = data.level ?? 3;
+        state.localPlayerIndex = state.players[0].isBot ? 1 : 0;
+        state.timesNeedSync  = true;
+        await updateFromServer();
+        await maybeTriggerBotMove();
+    }
+
+    async function updateFromServer() {
+        const wasFinished = state.finished;
+        const data = await api(`/state?gid=${state.gameId}`);
+        applyServerState(data);
+        resetTacticalData();
+        syncClockState();
+        render();
+        refreshHoverPreview();
+        if (!wasFinished && state.finished) handleGameEnd();
+    }
+
+    async function maybeTriggerBotMove() {
+        if (state.botMoveInProgress || state.finished || !state.players ||
+            !state.players[state.currentPlayer].isBot) return;
+        state.botMoveInProgress = true;
+
+        const botIndex = state.currentPlayer;
+        await new Promise(r => setTimeout(r, 0)); // yield for repaint / hover-clear
+
+        // Time budget: for WASM Expert bot use up to 90 % of remaining time
+        // capped at 3 s; for JS bot 500 ms is plenty.
+        const remaining = state.remainingTimes[botIndex];
+        const timeBudgetMs = state.level >= 4
+            ? (remaining > 0 ? Math.min(3000, remaining * 900) : 3000)
+            : 500;
+
+        const [i, j] = await new Promise(resolve => {
+            botWorker.onmessage = e => resolve(e.data.move);
+            botWorker.postMessage({
+                board:         state.board,
+                currentPlayer: state.currentPlayer,
+                level:         state.level,
+                timeBudgetMs,
+            });
+        });
+
+        // If the bot was flagged while thinking, discard the move (game already ended).
+        if (!state.finished) {
+            // Clock has been running and deducting time; add the increment now.
+            state.remainingTimes[botIndex] += state.increments[botIndex];
+            await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, { method: 'POST' });
+            await updateFromServer();
+        }
+        state.botMoveInProgress = false;
+    }
+
+    async function playCell(cell) {
+        const i = Number(cell.dataset.row);
+        const j = Number(cell.dataset.col);
+        resetTacticalData();
+        if (state.editorMode) { playEditorCell(i, j); return; }
+        if (state.replayMode && !state.finished) { exitReplayMode(); render(); return; }
+        if (!canPlayCell(i, j)) return;
+
+        const previousLastMove = state.lastMove ? [...state.lastMove] : null;
+        applyOptimisticMove(i, j);
+        startClock();
+        if (previousLastMove) renderCell(previousLastMove[0], previousLastMove[1]);
+        renderCell(i, j);
+        renderCursor();
+        renderPlayers();
+        renderClocks();
+
+        await api(`/move?gid=${state.gameId}&i=${i}&j=${j}`, { method: 'POST' });
+        if (state.replayMode) { exitReplayMode(); render(); }
+        await updateFromServer();
+        await maybeTriggerBotMove();
+    }
+
+    function resetTacticalData() {
+        if (state.tacticalData) { state.tacticalData = null; renderBoard(); }
+    }
+
+    function applyOptimisticMove(i, j) {
+        state.board[i][j] = state.currentPlayer + 1;
+        state.lastMove    = [i, j];
+        state.moveList.push([i, j]);
+        state.remainingTimes[state.currentPlayer] += state.increments[state.currentPlayer];
+        state.currentPlayer = 1 - state.currentPlayer;
+        state.clockPly     += 1;
+        state.lastUpdate    = Date.now();
+        clearAllPreviews();
+    }
+
+    function canPlayCell(i, j) {
+        return (
+            state.board &&
+            state.localPlayerIndex === state.currentPlayer &&
+            state.board[i][j] === 0 &&
+            !state.finished &&
+            !state.editorMode &&
+            !state.replayMode
+        );
+    }
+
+    function showPreview(cell) {
+        const i = Number(cell.dataset.row);
+        const j = Number(cell.dataset.col);
+        if (!canPlayCell(i, j)) return;
+        cell.dataset.preview = state.currentPlayer === 0 ? "black" : "white";
+    }
+
+    function hidePreview(cell) { delete cell.dataset.preview; }
+
+    function clearAllPreviews() {
+        for (const cell of document.getElementsByClassName('cell'))
+            if (cell.dataset.preview) delete cell.dataset.preview;
+    }
+
+    function refreshHoverPreview() {
+        if (!state.hoveredCell) return;
+        hidePreview(state.hoveredCell);
+        showPreview(state.hoveredCell);
+    }
+
+    function toggleMarker(cell, color) {
+        const i   = Number(cell.dataset.row);
+        const j   = Number(cell.dataset.col);
+        const key = `${i},${j}`;
+        if (state.markers[key] === color) delete state.markers[key];
+        else                              state.markers[key] = color;
+        renderCell(i, j);
+    }
+
+    function clearAllMarkers() { state.markers = {}; renderBoard(); }
+
+    function toggleMirrorHorizontal(vertical) {
+        if (vertical) {
+            if (state.transformIndex < 4) state.transformIndex = (state.transformIndex + 2) % 4;
+            else                          state.transformIndex = 4 + (state.transformIndex - 2) % 4;
+        }
+        state.transformIndex = (state.transformIndex + 4) % 8;
+        renderOrientation();
+    }
+
+    function cycleRotation(backwards) {
+        if (state.transformIndex < 4)
+            state.transformIndex = (state.transformIndex + (backwards ? 3 : 1)) % 4;
+        else
+            state.transformIndex = 4 + (state.transformIndex - (backwards ? 3 : 1)) % 4;
+        renderOrientation();
+    }
+
+    function enterReplayMode() {
+        state.replayMode  = true;
+        state.replayPly   = state.moveList.length;
+        state.replayBoard = buildReplayBoard(state.replayPly);
+        render();
+        refreshHoverPreview();
+    }
+
+    function exitReplayMode() {
+        state.replayMode  = false;
+        state.replayPly   = null;
+        state.replayBoard = null;
+        refreshHoverPreview();
+        renderCursor();
+    }
+
+    function buildReplayBoard(ply) {
+        const board  = JSON.parse(state.initialBoard);
+        let player   = state.initialPlayer;
+        for (let k = 0; k < ply; k++) {
+            const [i, j] = state.moveList[k];
+            board[i][j]  = player + 1;
+            player       = 1 - player;
+        }
+        return board;
+    }
+
+    function replayPrevious() {
+        if (!state.replayMode) enterReplayMode();
+        if (state.replayPly <= 0) return;
+        state.replayPly--;
+        state.replayBoard = buildReplayBoard(state.replayPly);
+        resetTacticalData();
+        renderReplay();
+    }
+
+    function replayNext() {
+        if (!state.replayMode) return;
+        if (state.replayPly >= state.moveList.length) return;
+        state.replayPly++;
+        state.replayBoard = buildReplayBoard(state.replayPly);
+        resetTacticalData();
+        renderReplay();
+        if (state.replayPly >= state.moveList.length) exitReplayMode();
+    }
+
+    function replayStart() {
+        state.replayMode  = true;
+        state.replayPly   = 0;
+        state.replayBoard = buildReplayBoard(0);
+        resetTacticalData();
+        renderReplay();
+        refreshHoverPreview();
+    }
+
+    function replayEnd() {
+        state.replayMode  = true;
+        state.replayPly   = state.moveList.length;
+        state.replayBoard = buildReplayBoard(state.replayPly);
+        resetTacticalData();
+        renderReplay();
+        exitReplayMode();
+    }
+
+    async function restartFromReplay() {
+        if (!state.replayMode) return;
+        stopClock();
+        const originalInitialBoard  = JSON.stringify(state.initialBoard);
+        const originalInitialPlayer = state.initialPlayer;
+        const { time, increment, level } = selectedSliders();
+        const data = await api(`/submit_board`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                board: state.replayBoard, editorPlayer: replayCurrentPlayer(),
+                moveList: replayMoveList(), localPlayer: state.localPlayerIndex,
+                time, increment, level,
+            }),
+        });
+        exitReplayMode();
+        await launchNewGame(data);
+        state.initialBoard  = JSON.parse(originalInitialBoard);
+        state.initialPlayer = originalInitialPlayer;
+    }
+
+    async function togglePlayers() {
+        if (state.replayMode) return;
+        stopClock();
+        const originalInitialBoard  = JSON.stringify(state.initialBoard);
+        const originalInitialPlayer = state.initialPlayer;
+        const { time, increment, level } = selectedSliders();
+        const data = await api(`/submit_board`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                board: currentBoard(), editorPlayer: currentActivePlayer(),
+                moveList: replayMoveList(), localPlayer: 1 - state.localPlayerIndex,
+                time, increment, level,
+            }),
+        });
+        exitReplayMode();
+        await launchNewGame(data);
+        state.initialBoard  = JSON.parse(originalInitialBoard);
+        state.initialPlayer = originalInitialPlayer;
+    }
+
+    async function analyzeTactics() {
+        if (state.tacticalData) { resetTacticalData(); return; }
+        const data = await api(`/tactics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ board: currentBoard(), currentPlayer: state.currentPlayer }),
+        });
+        state.tacticalData = data;
+        renderBoard();
+    }
+
+    function toggleEditorMode() {
+        state.editorMode = !state.editorMode;
+        resetTacticalData();
+        clearAllPreviews();
+        if (state.editorMode) {
+            state.editorBoard  = state.replayMode ? structuredClone(state.replayBoard) : structuredClone(state.board);
+            state.editorPlayer = state.currentPlayer;
+        } else {
+            state.editorBoard  = null;
+            state.editorPlayer = null;
+        }
+        render();
+    }
+
+    function toggleEditorPlayer() {
+        if (!state.editorMode) return;
+        state.editorPlayer = 1 - state.editorPlayer;
+        renderPlayers();
+    }
+
+    function clearEditorBoard() {
+        if (!state.editorMode) return;
+        state.editorBoard = Array.from({length: BOARD_SIZE}, () => Array(BOARD_SIZE).fill(0));
+        renderBoard();
+    }
+
+    function swapEditorColors() {
+        if (!state.editorMode) return;
+        for (let i = 0; i < BOARD_SIZE; i++)
+            for (let j = 0; j < BOARD_SIZE; j++)
+                if      (state.editorBoard[i][j] === 1) state.editorBoard[i][j] = 2;
+                else if (state.editorBoard[i][j] === 2) state.editorBoard[i][j] = 1;
+        renderBoard();
+    }
+
+    function playEditorCell(i, j) {
+        const current = state.editorBoard[i][j];
+        const next    = state.editorPlayer + 1;
+        state.editorBoard[i][j] = current === next ? 0 : next;
+        renderBoard();
+    }
+
+    async function submitEditorBoard() {
+        if (!state.editorMode) return;
+        exitReplayMode();
+        stopClock();
+        const { time, increment, level } = selectedSliders();
+        const data = await api(`/submit_board`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                board: state.editorBoard, editorPlayer: state.editorPlayer,
+                moveList: null, localPlayer: state.localPlayerIndex,
+                time, increment, level,
+            }),
+        });
+        state.editorMode  = false;
+        state.editorBoard  = null;
+        state.editorPlayer = null;
+        await launchNewGame(data);
+    }
+
+    function resetToDefaultView() {
+        if (state.editorMode) toggleEditorMode();
+        exitReplayMode();
+        clearAllPreviews();
+        clearAllMarkers();
+        state.transformIndex = 0;
+        render();
+    }
+
+    // ── events.js ─────────────────────────────────────────────────────────────
+    function initEvents() {
+        document.addEventListener("keydown", async (e) => {
+            const tag = document.activeElement.tagName.toLowerCase();
+            if (tag === "input" || tag === "textarea") return;
+            switch (e.key.toLowerCase()) {
+                case "m":        toggleMorpionMode(); break;
+                case "e":        toggleEditorMode(); break;
+                case "f":        toggleMirrorHorizontal(e.shiftKey); break;
+                case "r":        cycleRotation(e.shiftKey); break;
+                case "d":        cycleTheme(e.shiftKey); break;
+                case "c":        clearEditorBoard(); break;
+                case "s":        swapEditorColors(); break;
+                case "t":        await analyzeTactics(); break;
+                case " ":
+                    e.preventDefault();
+                    if (state.editorMode) toggleEditorPlayer();
+                    else if (!state.botMoveInProgress) await togglePlayers();
+                    break;
+                case "escape":   resetToDefaultView(); break;
+                case "enter":
+                    if (state.editorMode)       await submitEditorBoard();
+                    else if (state.replayMode)  await restartFromReplay();
+                    else if (state.finished)    await newGame();
+                    break;
+                case "arrowleft":  replayPrevious(); break;
+                case "arrowright": replayNext(); break;
+                case "home":       replayStart(); break;
+                case "end":        replayEnd(); break;
+            }
+        });
+
+        // ── view-menu dropdown ────────────────────────────────────────────────
+        dom.viewMenu.btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dom.viewMenu.panel.classList.toggle("hidden");
+        });
+        document.addEventListener("click", () => dom.viewMenu.panel.classList.add("hidden"));
+        dom.viewMenu.toggleBot.addEventListener("click", async () => { if (!state.botMoveInProgress) await togglePlayers(); });
+        dom.viewMenu.morpion.addEventListener("click",  () => { toggleMorpionMode(); updateViewMenu(); });
+        dom.viewMenu.editor.addEventListener("click",   () => { toggleEditorMode();  updateViewMenu(); });
+        dom.viewMenu.flipH.addEventListener("click",    () => toggleMirrorHorizontal(false));
+        dom.viewMenu.flipV.addEventListener("click",    () => toggleMirrorHorizontal(true));
+        dom.viewMenu.rotateCW.addEventListener("click",  () => cycleRotation(false));
+        dom.viewMenu.rotateCCW.addEventListener("click", () => cycleRotation(true));
+        dom.viewMenu.themePrev.addEventListener("click", () => cycleTheme(true));
+        dom.viewMenu.themeNext.addEventListener("click", () => cycleTheme(false));
+
+        dom.navBtns.begin.addEventListener("click", () => replayStart());
+        dom.navBtns.prev.addEventListener("click",  () => replayPrevious());
+        dom.navBtns.next.addEventListener("click",  () => replayNext());
+        dom.navBtns.end.addEventListener("click",   () => replayEnd());
+
+        dom.board.addEventListener("click", async (e) => {
+            const cell = e.target.closest(".cell");
+            if (cell) await playCell(cell);
+        });
+
+        dom.board.addEventListener("mousedown", (e) => {
+            if (e.button !== 1) return;
+            e.preventDefault();
+            clearAllMarkers();
+        });
+
+        dom.board.addEventListener("mouseover", (e) => {
+            const cell = e.target.closest(".cell");
+            if (!cell) return;
+            state.hoveredCell = cell;
+            showPreview(cell);
+        });
+
+        dom.board.addEventListener("mouseout", (e) => {
+            const cell = e.target.closest(".cell");
+            if (!cell) return;
+            state.hoveredCell = null;
+            hidePreview(cell);
+        });
+
+        dom.board.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            if (e.deltaY > 0) replayNext();
+            else              replayPrevious();
+        }, { passive: false });
+
+        dom.board.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            const cell = e.target.closest(".cell");
+            if (!cell) return;
+            if (e.ctrlKey)       toggleMarker(cell, "blue");
+            else if (e.shiftKey) toggleMarker(cell, "red");
+            else                 toggleMarker(cell, "green");
+        });
+
+        dom.controls.newGameBtn.addEventListener("click", newGame);
+    }
+
+    // ── main.js ───────────────────────────────────────────────────────────────
+    function init() {
+        loadSystemPreferences();
+        initSliders();
+        createBoard();
+        initEvents();
+        configureClock({ onFlagged: updateFromServer });
+        newGame();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+
+    </script>
+</body>
+</html>
